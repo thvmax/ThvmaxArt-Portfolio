@@ -57,6 +57,7 @@ export default function Portfolio() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState(0);
+  const [isShowcaseDetail, setIsShowcaseDetail] = useState(false);
 
   // Refs for elements GSAP needs direct access to
   const projCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -174,9 +175,9 @@ export default function Portfolio() {
         y: 0,
         duration: 1,
         ease: 'power3.out',
-        scrollTrigger: { 
-          trigger: el, 
-          start: 'top 85%', 
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
           toggleActions: 'play none none none',
           pinnedContainer: isInsideWork ? '#work' : undefined
         },
@@ -214,7 +215,7 @@ export default function Portfolio() {
         const listHeight = projectsList.scrollHeight;
         const scrollerEl = document.querySelector('.work-projects-scroller') as HTMLElement;
         if (!scrollerEl) return;
-        
+
         const visibleHeight = scrollerEl.offsetHeight;
         const scrollDistance = Math.max(0, listHeight - visibleHeight);
         console.log('--- DEBUG GSAP ---');
@@ -260,33 +261,6 @@ export default function Portfolio() {
           }
         });
       });
-    }
-
-    // Horizontal drag-scroll
-    const track = document.getElementById('showcaseTrack');
-    if (track && track.parentElement) {
-      const wrap = track.parentElement;
-      let isDown = false, startX = 0, scrollLeft = 0;
-
-      wrap.addEventListener('mousedown', (e) => {
-        isDown = true;
-        startX = e.pageX - wrap.offsetLeft;
-        scrollLeft = wrap.scrollLeft;
-        wrap.style.cursor = 'grabbing';
-      });
-      wrap.addEventListener('mouseleave', () => { isDown = false; wrap.style.cursor = 'grab'; });
-      wrap.addEventListener('mouseup', () => { isDown = false; wrap.style.cursor = 'grab'; });
-      wrap.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - wrap.offsetLeft;
-        const walk = (x - startX) * 1.5;
-        wrap.scrollLeft = scrollLeft - walk;
-      });
-
-      wrap.style.overflowX = 'auto';
-      wrap.style.cursor = 'grab';
-      wrap.style.scrollbarWidth = 'none';
     }
 
     // Smooth anchor scrolling
@@ -398,6 +372,7 @@ export default function Portfolio() {
   // ─── PROJECT DETAIL ─────────────────────────────────
   const openProject = useCallback((i: number) => {
     setCurrentProject(i);
+    setIsShowcaseDetail(false);
     const p = projects[i];
 
     // Draw hero canvas
@@ -441,7 +416,13 @@ export default function Portfolio() {
     });
   };
 
-  const goNextProject = () => openProject(projects[currentProject].next);
+  const goNextProject = () => {
+    if (isShowcaseDetail) {
+      openShowcase((currentProject + 1) % showcaseCards.length);
+    } else {
+      openProject(projects[currentProject].next);
+    }
+  };
 
   // ─── MOBILE MENU ────────────────────────────────────
   const toggleMobileMenu = () => {
@@ -457,8 +438,44 @@ export default function Portfolio() {
     document.body.classList.remove('menu-open');
   };
 
-  const p = projects[currentProject];
-  const next = projects[p.next];
+  const openShowcase = useCallback((i: number) => {
+    setCurrentProject(i);
+    setIsShowcaseDetail(true);
+    const p = showcaseCards[i];
+
+    if (detailHeroCanvasRef.current) {
+      detailHeroCanvasRef.current.width = 1400;
+      detailHeroCanvasRef.current.height = 700;
+      drawGradientCanvas(detailHeroCanvasRef.current, p.hue);
+    }
+
+    if (detailGalleryRef.current) {
+      detailGalleryRef.current.innerHTML = '';
+      [p.hue, p.hue + 30, p.hue + 60].forEach((h) => {
+        const c = document.createElement('canvas');
+        c.width = 800;
+        c.height = 600;
+        drawGradientCanvas(c, h % 360);
+        detailGalleryRef.current!.appendChild(c);
+      });
+    }
+
+    setDetailOpen(true);
+    const detail = document.getElementById('projectDetail');
+    if (detail) {
+      detail.scrollTop = 0;
+      gsap.fromTo(detail, { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+    }
+  }, []);
+
+  const p = isShowcaseDetail ? showcaseCards[currentProject] : projects[currentProject];
+  const next = isShowcaseDetail ? showcaseCards[(currentProject + 1) % showcaseCards.length] : projects[(p as any).next];
+
+  const displayName = p.name;
+  const displayDesc = isShowcaseDetail ? "An exploratory piece from the visual archive." : (p as any).desc;
+  const displayYear = isShowcaseDetail ? "2024" : (p as any).year;
+  const displayTags = isShowcaseDetail ? (p as any).cat : (p as any).tags;
+  const displayNextName = next.name;
 
   return (
     <>
@@ -620,13 +637,15 @@ export default function Portfolio() {
         <div className="showcase-header reveal">
           <div className="section-header" style={{ border: 'none', marginBottom: 0, paddingBottom: 0 }}>
             <h2 className="section-title">Visual<br />Archive</h2>
-            <div className="section-meta">Drag to explore</div>
+          </div>
+          <div className="section-meta" style={{ textAlign: 'right', alignSelf: 'flex-end', paddingBottom: '1rem', color: 'var(--white)', opacity: 0.8, textTransform: 'none', letterSpacing: '0', fontSize: '1.2rem', lineHeight: 1.4 }}>
+            Settling is easy<br /><b>the work here isn&apos;t built for that</b>
           </div>
         </div>
         <div className="showcase-track-wrap">
           <div className="showcase-track" id="showcaseTrack">
             {showcaseCards.map((card, i) => (
-              <div key={i} className="showcase-card">
+              <div key={i} className="showcase-card" onClick={() => openShowcase(i)}>
                 <canvas
                   ref={(el) => { showcaseCanvasRefs.current[i] = el; }}
                   width={760}
@@ -722,18 +741,18 @@ export default function Portfolio() {
             height={700}
           />
           <div className="detail-hero-overlay"></div>
-          <h2 className="detail-hero-title" id="detailTitle">{p.name}</h2>
+          <h2 className="detail-hero-title" id="detailTitle">{displayName}</h2>
         </div>
         <div className="detail-body">
-          <p className="detail-desc" id="detailDesc">{p.desc}</p>
+          <p className="detail-desc" id="detailDesc">{displayDesc}</p>
           <div className="detail-meta">
             <div className="detail-meta-item">
               <span className="detail-meta-label">Year</span>
-              <span className="detail-meta-value" id="detailYear">{p.year}</span>
+              <span className="detail-meta-value" id="detailYear">{displayYear}</span>
             </div>
             <div className="detail-meta-item">
               <span className="detail-meta-label">Scope</span>
-              <span className="detail-meta-value">{p.tags}</span>
+              <span className="detail-meta-value">{displayTags}</span>
             </div>
             <div className="detail-meta-item">
               <span className="detail-meta-label">Role</span>
@@ -755,7 +774,7 @@ export default function Portfolio() {
               onClick={goNextProject}
               type="button"
             >
-              {next.name} →
+              {displayNextName} →
             </button>
           </div>
         </div>
