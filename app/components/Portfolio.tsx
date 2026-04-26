@@ -438,10 +438,20 @@ export default function Portfolio() {
     document.body.classList.remove('menu-open');
   };
 
-  const openShowcase = useCallback((i: number) => {
+  const openShowcase = useCallback((i: number, e?: React.MouseEvent) => {
     setCurrentProject(i);
     setIsShowcaseDetail(true);
     const p = showcaseCards[i];
+
+    let top = 0, bottom = 0, left = 0, right = 0;
+    if (e) {
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      top = rect.top;
+      bottom = window.innerHeight - rect.bottom;
+      left = rect.left;
+      right = window.innerWidth - rect.right;
+    }
 
     if (detailHeroCanvasRef.current) {
       detailHeroCanvasRef.current.width = 1400;
@@ -464,7 +474,23 @@ export default function Portfolio() {
     const detail = document.getElementById('projectDetail');
     if (detail) {
       detail.scrollTop = 0;
-      gsap.fromTo(detail, { opacity: 0 }, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+      
+      if (e) {
+        const tl = gsap.timeline();
+        tl.fromTo(detail, 
+          { clipPath: `inset(${top}px ${right}px ${bottom}px ${left}px)`, opacity: 1 }, 
+          { clipPath: `inset(0px 0px 0px 0px)`, duration: 0.8, ease: 'power4.inOut' }
+        );
+        
+        const contentElements = detail.querySelectorAll('.detail-hero-title, .detail-desc, .detail-meta, .detail-gallery, .detail-next');
+        tl.fromTo(contentElements,
+          { opacity: 0, y: 40 },
+          { opacity: 1, y: 0, duration: 0.6, stagger: 0.05, ease: 'power3.out' },
+          '-=0.4'
+        );
+      } else {
+        gsap.fromTo(detail, { opacity: 0, clipPath: 'inset(0px 0px 0px 0px)' }, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+      }
     }
   }, []);
 
@@ -645,7 +671,7 @@ export default function Portfolio() {
         <div className="showcase-track-wrap">
           <div className="showcase-track" id="showcaseTrack">
             {showcaseCards.map((card, i) => (
-              <div key={i} className="showcase-card" onClick={() => openShowcase(i)}>
+              <div key={i} className="showcase-card" onClick={(e) => openShowcase(i, e)}>
                 <canvas
                   ref={(el) => { showcaseCanvasRefs.current[i] = el; }}
                   width={760}
