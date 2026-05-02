@@ -36,48 +36,70 @@ body {
   cursor: none;
 }
 
-/* ─── LOADER ─── */
+/* ─── INTRO LOADER ─── */
 #loader {
   position: fixed;
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  background: var(--white);
-}
-
-.loader-clipper {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 30vw;
-  height: 40vh;
-  border-radius: 4px;
+  background: var(--black);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  will-change: width, height, top;
 }
 
-.loader-image-sequence {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100vw;
-  height: 100vh;
+.intro-chars {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 6rem);
 }
 
-.loader-img {
+.intro-char-wrap {
+  overflow: hidden;
+  line-height: 0.85;
+}
+
+.intro-char {
+  display: block;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(6rem, 18vw, 22rem);
+  font-weight: 800;
+  color: var(--white);
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  will-change: transform;
+}
+
+.intro-amp {
+  font-size: clamp(3.5rem, 9vw, 12rem);
+  font-weight: 400;
+  color: var(--accent);
+  font-style: italic;
+  letter-spacing: 0;
+}
+
+.intro-footer {
   position: absolute;
-  top: 0;
+  bottom: 2.5rem;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  opacity: 0;
-  will-change: transform, opacity;
+  right: 0;
+  padding: 0 3rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+
+.intro-counter {
+  font-variant-numeric: tabular-nums;
+  min-width: 3ch;
+  text-align: right;
 }
 
 .hero-banner-img {

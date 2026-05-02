@@ -16,12 +16,6 @@ const heroSlides = [
   '/images/sting-nightlife/3.jpg',
 ];
 
-const loaderImages = [
-  '/images/sting-nightlife/1.jpg',
-  '/images/sting-nightlife/2.jpg',
-  '/images/sting-nightlife/3.jpg',
-  '/images/sting-nightlife/4.jpg',
-];
 
 const marqueeItems = [
   'Pepsi-Cola', 'Sting Energy', '7UP', 'Mirinda', 'AIA Life Insurance',
@@ -122,24 +116,23 @@ export default function Portfolio() {
   // ─── LOADER ANIMATION ───────────────────────────────
   const runLoader = () => {
     const loader = document.getElementById('loader');
-    const clipper = document.querySelector('.loader-clipper') as HTMLElement;
-    const imgs = gsap.utils.toArray<HTMLImageElement>('.loader-img');
-    if (!loader || !clipper || imgs.length === 0) return;
+    if (!loader) return;
 
-    const bannerImg = imgs[imgs.length - 1];
     document.body.style.overflow = 'hidden';
 
+    // Initial states
     gsap.set(loader, { opacity: 1, pointerEvents: 'all' });
-    gsap.set(clipper, { top: '50%' });
-    gsap.set(imgs, { opacity: 0, scale: 1.3, transformOrigin: 'center center', clipPath: 'inset(0% 0% 0% 0%)', yPercent: 0 });
-    gsap.set(imgs[0], { opacity: 1, clipPath: 'inset(0% 0% 100% 0%)', yPercent: -15 });
+    gsap.set(['#introT', '#introAmp', '#introA'], { yPercent: 110 });
+    gsap.set('.intro-footer', { opacity: 0, y: 12 });
     gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
     gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
     gsap.set('#heroSliderUI', { opacity: 0, y: 15 });
 
-    const introTl = gsap.timeline({
-      defaults: { ease: 'power4.inOut' },
+    const counterEl = document.getElementById('introCounter');
+    const counter = { val: 0 };
+
+    const tl = gsap.timeline({
       onComplete: () => {
         loader.style.display = 'none';
         loader.style.pointerEvents = 'none';
@@ -150,36 +143,37 @@ export default function Portfolio() {
       },
     });
 
-    introTl.to(imgs[0], {
-      clipPath: 'inset(0% 0% 0% 0%)',
+    // ── Phase 1: characters reveal from below masks
+    tl.to(['#introT', '#introAmp', '#introA'], {
       yPercent: 0,
-      duration: 0.9,
-      ease: 'power3.inOut',
-    });
+      duration: 1.1,
+      ease: 'power4.out',
+      stagger: 0.1,
+    })
+    .to('.intro-footer', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '<+0.15')
+    .to(counter, {
+      val: 100,
+      duration: 1.6,
+      ease: 'power1.inOut',
+      onUpdate: () => {
+        if (counterEl) counterEl.textContent = String(Math.round(counter.val)).padStart(2, '0');
+      },
+    }, '<');
 
-    const slideDuration = 0.5;
-    const wipeTl = gsap.timeline();
-    for (let i = 1; i < imgs.length; i++) {
-      wipeTl.fromTo(
-        imgs[i],
-        { opacity: 1, clipPath: 'inset(0% 0% 100% 0%)', yPercent: -15 },
-        { clipPath: 'inset(0% 0% 0% 0%)', yPercent: 0, duration: slideDuration, ease: 'power3.inOut' },
-        '-=' + slideDuration * 0.25
-      );
-    }
+    // ── Phase 2: hold, then exit
+    tl.addLabel('exit', '+=0.15')
+    .to('#introT', { xPercent: -130, duration: 0.65, ease: 'power4.in' }, 'exit')
+    .to('#introA', { xPercent: 130, duration: 0.65, ease: 'power4.in' }, 'exit')
+    .to('#introAmp', { yPercent: -120, duration: 0.5, ease: 'power3.in' }, 'exit+=0.06')
+    .to('.intro-footer', { opacity: 0, duration: 0.25 }, 'exit')
+    .to(loader, { opacity: 0, duration: 0.4, ease: 'power2.inOut' }, 'exit+=0.28');
 
-    introTl.add(wipeTl, '-=0.2');
-    introTl.addLabel('expand', '+=0.2');
-
-    introTl
-      .to(clipper, { width: '100vw', height: '100vh', borderRadius: '0px', duration: 1.6 }, 'expand')
-      .to(bannerImg, { scale: 1.0, duration: 1.6 }, 'expand')
-      .to(loader, { opacity: 0, duration: 0.55, ease: 'power2.inOut' }, 'expand+=1.15')
-      .to('.hero-name .line span', { yPercent: 0, opacity: 1, duration: 1.2, ease: 'power4.out', stagger: 0.12 }, 'expand+=0.85')
-      .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'expand+=1.15')
-      .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.5, ease: 'power2.out' }, 'expand+=1.15')
-      .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'expand+=1.4')
-      .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, 'expand+=1.45');
+    // ── Phase 3: hero reveal
+    tl.to('.hero-name .line span', { yPercent: 0, opacity: 1, duration: 1.2, ease: 'power4.out', stagger: 0.12 }, 'exit+=0.35')
+    .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'exit+=0.5')
+    .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.5, ease: 'power2.out' }, 'exit+=0.5')
+    .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'exit+=0.65')
+    .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, 'exit+=0.7');
   };
 
   // ─── CANVASES ────────────────────────────────────────
@@ -537,15 +531,22 @@ export default function Portfolio() {
 
   return (
     <>
-      {/* LOADER */}
+      {/* INTRO LOADER */}
       <div id="loader">
-        <div className="loader-clipper">
-          <div className="loader-image-sequence">
-            {loaderImages.map((src, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} className="loader-img" src={src} alt="" />
-            ))}
+        <div className="intro-chars">
+          <div className="intro-char-wrap">
+            <span className="intro-char" id="introT">T</span>
           </div>
+          <div className="intro-char-wrap">
+            <span className="intro-char intro-amp" id="introAmp">&amp;</span>
+          </div>
+          <div className="intro-char-wrap">
+            <span className="intro-char" id="introA">A</span>
+          </div>
+        </div>
+        <div className="intro-footer">
+          <span className="intro-label">Portfolio — 2026</span>
+          <span className="intro-counter" id="introCounter">00</span>
         </div>
       </div>
 
