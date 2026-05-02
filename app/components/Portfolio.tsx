@@ -120,31 +120,27 @@ export default function Portfolio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── LOADER ANIMATION (shed.design style: image flash + frame expand) ───
+  // ─── LOADER ANIMATION ───────────────────────────────
   const runLoader = () => {
     const loader = document.getElementById('loader');
-    const frame = document.querySelector('.loader-frame') as HTMLElement | null;
+    const clipper = document.querySelector('.loader-clipper') as HTMLElement;
     const imgs = gsap.utils.toArray<HTMLImageElement>('.loader-img');
-    if (!loader || !frame || imgs.length === 0) return;
+    if (!loader || !clipper || imgs.length === 0) return;
 
+    const bannerImg = imgs[imgs.length - 1];
     document.body.style.overflow = 'hidden';
 
-    const lastImg = imgs[imgs.length - 1];
-    const counterEl = document.getElementById('loaderCounter');
-    const counter = { val: 0 };
-
-    // ── initial states
-    gsap.set(loader, { yPercent: 0 });
-    gsap.set(frame, { scale: 1 });
-    gsap.set(imgs, { opacity: 0, scale: 1.05 });
-    gsap.set(imgs[0], { opacity: 1, scale: 1 });
-    gsap.set('#loaderMeta', { opacity: 0, y: 10 });
+    gsap.set(loader, { opacity: 1, pointerEvents: 'all' });
+    gsap.set(clipper, { top: '50%' });
+    gsap.set(imgs, { opacity: 0, scale: 1.3, transformOrigin: 'center center', clipPath: 'inset(0% 0% 0% 0%)', yPercent: 0 });
+    gsap.set(imgs[0], { opacity: 1, clipPath: 'inset(0% 0% 100% 0%)', yPercent: -15 });
     gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
     gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
     gsap.set('#heroSliderUI', { opacity: 0, y: 15 });
 
-    const tl = gsap.timeline({
+    const introTl = gsap.timeline({
+      defaults: { ease: 'power4.inOut' },
       onComplete: () => {
         loader.style.display = 'none';
         loader.style.pointerEvents = 'none';
@@ -155,58 +151,39 @@ export default function Portfolio() {
       },
     });
 
-    // ── Phase 1: meta info enters
-    tl.to('#loaderMeta', { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+    // First image: clip-path wipes down + parallax slide
+    introTl.to(imgs[0], {
+      clipPath: 'inset(0% 0% 0% 0%)',
+      yPercent: 0,
+      duration: 0.9,
+      ease: 'power3.inOut',
+    });
 
-    // ── Phase 2: rapid image flash — 200ms per image
-    const flashDur = 0.2;
+    // Subsequent images wipe in over each other
+    const slideDuration = 0.5;
+    const wipeTl = gsap.timeline();
     for (let i = 1; i < imgs.length; i++) {
-      tl.to(imgs[i - 1], { opacity: 0, duration: 0.01 }, `+=${flashDur - 0.01}`)
-        .to(imgs[i], { opacity: 1, duration: 0.01 }, '<');
+      wipeTl.fromTo(
+        imgs[i],
+        { opacity: 1, clipPath: 'inset(0% 0% 100% 0%)', yPercent: -15 },
+        { clipPath: 'inset(0% 0% 0% 0%)', yPercent: 0, duration: slideDuration, ease: 'power3.inOut' },
+        '-=' + slideDuration * 0.25
+      );
     }
 
-    // ── Phase 3: counter races 00 → 100 in parallel with image flash
-    tl.to(counter, {
-      val: 100,
-      duration: imgs.length * flashDur,
-      ease: 'none',
-      onUpdate: () => {
-        if (counterEl) counterEl.textContent = String(Math.round(counter.val)).padStart(2, '0');
-      },
-    }, `<-${(imgs.length - 1) * flashDur}`);
+    introTl.add(wipeTl, '-=0.2');
+    introTl.addLabel('expand', '+=0.2');
 
-    // brief hold on the last image so it registers
-    tl.to({}, { duration: 0.15 });
-
-    // ── Phase 4: frame expands to fill the viewport, image fills with it
-    tl.addLabel('expand');
-    tl.to(frame, {
-      width: '100vw',
-      height: '100vh',
-      duration: 1.3,
-      ease: 'power4.inOut',
-    }, 'expand')
-    .to(lastImg, {
-      scale: 1.0,
-      duration: 1.3,
-      ease: 'power4.inOut',
-    }, 'expand')
-    .to('#loaderMeta', { opacity: 0, duration: 0.3, ease: 'power2.in' }, 'expand');
-
-    // ── Phase 5: loader fades, hero reveals
-    tl.addLabel('reveal', 'expand+=0.95');
-    tl.to(loader, { opacity: 0, duration: 0.55, ease: 'power2.inOut' }, 'reveal')
-    .to('.hero-name .line span', {
-      yPercent: 0,
-      opacity: 1,
-      duration: 1.1,
-      ease: 'power4.out',
-      stagger: 0.1,
-    }, 'reveal-=0.3')
-    .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'reveal-=0.1')
-    .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.4 }, 'reveal-=0.1')
-    .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'reveal+=0.1')
-    .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, 'reveal+=0.15');
+    // Clipper opens to fullscreen, last image scales down to 1
+    introTl
+      .to(clipper, { width: '100vw', height: '100vh', borderRadius: '0px', duration: 1.6 }, 'expand')
+      .to(bannerImg, { scale: 1.0, duration: 1.6 }, 'expand')
+      .to(loader, { opacity: 0, duration: 0.55, ease: 'power2.inOut' }, 'expand+=1.15')
+      .to('.hero-name .line span', { yPercent: 0, opacity: 1, duration: 1.2, ease: 'power4.out', stagger: 0.12 }, 'expand+=0.85')
+      .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'expand+=1.15')
+      .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.5, ease: 'power2.out' }, 'expand+=1.15')
+      .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'expand+=1.4')
+      .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, 'expand+=1.45');
   };
 
   // ─── CANVASES ────────────────────────────────────────
@@ -564,25 +541,15 @@ export default function Portfolio() {
 
   return (
     <>
-      {/* INTRO LOADER — image flash + frame expand (shed.design style) */}
+      {/* LOADER */}
       <div id="loader">
-        <div className="loader-frame">
-          <div className="loader-image-stack">
+        <div className="loader-clipper">
+          <div className="loader-image-sequence">
             {loaderImages.map((src, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={i}
-                className="loader-img"
-                src={src}
-                alt=""
-                data-index={i}
-              />
+              <img key={i} className="loader-img" src={src} alt="" />
             ))}
           </div>
-        </div>
-        <div className="loader-meta" id="loaderMeta">
-          <span className="loader-meta-left">THVMAX — Selected Works</span>
-          <span className="loader-counter" id="loaderCounter">00</span>
         </div>
       </div>
 
