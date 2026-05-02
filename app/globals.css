@@ -36,77 +36,54 @@ body {
   cursor: none;
 }
 
-/* ─── INTRO LOADER (image flash + frame expand) ─── */
+/* ─── LOADER ─── */
 #loader {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  pointer-events: all;
-  background: var(--black);
+  pointer-events: none;
+  background: var(--white);
+}
+
+.loader-clipper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30vw;
+  height: 40vh;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  will-change: width, height, top;
 }
 
-/* the frame holds the cycling images; expands to fullscreen at exit */
-.loader-frame {
-  position: relative;
-  width: clamp(280px, 32vw, 560px);
-  height: clamp(360px, 42vw, 720px);
-  overflow: hidden;
-  will-change: width, height;
-}
-
-.loader-image-stack {
+.loader-image-sequence {
   position: absolute;
-  inset: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100vw;
+  height: 100vh;
 }
 
 .loader-img {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   object-fit: cover;
   opacity: 0;
-  will-change: opacity, transform;
-}
-
-/* meta row — small label and counter at the bottom of the screen */
-.loader-meta {
-  position: absolute;
-  bottom: 2.5rem;
-  left: 0;
-  right: 0;
-  padding: 0 3rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-display), sans-serif;
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(245, 243, 239, 0.55);
-  z-index: 2;
-}
-
-.loader-counter {
-  font-variant-numeric: tabular-nums;
-  min-width: 3ch;
-  text-align: right;
+  will-change: transform, opacity;
 }
 
 @media (max-width: 768px) {
-  .loader-frame {
+  .loader-clipper {
     width: 70vw;
-    height: 80vw;
-  }
-  .loader-meta {
-    padding: 0 1.5rem;
-    bottom: 1.5rem;
-    font-size: 0.55rem;
+    height: 50vh;
   }
 }
 
