@@ -16,6 +16,13 @@ const heroSlides = [
   '/images/sting-nightlife/3.jpg',
 ];
 
+const loaderImages = [
+  '/images/intro/1.jpg',
+  '/images/intro/2.jpg',
+  '/images/intro/3.jpg',
+  '/images/intro/4.jpg',
+];
+
 
 const marqueeItems = [
   'Pepsi-Cola', 'Sting Energy', '7UP', 'Mirinda', 'AIA Life Insurance',
@@ -113,30 +120,29 @@ export default function Portfolio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── LOADER ANIMATION ───────────────────────────────
+  // ─── LOADER ANIMATION (shed.design style: image flash + frame expand) ───
   const runLoader = () => {
     const loader = document.getElementById('loader');
-    if (!loader) return;
+    const frame = document.querySelector('.loader-frame') as HTMLElement | null;
+    const imgs = gsap.utils.toArray<HTMLImageElement>('.loader-img');
+    if (!loader || !frame || imgs.length === 0) return;
 
     document.body.style.overflow = 'hidden';
 
+    const lastImg = imgs[imgs.length - 1];
+    const counterEl = document.getElementById('loaderCounter');
+    const counter = { val: 0 };
+
     // ── initial states
     gsap.set(loader, { yPercent: 0 });
-    // Characters start below their overflow-hidden masks, with a slight skew for drama
-    gsap.set(['#introT', '#introAmp', '#introA'], { yPercent: 115, skewY: -6 });
-    // Bottom info starts invisible and slightly low
-    gsap.set('#introBottom', { opacity: 0, y: 10 });
-    // Progress fill starts collapsed
-    gsap.set('#introProgressFill', { scaleX: 0 });
-    // Hero elements hidden
+    gsap.set(frame, { scale: 1 });
+    gsap.set(imgs, { opacity: 0, scale: 1.05 });
+    gsap.set(imgs[0], { opacity: 1, scale: 1 });
+    gsap.set('#loaderMeta', { opacity: 0, y: 10 });
     gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
     gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
     gsap.set('#heroSliderUI', { opacity: 0, y: 15 });
-
-    const counterEl = document.getElementById('introCounter');
-    const progressFill = document.getElementById('introProgressFill');
-    const progress = { val: 0 };
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -149,62 +155,58 @@ export default function Portfolio() {
       },
     });
 
-    // ── Phase 1: characters rise through their masks, skew corrects on landing
-    tl.to(['#introT', '#introAmp', '#introA'], {
-      yPercent: 0,
-      skewY: 0,
-      duration: 1.15,
-      ease: 'power4.out',
-      stagger: 0.1,
-    });
+    // ── Phase 1: meta info enters
+    tl.to('#loaderMeta', { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
 
-    // ── Phase 1b: bottom info and progress bar enter
-    tl.to('#introBottom', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '<+0.25');
+    // ── Phase 2: rapid image flash — 200ms per image
+    const flashDur = 0.2;
+    for (let i = 1; i < imgs.length; i++) {
+      tl.to(imgs[i - 1], { opacity: 0, duration: 0.01 }, `+=${flashDur - 0.01}`)
+        .to(imgs[i], { opacity: 1, duration: 0.01 }, '<');
+    }
 
-    // Single tween drives both the counter text and the progress bar scaleX
-    tl.to(progress, {
-      val: 1,
-      duration: 1.75,
-      ease: 'power1.inOut',
+    // ── Phase 3: counter races 00 → 100 in parallel with image flash
+    tl.to(counter, {
+      val: 100,
+      duration: imgs.length * flashDur,
+      ease: 'none',
       onUpdate: () => {
-        const pct = progress.val;
-        if (counterEl) counterEl.textContent = String(Math.round(pct * 100)).padStart(2, '0');
-        if (progressFill) gsap.set(progressFill, { scaleX: pct });
+        if (counterEl) counterEl.textContent = String(Math.round(counter.val)).padStart(2, '0');
       },
-    }, '<-0.05');
+    }, `<-${(imgs.length - 1) * flashDur}`);
 
-    // ── Phase 2: hold until counter finishes, then exit
-    tl.addLabel('exit', '+=0.1');
+    // brief hold on the last image so it registers
+    tl.to({}, { duration: 0.15 });
 
-    // Bottom info fades out
-    tl.to('#introBottom', { opacity: 0, duration: 0.25 }, 'exit');
-    // Progress fill retracts from the right
-    tl.to('#introProgressFill', {
-      scaleX: 0,
-      transformOrigin: 'right center',
-      duration: 0.45,
-      ease: 'power3.in',
-    }, 'exit');
-
-    // ── Phase 3: THE CURTAIN RISES — whole loader translates up off screen
-    tl.to(loader, {
-      yPercent: -100,
-      duration: 1.05,
+    // ── Phase 4: frame expands to fill the viewport, image fills with it
+    tl.addLabel('expand');
+    tl.to(frame, {
+      width: '100vw',
+      height: '100vh',
+      duration: 1.3,
       ease: 'power4.inOut',
-    }, 'exit+=0.1');
+    }, 'expand')
+    .to(lastImg, {
+      scale: 1.0,
+      duration: 1.3,
+      ease: 'power4.inOut',
+    }, 'expand')
+    .to('#loaderMeta', { opacity: 0, duration: 0.3, ease: 'power2.in' }, 'expand');
 
-    // ── Phase 4: hero content enters as curtain rises
-    tl.to('.hero-name .line span', {
+    // ── Phase 5: loader fades, hero reveals
+    tl.addLabel('reveal', 'expand+=0.95');
+    tl.to(loader, { opacity: 0, duration: 0.55, ease: 'power2.inOut' }, 'reveal')
+    .to('.hero-name .line span', {
       yPercent: 0,
       opacity: 1,
       duration: 1.1,
       ease: 'power4.out',
       stagger: 0.1,
-    }, 'exit+=0.55')
-    .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'exit+=0.65')
-    .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.4 }, 'exit+=0.65')
-    .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'exit+=0.8')
-    .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, 'exit+=0.85');
+    }, 'reveal-=0.3')
+    .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'reveal-=0.1')
+    .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.4 }, 'reveal-=0.1')
+    .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'reveal+=0.1')
+    .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, 'reveal+=0.15');
   };
 
   // ─── CANVASES ────────────────────────────────────────
@@ -562,27 +564,25 @@ export default function Portfolio() {
 
   return (
     <>
-      {/* INTRO LOADER */}
+      {/* INTRO LOADER — image flash + frame expand (shed.design style) */}
       <div id="loader">
-        <div className="intro-inner">
-          <div className="intro-chars">
-            <div className="intro-char-wrap">
-              <span className="intro-char" id="introT">T</span>
-            </div>
-            <div className="intro-char-wrap intro-char-wrap--amp">
-              <span className="intro-char intro-amp" id="introAmp">&amp;</span>
-            </div>
-            <div className="intro-char-wrap">
-              <span className="intro-char" id="introA">A</span>
-            </div>
+        <div className="loader-frame">
+          <div className="loader-image-stack">
+            {loaderImages.map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={i}
+                className="loader-img"
+                src={src}
+                alt=""
+                data-index={i}
+              />
+            ))}
           </div>
         </div>
-        <div className="intro-bottom" id="introBottom">
-          <span className="intro-bottom-label">Design &amp; Strategy</span>
-          <span className="intro-counter" id="introCounter">00</span>
-        </div>
-        <div className="intro-progress" id="introProgress">
-          <div className="intro-progress-fill" id="introProgressFill"></div>
+        <div className="loader-meta" id="loaderMeta">
+          <span className="loader-meta-left">THVMAX — Selected Works</span>
+          <span className="loader-counter" id="loaderCounter">00</span>
         </div>
       </div>
 
