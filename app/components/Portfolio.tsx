@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+import Lenis from 'lenis';
 import { projects, showcaseCards } from '@/lib/projects';
 import { drawGradientCanvas, drawPortrait } from '@/lib/canvas-helpers';
 
@@ -70,11 +71,36 @@ export default function Portfolio() {
   const nextThumbFgRef = useRef<HTMLImageElement | null>(null);
   const slideTimelineRef = useRef<gsap.core.Timeline | null>(null);
   const currentSlideRef = useRef(0);
+  const lenisRef = useRef<Lenis | null>(null);
 
   // ─── INIT EVERYTHING ────────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
     gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+    // ─── LENIS SMOOTH SCROLL ──────────────────────────
+    // Buttery momentum scrolling à la raviklaassens.com.
+    // We disable Lenis's internal RAF and drive it from GSAP's ticker
+    // so ScrollTrigger stays perfectly in sync with the smoothed scroll.
+    const lenis = new Lenis({
+      duration: 1.25,
+      // exponential ease-out — long, weighted glide
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 1.5,
+      // touch devices use native scrolling for best feel/perf
+      syncTouch: false,
+    });
+    lenisRef.current = lenis;
+
+    lenis.on('scroll', ScrollTrigger.update);
+
+    const tickerCb = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(tickerCb);
+    gsap.ticker.lagSmoothing(0);
 
     let ctx = gsap.context(() => {
       // Initial hidden states
@@ -88,6 +114,9 @@ export default function Portfolio() {
     return () => {
       ctx.revert();
       slideTimelineRef.current?.kill();
+      gsap.ticker.remove(tickerCb);
+      lenis.destroy();
+      lenisRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -101,6 +130,7 @@ export default function Portfolio() {
 
     const bannerImg = imgs[imgs.length - 1];
     document.body.style.overflow = 'hidden';
+    lenisRef.current?.stop();
 
     gsap.set(loader, { opacity: 1, pointerEvents: 'all' });
     gsap.set(clipper, { top: '50%' });
@@ -117,6 +147,7 @@ export default function Portfolio() {
         loader.style.display = 'none';
         loader.style.pointerEvents = 'none';
         document.body.style.overflow = '';
+        lenisRef.current?.start();
         initCanvases();
         initScrollTriggers();
         initHeroSlider();
@@ -263,13 +294,20 @@ export default function Portfolio() {
       });
     }
 
-    // Smooth anchor scrolling
+    // Smooth anchor scrolling — handed off to Lenis so it shares the
+    // same momentum curve as wheel scrolling.
     document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
       a.addEventListener('click', (e) => {
         const id = a.getAttribute('href');
         if (!id || id === '#') return;
         e.preventDefault();
-        gsap.to(window, { duration: 1, scrollTo: id, ease: 'power3.inOut' });
+        const target = document.querySelector(id) as HTMLElement | null;
+        if (!target) return;
+        if (lenisRef.current) {
+          lenisRef.current.scrollTo(target, { duration: 1.6 });
+        } else {
+          gsap.to(window, { duration: 1, scrollTo: id, ease: 'power3.inOut' });
+        }
       });
     });
   };
@@ -429,13 +467,19 @@ export default function Portfolio() {
     const next = !mobileMenuOpen;
     setMobileMenuOpen(next);
     document.body.style.overflow = next ? 'hidden' : '';
-    if (next) document.body.classList.add('menu-open');
-    else document.body.classList.remove('menu-open');
+    if (next) {
+      document.body.classList.add('menu-open');
+      lenisRef.current?.stop();
+    } else {
+      document.body.classList.remove('menu-open');
+      lenisRef.current?.start();
+    }
   };
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
     document.body.style.overflow = '';
     document.body.classList.remove('menu-open');
+    lenisRef.current?.start();
   };
 
   const openShowcase = useCallback((i: number, e?: React.MouseEvent) => {
