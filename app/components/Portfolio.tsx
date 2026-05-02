@@ -120,17 +120,23 @@ export default function Portfolio() {
 
     document.body.style.overflow = 'hidden';
 
-    // Initial states
-    gsap.set(loader, { opacity: 1, pointerEvents: 'all' });
-    gsap.set(['#introT', '#introAmp', '#introA'], { yPercent: 110 });
-    gsap.set('.intro-footer', { opacity: 0, y: 12 });
+    // ── initial states
+    gsap.set(loader, { yPercent: 0 });
+    // Characters start below their overflow-hidden masks, with a slight skew for drama
+    gsap.set(['#introT', '#introAmp', '#introA'], { yPercent: 115, skewY: -6 });
+    // Bottom info starts invisible and slightly low
+    gsap.set('#introBottom', { opacity: 0, y: 10 });
+    // Progress fill starts collapsed
+    gsap.set('#introProgressFill', { scaleX: 0 });
+    // Hero elements hidden
     gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
     gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
     gsap.set('#heroSliderUI', { opacity: 0, y: 15 });
 
     const counterEl = document.getElementById('introCounter');
-    const counter = { val: 0 };
+    const progressFill = document.getElementById('introProgressFill');
+    const progress = { val: 0 };
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -143,37 +149,62 @@ export default function Portfolio() {
       },
     });
 
-    // ── Phase 1: characters reveal from below masks
+    // ── Phase 1: characters rise through their masks, skew corrects on landing
     tl.to(['#introT', '#introAmp', '#introA'], {
       yPercent: 0,
+      skewY: 0,
+      duration: 1.15,
+      ease: 'power4.out',
+      stagger: 0.1,
+    });
+
+    // ── Phase 1b: bottom info and progress bar enter
+    tl.to('#introBottom', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, '<+0.25');
+
+    // Single tween drives both the counter text and the progress bar scaleX
+    tl.to(progress, {
+      val: 1,
+      duration: 1.75,
+      ease: 'power1.inOut',
+      onUpdate: () => {
+        const pct = progress.val;
+        if (counterEl) counterEl.textContent = String(Math.round(pct * 100)).padStart(2, '0');
+        if (progressFill) gsap.set(progressFill, { scaleX: pct });
+      },
+    }, '<-0.05');
+
+    // ── Phase 2: hold until counter finishes, then exit
+    tl.addLabel('exit', '+=0.1');
+
+    // Bottom info fades out
+    tl.to('#introBottom', { opacity: 0, duration: 0.25 }, 'exit');
+    // Progress fill retracts from the right
+    tl.to('#introProgressFill', {
+      scaleX: 0,
+      transformOrigin: 'right center',
+      duration: 0.45,
+      ease: 'power3.in',
+    }, 'exit');
+
+    // ── Phase 3: THE CURTAIN RISES — whole loader translates up off screen
+    tl.to(loader, {
+      yPercent: -100,
+      duration: 1.05,
+      ease: 'power4.inOut',
+    }, 'exit+=0.1');
+
+    // ── Phase 4: hero content enters as curtain rises
+    tl.to('.hero-name .line span', {
+      yPercent: 0,
+      opacity: 1,
       duration: 1.1,
       ease: 'power4.out',
       stagger: 0.1,
-    })
-    .to('.intro-footer', { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out' }, '<+0.15')
-    .to(counter, {
-      val: 100,
-      duration: 1.6,
-      ease: 'power1.inOut',
-      onUpdate: () => {
-        if (counterEl) counterEl.textContent = String(Math.round(counter.val)).padStart(2, '0');
-      },
-    }, '<');
-
-    // ── Phase 2: hold, then exit
-    tl.addLabel('exit', '+=0.15')
-    .to('#introT', { xPercent: -130, duration: 0.65, ease: 'power4.in' }, 'exit')
-    .to('#introA', { xPercent: 130, duration: 0.65, ease: 'power4.in' }, 'exit')
-    .to('#introAmp', { yPercent: -120, duration: 0.5, ease: 'power3.in' }, 'exit+=0.06')
-    .to('.intro-footer', { opacity: 0, duration: 0.25 }, 'exit')
-    .to(loader, { opacity: 0, duration: 0.4, ease: 'power2.inOut' }, 'exit+=0.28');
-
-    // ── Phase 3: hero reveal
-    tl.to('.hero-name .line span', { yPercent: 0, opacity: 1, duration: 1.2, ease: 'power4.out', stagger: 0.12 }, 'exit+=0.35')
-    .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'exit+=0.5')
-    .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.5, ease: 'power2.out' }, 'exit+=0.5')
-    .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'exit+=0.65')
-    .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, 'exit+=0.7');
+    }, 'exit+=0.55')
+    .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'exit+=0.65')
+    .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.4 }, 'exit+=0.65')
+    .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'exit+=0.8')
+    .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, 'exit+=0.85');
   };
 
   // ─── CANVASES ────────────────────────────────────────
@@ -533,20 +564,25 @@ export default function Portfolio() {
     <>
       {/* INTRO LOADER */}
       <div id="loader">
-        <div className="intro-chars">
-          <div className="intro-char-wrap">
-            <span className="intro-char" id="introT">T</span>
-          </div>
-          <div className="intro-char-wrap">
-            <span className="intro-char intro-amp" id="introAmp">&amp;</span>
-          </div>
-          <div className="intro-char-wrap">
-            <span className="intro-char" id="introA">A</span>
+        <div className="intro-inner">
+          <div className="intro-chars">
+            <div className="intro-char-wrap">
+              <span className="intro-char" id="introT">T</span>
+            </div>
+            <div className="intro-char-wrap intro-char-wrap--amp">
+              <span className="intro-char intro-amp" id="introAmp">&amp;</span>
+            </div>
+            <div className="intro-char-wrap">
+              <span className="intro-char" id="introA">A</span>
+            </div>
           </div>
         </div>
-        <div className="intro-footer">
-          <span className="intro-label">Portfolio — 2026</span>
+        <div className="intro-bottom" id="introBottom">
+          <span className="intro-bottom-label">Design &amp; Strategy</span>
           <span className="intro-counter" id="introCounter">00</span>
+        </div>
+        <div className="intro-progress" id="introProgress">
+          <div className="intro-progress-fill" id="introProgressFill"></div>
         </div>
       </div>
 

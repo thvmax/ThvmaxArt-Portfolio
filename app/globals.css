@@ -41,65 +41,107 @@ body {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  pointer-events: none;
+  pointer-events: all;
   background: var(--black);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  will-change: transform;
+}
+
+/* inner wrapper keeps characters perfectly centered */
+.intro-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0 5vw;
 }
 
 .intro-chars {
   display: flex;
-  align-items: center;
-  gap: clamp(1.5rem, 4vw, 6rem);
+  align-items: baseline;
+  gap: clamp(1rem, 3vw, 4rem);
 }
 
+/* each wrap is the clip mask — overflow hidden hides the char below */
 .intro-char-wrap {
   overflow: hidden;
-  line-height: 0.85;
+  line-height: 0.88;
+  padding-bottom: 0.08em;
 }
 
 .intro-char {
   display: block;
   font-family: var(--font-display), sans-serif;
-  font-size: clamp(6rem, 18vw, 22rem);
+  font-size: clamp(5.5rem, 26vw, 30rem);
   font-weight: 800;
   color: var(--white);
-  line-height: 0.85;
-  letter-spacing: -0.03em;
+  line-height: 0.88;
+  letter-spacing: -0.04em;
   will-change: transform;
+  transform-origin: bottom center;
+}
+
+.intro-char-wrap--amp {
+  line-height: 1;
+  padding-bottom: 0;
+  /* align & to baseline of T and A */
+  margin-bottom: -0.06em;
 }
 
 .intro-amp {
-  font-size: clamp(3.5rem, 9vw, 12rem);
-  font-weight: 400;
-  color: var(--accent);
+  font-size: clamp(3rem, 14vw, 17rem);
+  font-weight: 300;
   font-style: italic;
+  color: var(--white);
+  opacity: 0.55;
   letter-spacing: 0;
 }
 
-.intro-footer {
+/* bottom info bar */
+.intro-bottom {
   position: absolute;
-  bottom: 2.5rem;
+  bottom: 3.5rem;
   left: 0;
   right: 0;
-  padding: 0 3rem;
+  padding: 0 3.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-family: var(--font-display), sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--gray);
+  color: rgba(245, 243, 239, 0.35);
 }
 
 .intro-counter {
   font-variant-numeric: tabular-nums;
   min-width: 3ch;
   text-align: right;
+}
+
+/* progress line — 2px bar pinned to the very bottom edge */
+.intro-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(245, 243, 239, 0.08);
+  overflow: hidden;
+}
+
+.intro-progress-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--white);
+  transform-origin: left center;
+  transform: scaleX(0);
+  will-change: transform;
 }
 
 .hero-banner-img {
