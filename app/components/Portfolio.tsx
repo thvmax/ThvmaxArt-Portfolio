@@ -17,10 +17,10 @@ const heroSlides = [
 ];
 
 const loaderImages = [
-  '/images/intro/1.jpg',
-  '/images/intro/2.jpg',
-  '/images/intro/3.jpg',
-  '/images/intro/4.jpg',
+  '/intro/1.png',
+  '/intro/2.png',
+  '/intro/3.jpg',
+  '/intro/4.png',
 ];
 
 
