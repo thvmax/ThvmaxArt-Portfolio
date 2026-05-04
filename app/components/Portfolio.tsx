@@ -104,7 +104,6 @@ export default function Portfolio() {
   // ─── LOADER ANIMATION ───────────────────────────────
   const runLoader = () => {
     const loader = document.getElementById('loader');
-    const bgRect = document.getElementById('loaderBgRect') as SVGRectElement | null;
     const holePath = document.getElementById('loaderHolePath') as SVGPathElement | null;
     const loaderL1 = document.getElementById('loaderL1');
     const loaderL2 = document.getElementById('loaderL2');
@@ -117,11 +116,8 @@ export default function Portfolio() {
     const cx = vw / 2;
     const cy = vh / 2;
 
-    // Full-screen outer boundary for the evenodd clip path
+    // Exact-dimension outer boundary (replaces the huge SSR path)
     const outerPath = `M 0 0 L ${vw} 0 L ${vw} ${vh} L 0 ${vh} Z`;
-
-    // Apply clip-path to rect and initialise with full coverage (no hole yet)
-    bgRect?.setAttribute('clip-path', 'url(#loaderClip)');
     holePath?.setAttribute('d', outerPath);
 
     // Animated proxy object — hole grows from center outward
@@ -136,8 +132,8 @@ export default function Portfolio() {
       );
     };
 
-    // Initial hidden states
-    gsap.set([loaderL1, loaderL2], { yPercent: 110 });
+    // Make letters visible but hidden below their overflow mask (CSS kept them display-hidden)
+    gsap.set([loaderL1, loaderL2], { visibility: 'visible', yPercent: 110 });
     gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
     gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
@@ -612,12 +608,15 @@ export default function Portfolio() {
         >
           <defs>
             <clipPath id="loaderClip" clipPathUnits="userSpaceOnUse">
-              {/* evenodd: outer rect fills dark, inner hole becomes transparent */}
-              <path id="loaderHolePath" fillRule="evenodd" d="" />
+              {/*
+                evenodd: outer rect = dark, inner growing rect = transparent hole.
+                Starts huge to guarantee full coverage before JS updates exact dims.
+              */}
+              <path id="loaderHolePath" fillRule="evenodd" d="M -1 -1 L 9999 -1 L 9999 9999 L -1 9999 Z" />
             </clipPath>
           </defs>
-          {/* Plain dark rect — clip-path applied via JS once vw/vh are known */}
-          <rect id="loaderBgRect" width="100%" height="100%" fill="#080808" />
+          {/* clipPath applied in JSX — no JS setup needed for initial dark state */}
+          <rect id="loaderBgRect" width="100%" height="100%" fill="#080808" clipPath="url(#loaderClip)" />
         </svg>
 
         {/* Logo letters — slide up from below their overflow-hidden masks */}

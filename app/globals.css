@@ -43,8 +43,8 @@ body {
   z-index: 9999;
   pointer-events: all;
   overflow: hidden;
-  /* Dark background before JS runs (before SVG clip-path is applied) */
-  background: #080808;
+  /* transparent so the SVG hole reveals the hero artwork beneath */
+  background: transparent;
 }
 
 .loader-svg {
@@ -84,8 +84,8 @@ body {
   color: var(--white);
   line-height: 0.88;
   will-change: transform;
-  /* GSAP sets yPercent: 110 — this CSS just ensures no flash */
-  transform: translateY(110%);
+  /* initial visibility hidden — GSAP controls the transform exclusively */
+  visibility: hidden;
 }
 
 @media (max-width: 600px) {
