@@ -9,18 +9,11 @@ import Lenis from 'lenis';
 import { projects, showcaseCards } from '@/lib/projects';
 import { drawGradientCanvas, drawPortrait } from '@/lib/canvas-helpers';
 
-const heroSlides = [
-  '/images/sting-nightlife/4.jpg',
-  '/images/sting-nightlife/1.jpg',
-  '/images/sting-nightlife/2.jpg',
-  '/images/sting-nightlife/3.jpg',
-];
-
 const loaderImages = [
   '/intro/1.webp',
   '/intro/2.webp',
   '/intro/3.webp',
-  '/images/sting-nightlife/4.jpg',
+  '/images/my-kind-of-vacation.jpg',
 ];
 
 
@@ -66,11 +59,7 @@ export default function Portfolio() {
   const showcaseCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const detailHeroCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const detailGalleryRef = useRef<HTMLDivElement | null>(null);
-  const heroSlidesRef = useRef<(HTMLImageElement | null)[]>([]);
-  const nextThumbBgRef = useRef<HTMLImageElement | null>(null);
-  const nextThumbFgRef = useRef<HTMLImageElement | null>(null);
-  const slideTimelineRef = useRef<gsap.core.Timeline | null>(null);
-  const currentSlideRef = useRef(0);
+  const heroArtworkRef = useRef<HTMLImageElement | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
 
   // ─── INIT EVERYTHING ────────────────────────────────
@@ -110,7 +99,6 @@ export default function Portfolio() {
 
     return () => {
       ctx.revert();
-      slideTimelineRef.current?.kill();
       lenis.destroy();
       lenisRef.current = null;
       gsap.ticker.remove((time) => lenis.raf(time * 1000));
@@ -136,7 +124,8 @@ export default function Portfolio() {
     gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
     gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
-    gsap.set('#heroSliderUI', { opacity: 0, y: 15 });
+    gsap.set('#heroTagline', { opacity: 0, y: 20 });
+    gsap.set('.hero-label', { opacity: 0, y: 10 });
 
     const introTl = gsap.timeline({
       defaults: { ease: 'power4.inOut' },
@@ -146,7 +135,7 @@ export default function Portfolio() {
         document.body.style.overflow = '';
         initCanvases();
         initScrollTriggers();
-        initHeroSlider();
+        initHeroParallax();
       },
     });
 
@@ -182,7 +171,8 @@ export default function Portfolio() {
       .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'expand+=1.15')
       .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.5, ease: 'power2.out' }, 'expand+=1.15')
       .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'expand+=1.4')
-      .to('#heroSliderUI', { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }, 'expand+=1.45');
+      .to('#heroTagline', { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }, 'expand+=1.1')
+      .to('.hero-label', { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', stagger: 0.15 }, 'expand+=1.2');
   };
 
   // ─── CANVASES ────────────────────────────────────────
@@ -382,50 +372,62 @@ export default function Portfolio() {
         if (target) lenisRef.current?.scrollTo(target as HTMLElement, { duration: 1.4, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
       });
     });
+
+    // ── Hero artwork scroll parallax ──
+    gsap.to('#heroArtworkWrap', {
+      yPercent: 30,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#home',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: true,
+      },
+    });
+
+    // Hero text fades & lifts as you scroll away
+    gsap.to(['.hero-name', '#heroTagline', '.hero-label'], {
+      y: -50,
+      opacity: 0,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '#home',
+        start: 'top top',
+        end: '55% top',
+        scrub: true,
+      },
+    });
   };
 
-  // ─── HERO SLIDER ────────────────────────────────────
-  const initHeroSlider = () => {
-    const slides = heroSlidesRef.current.filter(Boolean) as HTMLImageElement[];
-    const nextThumbBg = nextThumbBgRef.current;
-    const nextThumbFg = nextThumbFgRef.current;
-    if (!slides.length || !nextThumbFg || !nextThumbBg) return;
+  // ─── HERO PARALLAX (mouse-move) ─────────────────────
+  const initHeroParallax = () => {
+    const heroEl = document.getElementById('home');
+    const wrap = document.getElementById('heroArtworkWrap');
+    const labelLeft = document.getElementById('heroLabelLeft');
+    const labelRight = document.getElementById('heroLabelRight');
+    if (!heroEl || !wrap) return;
 
-    const duration = 3800;
+    const wrapXTo = gsap.quickTo(wrap, 'x', { duration: 1.4, ease: 'power3.out' });
+    const wrapYTo = gsap.quickTo(wrap, 'y', { duration: 1.4, ease: 'power3.out' });
+    const lxTo = labelLeft ? gsap.quickTo(labelLeft, 'x', { duration: 1.1, ease: 'power3.out' }) : null;
+    const lyTo = labelLeft ? gsap.quickTo(labelLeft, 'y', { duration: 1.1, ease: 'power3.out' }) : null;
+    const rxTo = labelRight ? gsap.quickTo(labelRight, 'x', { duration: 1.0, ease: 'power3.out' }) : null;
+    const ryTo = labelRight ? gsap.quickTo(labelRight, 'y', { duration: 1.0, ease: 'power3.out' }) : null;
 
-    const goToSlide = (idx: number) => {
-      slides.forEach((s) => s.classList.remove('active'));
-      currentSlideRef.current = idx;
-      slides[idx].classList.add('active');
-
-      const nextIdx = (idx + 1) % slides.length;
-      nextThumbBg.src = slides[nextIdx].src;
-      nextThumbFg.src = slides[nextIdx].src;
-
-      slideTimelineRef.current?.kill();
-      slideTimelineRef.current = gsap.timeline({
-        onComplete: () => goToSlide((idx + 1) % slides.length),
-      });
-      slideTimelineRef.current.fromTo(
-        nextThumbFg,
-        { clipPath: 'inset(0 100% 0 0)' },
-        { clipPath: 'inset(0 0% 0 0)', duration: duration / 1000, ease: 'none' }
-      );
-    };
-
-    // Start first cycle
-    const nextIdx = (currentSlideRef.current + 1) % slides.length;
-    nextThumbBg.src = slides[nextIdx].src;
-    nextThumbFg.src = slides[nextIdx].src;
-
-    slideTimelineRef.current = gsap.timeline({
-      onComplete: () => goToSlide((currentSlideRef.current + 1) % slides.length),
+    heroEl.addEventListener('mousemove', (e) => {
+      const cx = e.clientX / window.innerWidth - 0.5;
+      const cy = e.clientY / window.innerHeight - 0.5;
+      wrapXTo(cx * -28);
+      wrapYTo(cy * -20);
+      if (lxTo && lyTo) { lxTo(cx * 20); lyTo(cy * 14); }
+      if (rxTo && ryTo) { rxTo(cx * -16); ryTo(cy * -12); }
     });
-    slideTimelineRef.current.fromTo(
-      nextThumbFg,
-      { clipPath: 'inset(0 100% 0 0)' },
-      { clipPath: 'inset(0 0% 0 0)', duration: duration / 1000, ease: 'none' }
-    );
+
+    heroEl.addEventListener('mouseleave', () => {
+      wrapXTo(0); wrapYTo(0);
+      if (lxTo && lyTo) { lxTo(0); lyTo(0); }
+      if (rxTo && ryTo) { rxTo(0); ryTo(0); }
+    });
   };
 
   // ─── NAV HIDE/SHOW ──────────────────────────────────
@@ -598,39 +600,28 @@ export default function Portfolio() {
       {/* HERO */}
       <section id="home">
         <div className="hero-bg">
-          {heroSlides.map((src, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
+          <div className="hero-artwork-wrap" id="heroArtworkWrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              key={src}
-              ref={(el) => { heroSlidesRef.current[i] = el; }}
-              className={`hero-banner-img slide-img ${i === 0 ? 'active' : ''}`}
-              src={src}
-              alt=""
+              ref={heroArtworkRef}
+              className="hero-artwork-img"
+              src="/images/my-kind-of-vacation.jpg"
+              alt="My Kind of Vacation"
             />
-          ))}
+          </div>
           <div className="hero-overlay"></div>
+          <div className="hero-grain-overlay" aria-hidden="true"></div>
           <div className="hero-bg-grid"></div>
         </div>
 
-        <div className="hero-slider-ui" id="heroSliderUI">
-          <div
-            className="next-capsule"
-            id="nextCapsule"
-            onClick={() => {
-              const next = (currentSlideRef.current + 1) % heroSlides.length;
-              const slides = heroSlidesRef.current.filter(Boolean) as HTMLImageElement[];
-              if (slides.length) {
-                slides.forEach((s) => s.classList.remove('active'));
-                slides[next].classList.add('active');
-                currentSlideRef.current = next;
-              }
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img ref={nextThumbBgRef} id="next-thumb-bg" className="capsule-img" src={heroSlides[1]} alt="Next slide bg" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img ref={nextThumbFgRef} id="next-thumb-fg" className="capsule-img" src={heroSlides[1]} alt="Next slide fg" />
-          </div>
+        {/* Corner labels — parallax on mouse move */}
+        <div className="hero-label hero-label-left" id="heroLabelLeft">
+          <span>My Kind of Vacation</span>
+          <span>Original Artwork · 2024</span>
+        </div>
+        <div className="hero-label hero-label-right" id="heroLabelRight">
+          <span>Art Direction</span>
+          <span>Photo Manipulation</span>
         </div>
 
         <div className="hero-scroll-btn" id="heroScrollBtn">
@@ -640,6 +631,7 @@ export default function Portfolio() {
         <h1 className="hero-name thomas-title">
           <span className="line"><span>THIS IS THOMAS</span></span>
         </h1>
+        <p className="hero-tagline" id="heroTagline">Creative Director &amp; Visual Artist</p>
       </section>
 
       {/* MARQUEE */}
