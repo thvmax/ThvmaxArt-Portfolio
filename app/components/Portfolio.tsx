@@ -57,7 +57,6 @@ export default function Portfolio() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState(0);
-  const [isShowcaseDetail, setIsShowcaseDetail] = useState(false);
 
   // Refs for elements GSAP needs direct access to
   const projCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
@@ -175,9 +174,9 @@ export default function Portfolio() {
         y: 0,
         duration: 1,
         ease: 'power3.out',
-        scrollTrigger: {
-          trigger: el,
-          start: 'top 85%',
+        scrollTrigger: { 
+          trigger: el, 
+          start: 'top 85%', 
           toggleActions: 'play none none none',
           pinnedContainer: isInsideWork ? '#work' : undefined
         },
@@ -215,7 +214,7 @@ export default function Portfolio() {
         const listHeight = projectsList.scrollHeight;
         const scrollerEl = document.querySelector('.work-projects-scroller') as HTMLElement;
         if (!scrollerEl) return;
-
+        
         const visibleHeight = scrollerEl.offsetHeight;
         const scrollDistance = Math.max(0, listHeight - visibleHeight);
         console.log('--- DEBUG GSAP ---');
@@ -259,6 +258,82 @@ export default function Portfolio() {
           onToggle: self => {
             if (self.isActive) activateWork(i);
           }
+        });
+      });
+    }
+
+    // ── Visual Archive: Parallax + Magnetic Hover ──
+    const showcaseSection = document.getElementById('showcase');
+    const archiveCards = gsap.utils.toArray<HTMLElement>('.showcase-card');
+
+    if (showcaseSection && archiveCards.length) {
+      // Set initial hidden state
+      gsap.set(archiveCards, { opacity: 0, y: 70, scale: 0.88 });
+
+      // Staggered scroll-entry reveal
+      ScrollTrigger.create({
+        trigger: showcaseSection,
+        start: 'top 78%',
+        onEnter: () => {
+          gsap.to(archiveCards, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 1.3,
+            ease: 'power4.out',
+            stagger: 0.08,
+          });
+        },
+      });
+
+      // Per-card quickTo setters for smooth parallax
+      const cardXTo = archiveCards.map((c) =>
+        gsap.quickTo(c, 'x', { duration: 0.9, ease: 'power3.out' })
+      );
+      const cardYTo = archiveCards.map((c) =>
+        gsap.quickTo(c, 'y', { duration: 0.9, ease: 'power3.out' })
+      );
+      const cardRXTo = archiveCards.map((c) =>
+        gsap.quickTo(c, 'rotateX', { duration: 0.9, ease: 'power3.out' })
+      );
+      const cardRYTo = archiveCards.map((c) =>
+        gsap.quickTo(c, 'rotateY', { duration: 0.9, ease: 'power3.out' })
+      );
+
+      // Global mouse-parallax across the entire section
+      const onSectionMove = (e: MouseEvent) => {
+        const rect = showcaseSection.getBoundingClientRect();
+        const xRel = (e.clientX - rect.left) / rect.width - 0.5;
+        const yRel = (e.clientY - rect.top) / rect.height - 0.5;
+        archiveCards.forEach((card, i) => {
+          const d = parseFloat(card.dataset.depth || '1');
+          cardXTo[i](xRel * 28 * d);
+          cardYTo[i](yRel * 18 * d);
+          cardRXTo[i](yRel * -5 * d);
+          cardRYTo[i](xRel * 5 * d);
+        });
+      };
+      showcaseSection.addEventListener('mousemove', onSectionMove);
+
+      // Reset on mouse leave
+      showcaseSection.addEventListener('mouseleave', () => {
+        archiveCards.forEach((_, i) => {
+          cardXTo[i](0); cardYTo[i](0);
+          cardRXTo[i](0); cardRYTo[i](0);
+        });
+      });
+
+      // Per-card magnetic pull + counter update
+      const counterEl = document.getElementById('showcaseCurrentNum');
+      archiveCards.forEach((card, i) => {
+        const scaleUp = gsap.quickTo(card, 'scale', { duration: 0.4, ease: 'power2.out' });
+
+        card.addEventListener('mouseenter', () => {
+          scaleUp(1.06);
+          if (counterEl) counterEl.textContent = String(i + 1).padStart(2, '0');
+        });
+        card.addEventListener('mouseleave', () => {
+          scaleUp(1);
         });
       });
     }
@@ -372,7 +447,6 @@ export default function Portfolio() {
   // ─── PROJECT DETAIL ─────────────────────────────────
   const openProject = useCallback((i: number) => {
     setCurrentProject(i);
-    setIsShowcaseDetail(false);
     const p = projects[i];
 
     // Draw hero canvas
@@ -416,13 +490,7 @@ export default function Portfolio() {
     });
   };
 
-  const goNextProject = () => {
-    if (isShowcaseDetail) {
-      openShowcase((currentProject + 1) % showcaseCards.length);
-    } else {
-      openProject(projects[currentProject].next);
-    }
-  };
+  const goNextProject = () => openProject(projects[currentProject].next);
 
   // ─── MOBILE MENU ────────────────────────────────────
   const toggleMobileMenu = () => {
@@ -438,70 +506,8 @@ export default function Portfolio() {
     document.body.classList.remove('menu-open');
   };
 
-  const openShowcase = useCallback((i: number, e?: React.MouseEvent) => {
-    setCurrentProject(i);
-    setIsShowcaseDetail(true);
-    const p = showcaseCards[i];
-
-    let top = 0, bottom = 0, left = 0, right = 0;
-    if (e) {
-      const target = e.currentTarget as HTMLElement;
-      const rect = target.getBoundingClientRect();
-      top = rect.top;
-      bottom = window.innerHeight - rect.bottom;
-      left = rect.left;
-      right = window.innerWidth - rect.right;
-    }
-
-    if (detailHeroCanvasRef.current) {
-      detailHeroCanvasRef.current.width = 1400;
-      detailHeroCanvasRef.current.height = 700;
-      drawGradientCanvas(detailHeroCanvasRef.current, p.hue);
-    }
-
-    if (detailGalleryRef.current) {
-      detailGalleryRef.current.innerHTML = '';
-      [p.hue, p.hue + 30, p.hue + 60].forEach((h) => {
-        const c = document.createElement('canvas');
-        c.width = 800;
-        c.height = 600;
-        drawGradientCanvas(c, h % 360);
-        detailGalleryRef.current!.appendChild(c);
-      });
-    }
-
-    setDetailOpen(true);
-    const detail = document.getElementById('projectDetail');
-    if (detail) {
-      detail.scrollTop = 0;
-      
-      if (e) {
-        const tl = gsap.timeline();
-        tl.fromTo(detail, 
-          { clipPath: `inset(${top}px ${right}px ${bottom}px ${left}px)`, opacity: 1 }, 
-          { clipPath: `inset(0px 0px 0px 0px)`, duration: 0.8, ease: 'power4.inOut' }
-        );
-        
-        const contentElements = detail.querySelectorAll('.detail-hero-title, .detail-desc, .detail-meta, .detail-gallery, .detail-next');
-        tl.fromTo(contentElements,
-          { opacity: 0, y: 40 },
-          { opacity: 1, y: 0, duration: 0.6, stagger: 0.05, ease: 'power3.out' },
-          '-=0.4'
-        );
-      } else {
-        gsap.fromTo(detail, { opacity: 0, clipPath: 'inset(0px 0px 0px 0px)' }, { opacity: 1, duration: 0.6, ease: 'power2.out' });
-      }
-    }
-  }, []);
-
-  const p = isShowcaseDetail ? showcaseCards[currentProject] : projects[currentProject];
-  const next = isShowcaseDetail ? showcaseCards[(currentProject + 1) % showcaseCards.length] : projects[(p as any).next];
-
-  const displayName = p.name;
-  const displayDesc = isShowcaseDetail ? "An exploratory piece from the visual archive." : (p as any).desc;
-  const displayYear = isShowcaseDetail ? "2024" : (p as any).year;
-  const displayTags = isShowcaseDetail ? (p as any).cat : (p as any).tags;
-  const displayNextName = next.name;
+  const p = projects[currentProject];
+  const next = projects[p.next];
 
   return (
     <>
@@ -660,30 +666,51 @@ export default function Portfolio() {
 
       {/* SHOWCASE */}
       <section id="showcase">
+        {/* Ghost watermark */}
+        <div className="showcase-ghost" aria-hidden="true">ARCHIVE</div>
+
+        {/* Header */}
         <div className="showcase-header reveal">
-          <div className="section-header" style={{ border: 'none', marginBottom: 0, paddingBottom: 0 }}>
+          <div className="showcase-header-left">
             <h2 className="section-title">Visual<br />Archive</h2>
           </div>
-          <div className="section-meta" style={{ textAlign: 'right', alignSelf: 'flex-end', paddingBottom: '1rem', color: 'var(--white)', opacity: 0.8, textTransform: 'none', letterSpacing: '0', fontSize: '1.2rem', lineHeight: 1.4 }}>
-            Settling is easy<br /><b>the work here isn&apos;t built for that</b>
+          <div className="showcase-header-right">
+            <div className="showcase-counter">
+              <span className="showcase-counter-current" id="showcaseCurrentNum">01</span>
+              <span className="showcase-counter-sep">/</span>
+              <span className="showcase-counter-total">08</span>
+            </div>
+            <p className="showcase-header-sub">Selected visual experiments<br />and brand explorations</p>
           </div>
         </div>
-        <div className="showcase-track-wrap">
-          <div className="showcase-track" id="showcaseTrack">
-            {showcaseCards.map((card, i) => (
-              <div key={i} className="showcase-card" onClick={(e) => openShowcase(i, e)}>
+
+        {/* Masonry grid */}
+        <div className="showcase-grid" id="showcaseGrid">
+          {showcaseCards.map((card, i) => (
+            <div
+              key={i}
+              className="showcase-card"
+              data-index={i}
+              data-depth={card.depth}
+            >
+              <div className="showcase-card-inner">
                 <canvas
                   ref={(el) => { showcaseCanvasRefs.current[i] = el; }}
-                  width={760}
-                  height={1012}
+                  width={800}
+                  height={1000}
                 />
-                <div className="showcase-card-info">
-                  <div className="showcase-card-name">{card.name}</div>
-                  <div className="showcase-card-cat">{card.cat}</div>
-                </div>
               </div>
-            ))}
-          </div>
+              {/* Corner index */}
+              <span className="showcase-card-index">{String(i + 1).padStart(2, '0')}</span>
+              {/* Info overlay */}
+              <div className="showcase-card-info">
+                <span className="showcase-card-cat">{card.cat}</span>
+                <span className="showcase-card-name">{card.name}</span>
+              </div>
+              {/* Animated border */}
+              <div className="showcase-card-border" aria-hidden="true" />
+            </div>
+          ))}
         </div>
       </section>
 
@@ -767,18 +794,18 @@ export default function Portfolio() {
             height={700}
           />
           <div className="detail-hero-overlay"></div>
-          <h2 className="detail-hero-title" id="detailTitle">{displayName}</h2>
+          <h2 className="detail-hero-title" id="detailTitle">{p.name}</h2>
         </div>
         <div className="detail-body">
-          <p className="detail-desc" id="detailDesc">{displayDesc}</p>
+          <p className="detail-desc" id="detailDesc">{p.desc}</p>
           <div className="detail-meta">
             <div className="detail-meta-item">
               <span className="detail-meta-label">Year</span>
-              <span className="detail-meta-value" id="detailYear">{displayYear}</span>
+              <span className="detail-meta-value" id="detailYear">{p.year}</span>
             </div>
             <div className="detail-meta-item">
               <span className="detail-meta-label">Scope</span>
-              <span className="detail-meta-value">{displayTags}</span>
+              <span className="detail-meta-value">{p.tags}</span>
             </div>
             <div className="detail-meta-item">
               <span className="detail-meta-label">Role</span>
@@ -800,7 +827,7 @@ export default function Portfolio() {
               onClick={goNextProject}
               type="button"
             >
-              {displayNextName} →
+              {next.name} →
             </button>
           </div>
         </div>

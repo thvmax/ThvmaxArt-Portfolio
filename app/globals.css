@@ -760,93 +760,272 @@ section {
   color: var(--accent);
 }
 
-/* ─── SHOWCASE / ACCORDION ─── */
+/* ─── SHOWCASE / VISUAL ARCHIVE ─── */
 #showcase {
-  padding: 8rem 0;
-  overflow: hidden;
-  background: var(--black);
-}
-
-.showcase-header {
-  padding: 0 3rem;
-  margin-bottom: 3rem;
-}
-
-.showcase-track-wrap {
-  width: 100%;
-  height: 65vh;
-}
-
-.showcase-track {
-  display: flex;
-  width: 100vw;
-  height: 100%;
-}
-
-.showcase-card {
-  flex: 1;
   position: relative;
-  cursor: none;
+  padding: 8rem 0 10rem;
+  background: var(--black);
   overflow: hidden;
-  transition: flex 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  perspective: 1400px;
 }
 
-.showcase-card:last-child {
-  border-right: none;
-}
-
-.showcase-card:hover {
-  flex: 4;
-}
-
-.showcase-card canvas {
+/* Ghost watermark */
+.showcase-ghost {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(8rem, 20vw, 18rem);
+  font-weight: 900;
+  letter-spacing: -0.1em;
+  color: var(--white);
+  opacity: 0.028;
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1;
+  z-index: 0;
+  user-select: none;
+}
+
+/* Header row */
+.showcase-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 0 3.5rem 3.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.showcase-header-left .section-title {
+  line-height: 0.88;
+}
+
+.showcase-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.showcase-counter {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  line-height: 1;
+}
+
+.showcase-counter-current {
+  display: inline-block;
+  min-width: 2.5ch;
+  transition: opacity 0.2s;
+}
+
+.showcase-counter-sep {
+  color: var(--gray);
+  font-weight: 300;
+  font-size: 0.6em;
+}
+
+.showcase-counter-total {
+  font-size: 0.55em;
+  color: var(--gray);
+  font-weight: 400;
+}
+
+.showcase-header-sub {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gray);
+  line-height: 1.7;
+  text-align: right;
+}
+
+/* ── Masonry Grid ── */
+/*
+  4-column layout with named areas:
+  Row 1: [a  a  b  c]   — a=landscape(2col), b=portrait(2rows), c=portrait
+  Row 2: [d  e  b  f]   — d=portrait(2rows), e=square,          f=square
+  Row 3: [d  g  g  h]   — g=landscape(2col),                    h=portrait
+*/
+.showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr 1fr;
+  grid-template-rows: 38vh 30vh 38vh;
+  grid-template-areas:
+    "a a b c"
+    "d e b f"
+    "d g g h";
+  gap: 0.75rem;
+  padding: 0 3.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Map cards to grid areas */
+.showcase-card:nth-child(1) { grid-area: a; }
+.showcase-card:nth-child(2) { grid-area: b; }
+.showcase-card:nth-child(3) { grid-area: c; }
+.showcase-card:nth-child(4) { grid-area: d; }
+.showcase-card:nth-child(5) { grid-area: e; }
+.showcase-card:nth-child(6) { grid-area: f; }
+.showcase-card:nth-child(7) { grid-area: g; }
+.showcase-card:nth-child(8) { grid-area: h; }
+
+/* Card base */
+.showcase-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  cursor: none;
+  will-change: transform;
+  transform-style: preserve-3d;
+  background: #111;
+  opacity: 0; /* set by GSAP on entry */
+}
+
+/* Inner canvas fills card fully */
+.showcase-card-inner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.showcase-card-inner canvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   display: block;
-  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.showcase-card:hover canvas {
-  transform: scale(1.05);
+.showcase-card:hover .showcase-card-inner canvas {
+  transform: scale(1.07);
 }
 
+/* Corner index */
+.showcase-card-index {
+  position: absolute;
+  top: 1rem;
+  left: 1.2rem;
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.45);
+  z-index: 3;
+  pointer-events: none;
+  transition: color 0.3s;
+}
+
+.showcase-card:hover .showcase-card-index {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Info overlay — slides up on hover */
 .showcase-card-info {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 2rem 1.5rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+  padding: 3rem 1.4rem 1.4rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  z-index: 3;
+  transform: translateY(20px);
   opacity: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
+  transition:
+    transform 0.55s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.4s ease;
 }
 
 .showcase-card:hover .showcase-card-info {
+  transform: translateY(0);
   opacity: 1;
 }
 
+/* Category label */
+.showcase-card-cat {
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* Card name with clip-path wipe reveal */
 .showcase-card-name {
   font-family: var(--font-display), sans-serif;
-  font-size: 1.25rem;
+  font-size: clamp(0.95rem, 1.6vw, 1.35rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--white);
-  margin-bottom: 0.3rem;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.55s cubic-bezier(0.23, 1, 0.32, 1) 0.08s;
 }
 
-.showcase-card-cat {
-  font-size: 0.65rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--gray);
+.showcase-card:hover .showcase-card-name {
+  clip-path: inset(0 0% 0 0);
+}
+
+/* Animated border glow */
+.showcase-card-border {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0);
+  border-radius: inherit;
+  z-index: 4;
+  pointer-events: none;
+  transition: border-color 0.4s ease;
+}
+
+.showcase-card:hover .showcase-card-border {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 900px) {
+  .showcase-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: none;
+    gap: 0.6rem;
+    padding: 0 1.5rem;
+  }
+
+  .showcase-card:nth-child(n) {
+    grid-area: auto;
+    height: 45vw;
+  }
+
+  .showcase-ghost {
+    display: none;
+  }
+
+  .showcase-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 0 1.5rem 2.5rem;
+  }
+
+  .showcase-header-right {
+    align-items: flex-start;
+  }
+
+  .showcase-header-sub {
+    text-align: left;
+  }
 }
 
 /* ─── ABOUT ─── */

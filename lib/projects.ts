@@ -54,15 +54,16 @@ export interface ShowcaseCard {
   name: string;
   cat: string;
   hue: number;
+  depth: number; // parallax strength multiplier (0.5–1.8)
 }
 
 export const showcaseCards: ShowcaseCard[] = [
-  { name: 'Pepsi-Cola', cat: 'Social Advertising', hue: 220 },
-  { name: 'Logo & Identity', cat: 'Brand Identity', hue: 0 },
-  { name: 'Velosi Asset', cat: 'Social Advertising', hue: 30 },
-  { name: '7UP Social Series', cat: 'Social Advertising', hue: 140 },
-  { name: 'STING & Pepsi', cat: 'Motion Design', hue: 280 },
-  { name: 'Iremia App', cat: 'UI Design', hue: 200 },
-  { name: 'Product Photography', cat: 'Retouching', hue: 180 },
-  { name: 'Pepsi 2024 Calendar', cat: 'Offline Branding', hue: 220 },
+  { name: 'Pepsi-Cola',            cat: 'Social Advertising', hue: 220, depth: 1.4 },
+  { name: 'Logo & Identity',       cat: 'Brand Identity',     hue: 0,   depth: 0.7 },
+  { name: 'Velosi Asset',          cat: 'Social Advertising', hue: 30,  depth: 1.6 },
+  { name: '7UP Social Series',     cat: 'Social Advertising', hue: 140, depth: 0.9 },
+  { name: 'STING & Pepsi',         cat: 'Motion Design',      hue: 280, depth: 1.3 },
+  { name: 'Iremia App',            cat: 'UI Design',          hue: 200, depth: 0.6 },
+  { name: 'Product Photography',   cat: 'Retouching',         hue: 180, depth: 1.1 },
+  { name: 'Pepsi 2024 Calendar',   cat: 'Offline Branding',   hue: 220, depth: 0.8 },
 ];
