@@ -9,12 +9,6 @@ import Lenis from 'lenis';
 import { projects, showcaseCards } from '@/lib/projects';
 import { drawGradientCanvas, drawPortrait } from '@/lib/canvas-helpers';
 
-const loaderImages = [
-  '/intro/1.webp',
-  '/intro/2.webp',
-  '/intro/3.webp',
-  '/images/my-kind-of-vacation.jpg',
-];
 
 
 const marqueeItems = [
@@ -110,25 +104,47 @@ export default function Portfolio() {
   // ─── LOADER ANIMATION ───────────────────────────────
   const runLoader = () => {
     const loader = document.getElementById('loader');
-    const clipper = document.querySelector('.loader-clipper') as HTMLElement;
-    const imgs = gsap.utils.toArray<HTMLImageElement>('.loader-img');
-    if (!loader || !clipper || imgs.length === 0) return;
+    const bgRect = document.getElementById('loaderBgRect') as SVGRectElement | null;
+    const holePath = document.getElementById('loaderHolePath') as SVGPathElement | null;
+    const loaderL1 = document.getElementById('loaderL1');
+    const loaderL2 = document.getElementById('loaderL2');
+    if (!loader) return;
 
-    const bannerImg = imgs[imgs.length - 1];
     document.body.style.overflow = 'hidden';
 
-    gsap.set(loader, { opacity: 1, pointerEvents: 'all' });
-    gsap.set(clipper, { top: '50%' });
-    gsap.set(imgs, { opacity: 0, scale: 1.3, transformOrigin: 'center center', clipPath: 'inset(0% 0% 0% 0%)', yPercent: 0 });
-    gsap.set(imgs[0], { opacity: 1, clipPath: 'inset(0% 0% 100% 0%)', yPercent: -15 });
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cx = vw / 2;
+    const cy = vh / 2;
+
+    // Full-screen outer boundary for the evenodd clip path
+    const outerPath = `M 0 0 L ${vw} 0 L ${vw} ${vh} L 0 ${vh} Z`;
+
+    // Apply clip-path to rect and initialise with full coverage (no hole yet)
+    bgRect?.setAttribute('clip-path', 'url(#loaderClip)');
+    holePath?.setAttribute('d', outerPath);
+
+    // Animated proxy object — hole grows from center outward
+    const hole = { w: 0, h: 0 };
+    const updatePath = () => {
+      if (!holePath) return;
+      const x = cx - hole.w / 2;
+      const y = cy - hole.h / 2;
+      holePath.setAttribute(
+        'd',
+        `${outerPath} M ${x} ${y} L ${x + hole.w} ${y} L ${x + hole.w} ${y + hole.h} L ${x} ${y + hole.h} Z`
+      );
+    };
+
+    // Initial hidden states
+    gsap.set([loaderL1, loaderL2], { yPercent: 110 });
     gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
     gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
     gsap.set('#heroTagline', { opacity: 0, y: 20 });
     gsap.set('.hero-label', { opacity: 0, y: 10 });
 
-    const introTl = gsap.timeline({
-      defaults: { ease: 'power4.inOut' },
+    const tl = gsap.timeline({
       onComplete: () => {
         loader.style.display = 'none';
         loader.style.pointerEvents = 'none';
@@ -139,40 +155,77 @@ export default function Portfolio() {
       },
     });
 
-    // First image: clip-path wipes down + parallax slide
-    introTl.to(imgs[0], {
-      clipPath: 'inset(0% 0% 0% 0%)',
+    // ── Phase 1: Letter groups slide up from below their masks ──
+    tl.to([loaderL1, loaderL2], {
       yPercent: 0,
-      duration: 0.9,
-      ease: 'power3.inOut',
-    });
+      duration: 0.88,
+      ease: 'power4.out',
+      stagger: 0.1,
+    }, 0);
 
-    // Subsequent images wipe in one after another — no yPercent jump, tight 0.1s overlap
-    const slideDuration = 0.5;
-    const wipeTl = gsap.timeline();
-    for (let i = 1; i < imgs.length; i++) {
-      wipeTl.fromTo(
-        imgs[i],
-        { opacity: 1, clipPath: 'inset(0% 0% 100% 0%)' },
-        { clipPath: 'inset(0% 0% 0% 0%)', duration: slideDuration, ease: 'power3.inOut' },
-        i === 1 ? 0 : '>-0.1'
-      );
-    }
+    // ── Phase 2: Tiny square hole punches through centre ──
+    tl.addLabel('holeOpen', '+=0.24');
+    tl.to(hole, {
+      w: 48, h: 48,
+      duration: 0.28,
+      ease: 'power2.out',
+      onUpdate: updatePath,
+    }, 'holeOpen');
 
-    introTl.add(wipeTl, '-=0.2');
-    introTl.addLabel('expand', '+=0.2');
+    // ── Phase 3: Hole grows to mid-sized rectangle ──
+    tl.addLabel('holeRect', '>');
+    const midW = vw * 0.58;
+    const midH = vh * 0.58;
+    tl.to(hole, {
+      w: midW, h: midH,
+      duration: 1.05,
+      ease: 'power4.inOut',
+      onUpdate: updatePath,
+    }, 'holeRect');
 
-    // Clipper opens to fullscreen, last image scales down to 1
-    introTl
-      .to(clipper, { width: '100vw', height: '100vh', borderRadius: '0px', duration: 1.6 }, 'expand')
-      .to(bannerImg, { scale: 1.0, duration: 1.6 }, 'expand')
-      .to(loader, { opacity: 0, duration: 0.55, ease: 'power2.inOut' }, 'expand+=1.15')
-      .to('.hero-name .line span', { yPercent: 0, opacity: 1, duration: 1.2, ease: 'power4.out', stagger: 0.12 }, 'expand+=0.85')
-      .to('nav', { yPercent: 0, opacity: 1, duration: 0.8, ease: 'power3.out', clearProps: 'transform' }, 'expand+=1.15')
-      .to(['#cursor', '#cursor-follower'], { opacity: 1, duration: 0.5, ease: 'power2.out' }, 'expand+=1.15')
-      .to('#heroScrollBtn', { scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)' }, 'expand+=1.4')
-      .to('#heroTagline', { y: 0, opacity: 1, duration: 0.9, ease: 'power3.out' }, 'expand+=1.1')
-      .to('.hero-label', { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', stagger: 0.15 }, 'expand+=1.2');
+    // Letters exit during rect expansion
+    tl.to([loaderL1, loaderL2], {
+      yPercent: 110,
+      duration: 0.42,
+      ease: 'power3.in',
+      stagger: { amount: 0.07, from: 'center' },
+    }, 'holeRect+=0.32');
+
+    // ── Phase 4: Rectangle blows out to full screen ──
+    tl.addLabel('holeFull', 'holeRect+=0.78');
+    tl.to(hole, {
+      w: vw + 20, h: vh + 20,
+      duration: 0.66,
+      ease: 'power4.inOut',
+      onUpdate: updatePath,
+    }, 'holeFull');
+
+    // ── Hero content cascades in as overlay disappears ──
+    tl.to('.hero-name .line span', {
+      yPercent: 0, opacity: 1,
+      duration: 1.2, ease: 'power4.out', stagger: 0.12,
+    }, 'holeFull+=0.26');
+
+    tl.to('#heroTagline', {
+      y: 0, opacity: 1, duration: 0.9, ease: 'power3.out',
+    }, 'holeFull+=0.48');
+
+    tl.to('.hero-label', {
+      y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', stagger: 0.14,
+    }, 'holeFull+=0.52');
+
+    tl.to('nav', {
+      yPercent: 0, opacity: 1, duration: 0.8,
+      ease: 'power3.out', clearProps: 'transform',
+    }, 'holeFull+=0.36');
+
+    tl.to(['#cursor', '#cursor-follower'], {
+      opacity: 1, duration: 0.5, ease: 'power2.out',
+    }, 'holeFull+=0.36');
+
+    tl.to('#heroScrollBtn', {
+      scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)',
+    }, 'holeFull+=0.62');
   };
 
   // ─── CANVASES ────────────────────────────────────────
@@ -548,14 +601,32 @@ export default function Portfolio() {
 
   return (
     <>
-      {/* LOADER */}
+      {/* LOADER — SVG hole-punch reveal */}
       <div id="loader">
-        <div className="loader-clipper">
-          <div className="loader-image-sequence">
-            {loaderImages.map((src, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={i} className="loader-img" src={src} alt="" />
-            ))}
+        {/* Dark overlay with a growing transparent hole cut from centre */}
+        <svg
+          id="loaderSvg"
+          className="loader-svg"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <clipPath id="loaderClip" clipPathUnits="userSpaceOnUse">
+              {/* evenodd: outer rect fills dark, inner hole becomes transparent */}
+              <path id="loaderHolePath" fillRule="evenodd" d="" />
+            </clipPath>
+          </defs>
+          {/* Plain dark rect — clip-path applied via JS once vw/vh are known */}
+          <rect id="loaderBgRect" width="100%" height="100%" fill="#080808" />
+        </svg>
+
+        {/* Logo letters — slide up from below their overflow-hidden masks */}
+        <div className="loader-name-wrap" id="loaderNameWrap">
+          <div className="loader-letter-mask">
+            <span className="loader-letter" id="loaderL1">THV</span>
+          </div>
+          <div className="loader-letter-mask">
+            <span className="loader-letter" id="loaderL2">MAX</span>
           </div>
         </div>
       </div>

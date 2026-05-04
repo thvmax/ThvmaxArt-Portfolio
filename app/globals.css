@@ -41,49 +41,60 @@ body {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  pointer-events: none;
-  background: var(--white);
+  pointer-events: all;
+  overflow: hidden;
+  /* Dark background before JS runs (before SVG clip-path is applied) */
+  background: #080808;
 }
 
-.loader-clipper {
+.loader-svg {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 30vw;
-  height: 40vh;
-  border-radius: 4px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* Letter container — centred, letters hidden below overflow mask initially */
+.loader-name-wrap {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: clamp(2.5rem, 7vw, 6rem);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.loader-letter-mask {
   overflow: hidden;
-  will-change: width, height, top;
+  /* tiny bottom padding so descenders aren't clipped */
+  padding-bottom: 0.06em;
+  line-height: 0.88;
 }
 
-.loader-image-sequence {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100vw;
-  height: 100vh;
+.loader-letter {
+  display: block;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(4rem, 11vw, 10rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--white);
+  line-height: 0.88;
+  will-change: transform;
+  /* GSAP sets yPercent: 110 — this CSS just ensures no flash */
+  transform: translateY(110%);
 }
 
-.loader-img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  opacity: 0;
-  will-change: transform, opacity;
-}
+@media (max-width: 600px) {
+  .loader-letter {
+    font-size: clamp(2.8rem, 14vw, 5rem);
+  }
 
-@media (max-width: 768px) {
-  .loader-clipper {
-    width: 70vw;
-    height: 50vh;
+  .loader-name-wrap {
+    gap: clamp(1.5rem, 5vw, 3rem);
   }
 }
 
