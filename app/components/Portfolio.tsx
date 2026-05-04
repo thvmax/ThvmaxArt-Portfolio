@@ -20,7 +20,7 @@ const loaderImages = [
   '/intro/1.webp',
   '/intro/2.webp',
   '/intro/3.webp',
-  '/intro/4.webp',
+  '/images/sting-nightlife/4.jpg',
 ];
 
 
@@ -158,15 +158,15 @@ export default function Portfolio() {
       ease: 'power3.inOut',
     });
 
-    // Subsequent images wipe in over each other
+    // Subsequent images wipe in one after another — no yPercent jump, tight 0.1s overlap
     const slideDuration = 0.5;
     const wipeTl = gsap.timeline();
     for (let i = 1; i < imgs.length; i++) {
       wipeTl.fromTo(
         imgs[i],
-        { opacity: 1, clipPath: 'inset(0% 0% 100% 0%)', yPercent: -15 },
-        { clipPath: 'inset(0% 0% 0% 0%)', yPercent: 0, duration: slideDuration, ease: 'power3.inOut' },
-        '-=' + slideDuration * 0.25
+        { opacity: 1, clipPath: 'inset(0% 0% 100% 0%)' },
+        { clipPath: 'inset(0% 0% 0% 0%)', duration: slideDuration, ease: 'power3.inOut' },
+        i === 1 ? 0 : '>-0.1'
       );
     }
 
