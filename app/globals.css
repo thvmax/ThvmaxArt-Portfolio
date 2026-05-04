@@ -80,6 +80,13 @@ body {
   will-change: transform, opacity;
 }
 
+@media (max-width: 768px) {
+  .loader-clipper {
+    width: 70vw;
+    height: 50vh;
+  }
+}
+
 .hero-banner-img {
   position: absolute;
   inset: 0;

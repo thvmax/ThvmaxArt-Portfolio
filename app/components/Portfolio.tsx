@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+import Lenis from 'lenis';
 import { projects, showcaseCards } from '@/lib/projects';
 import { drawGradientCanvas, drawPortrait } from '@/lib/canvas-helpers';
 
@@ -16,11 +17,12 @@ const heroSlides = [
 ];
 
 const loaderImages = [
-  '/images/sting-nightlife/1.jpg',
-  '/images/sting-nightlife/2.jpg',
-  '/images/sting-nightlife/3.jpg',
-  '/images/sting-nightlife/4.jpg',
+  '/intro/1.webp',
+  '/intro/2.webp',
+  '/intro/3.webp',
+  '/intro/4.webp',
 ];
+
 
 const marqueeItems = [
   'Pepsi-Cola', 'Sting Energy', '7UP', 'Mirinda', 'AIA Life Insurance',
@@ -69,16 +71,38 @@ export default function Portfolio() {
   const nextThumbFgRef = useRef<HTMLImageElement | null>(null);
   const slideTimelineRef = useRef<gsap.core.Timeline | null>(null);
   const currentSlideRef = useRef(0);
+  const lenisRef = useRef<Lenis | null>(null);
 
   // ─── INIT EVERYTHING ────────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
     gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
-    let ctx = gsap.context(() => {
-      // Initial hidden states
-      gsap.set('nav', { opacity: 0, yPercent: -100 });
+    // Lenis smooth scroll — lerp gives the inertia feel
+    const lenis = new Lenis({ lerp: 0.08, smoothWheel: true });
+    lenisRef.current = lenis;
 
+    // Drive Lenis from GSAP's RAF so timing stays in sync
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+
+    // Let ScrollTrigger read Lenis's virtual scroll position
+    ScrollTrigger.scrollerProxy(document.documentElement, {
+      scrollTop(value) {
+        if (arguments.length && value !== undefined) {
+          lenis.scrollTo(value, { immediate: true });
+        }
+        return lenis.scroll;
+      },
+      getBoundingClientRect() {
+        return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
+      },
+    });
+
+    lenis.on('scroll', ScrollTrigger.update);
+
+    let ctx = gsap.context(() => {
+      gsap.set('nav', { opacity: 0, yPercent: -100 });
       initCursor();
       initNav();
       runLoader();
@@ -87,6 +111,10 @@ export default function Portfolio() {
     return () => {
       ctx.revert();
       slideTimelineRef.current?.kill();
+      lenis.destroy();
+      lenisRef.current = null;
+      gsap.ticker.remove((time) => lenis.raf(time * 1000));
+      ScrollTrigger.clearScrollMemory();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -122,6 +150,7 @@ export default function Portfolio() {
       },
     });
 
+    // First image: clip-path wipes down + parallax slide
     introTl.to(imgs[0], {
       clipPath: 'inset(0% 0% 0% 0%)',
       yPercent: 0,
@@ -129,6 +158,7 @@ export default function Portfolio() {
       ease: 'power3.inOut',
     });
 
+    // Subsequent images wipe in over each other
     const slideDuration = 0.5;
     const wipeTl = gsap.timeline();
     for (let i = 1; i < imgs.length; i++) {
@@ -143,6 +173,7 @@ export default function Portfolio() {
     introTl.add(wipeTl, '-=0.2');
     introTl.addLabel('expand', '+=0.2');
 
+    // Clipper opens to fullscreen, last image scales down to 1
     introTl
       .to(clipper, { width: '100vw', height: '100vh', borderRadius: '0px', duration: 1.6 }, 'expand')
       .to(bannerImg, { scale: 1.0, duration: 1.6 }, 'expand')
@@ -174,9 +205,9 @@ export default function Portfolio() {
         y: 0,
         duration: 1,
         ease: 'power3.out',
-        scrollTrigger: { 
-          trigger: el, 
-          start: 'top 85%', 
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
           toggleActions: 'play none none none',
           pinnedContainer: isInsideWork ? '#work' : undefined
         },
@@ -214,7 +245,7 @@ export default function Portfolio() {
         const listHeight = projectsList.scrollHeight;
         const scrollerEl = document.querySelector('.work-projects-scroller') as HTMLElement;
         if (!scrollerEl) return;
-        
+
         const visibleHeight = scrollerEl.offsetHeight;
         const scrollDistance = Math.max(0, listHeight - visibleHeight);
         console.log('--- DEBUG GSAP ---');
@@ -222,6 +253,7 @@ export default function Portfolio() {
 
         ScrollTrigger.create({
           trigger: '#work',
+          scroller: document.documentElement,
           start: 'top top',
           end: () => `+=${scrollDistance + window.innerHeight * 0.5}`,
           pin: true,
@@ -245,6 +277,7 @@ export default function Portfolio() {
 
         ScrollTrigger.create({
           trigger: '#work',
+          scroller: document.documentElement,
           start: 'top 80%',
           onEnter: () => activateWork(0),
         });
@@ -253,6 +286,7 @@ export default function Portfolio() {
       workItems.forEach((item, i) => {
         ScrollTrigger.create({
           trigger: item,
+          scroller: document.documentElement,
           start: 'top center',
           end: 'bottom center',
           onToggle: self => {
@@ -338,13 +372,14 @@ export default function Portfolio() {
       });
     }
 
-    // Smooth anchor scrolling
+    // Smooth anchor scrolling via Lenis
     document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
       a.addEventListener('click', (e) => {
         const id = a.getAttribute('href');
         if (!id || id === '#') return;
         e.preventDefault();
-        gsap.to(window, { duration: 1, scrollTo: id, ease: 'power3.inOut' });
+        const target = document.querySelector(id);
+        if (target) lenisRef.current?.scrollTo(target as HTMLElement, { duration: 1.4, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
       });
     });
   };
@@ -396,15 +431,15 @@ export default function Portfolio() {
   // ─── NAV HIDE/SHOW ──────────────────────────────────
   const initNav = () => {
     let lastY = 0;
-    const handler = () => {
-      const y = window.scrollY;
+    const handler = ({ scroll }: { scroll: number }) => {
       const nav = document.getElementById('nav');
       if (!nav) return;
-      if (y > lastY && y > 100) nav.classList.add('hide');
+      if (scroll > lastY && scroll > 100) nav.classList.add('hide');
       else nav.classList.remove('hide');
-      lastY = y;
+      lastY = scroll;
     };
-    window.addEventListener('scroll', handler, { passive: true });
+    // Attach after lenis is ready (next tick)
+    setTimeout(() => lenisRef.current?.on('scroll', handler), 0);
   };
 
   // ─── CUSTOM CURSOR ──────────────────────────────────
