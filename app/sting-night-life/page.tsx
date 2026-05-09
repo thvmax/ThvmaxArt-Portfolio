@@ -112,9 +112,8 @@ export default function StingNightLifeCaseStudy() {
           <div className={styles.videoWrapper}>
             <video
               src="/case-studies/sting-night-life/hero-video.mp4"
-              autoPlay
+              controls
               loop
-              muted
               playsInline
               className={styles.videoPlayer}
             />
