@@ -45,15 +45,6 @@ export default function StingNightLifeCaseStudy() {
 
       {/* ── Hero ────────────────────────────────────── */}
       <section className={styles.hero}>
-        <video
-          className={styles.heroVideo}
-          src="/case-studies/sting-night-life/hero-video.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-        />
-        <div className={styles.heroGradient} />
         <div className={styles.heroGrain} />
 
         <div className={styles.heroContent}>
@@ -114,6 +105,21 @@ export default function StingNightLifeCaseStudy() {
         </div>
       </section>
 
+      {/* ── Campaign Film ───────────────────────────── */}
+      <section className={styles.videoSection}>
+        <div className={styles.videoInner}>
+          <p className={styles.sectionLabel}>Campaign Film</p>
+          <div className={styles.videoWrapper}>
+            <video
+              src="/case-studies/sting-night-life/hero-video.mp4"
+              controls
+              playsInline
+              className={styles.videoPlayer}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* ── Concept / Pull-quote ────────────────────── */}
       <section className={styles.concept}>
         <p className={styles.conceptLabel}>Creative Direction</p>
@@ -139,28 +145,34 @@ export default function StingNightLifeCaseStudy() {
 
         <div className={styles.galleryGrid}>
 
+          {/* 1 — tall portrait: col 1, rows 1-2 */}
           <div className={styles.galleryItem}>
-            <Image src="/case-studies/sting-night-life/thematic-kv.png" alt="Thematic Key Visual" width={3000} height={4500} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <Image src="/case-studies/sting-night-life/thematic-kv.png" alt="Thematic Key Visual" fill style={{ objectFit: 'cover' }} />
           </div>
 
+          {/* 2 — landscape: cols 2-4, row 1 */}
           <div className={styles.galleryItem}>
-            <Image src="/case-studies/sting-night-life/slide-2.jpg" alt="Campaign Slide 2" width={1920} height={1080} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <Image src="/case-studies/sting-night-life/slide-2.jpg" alt="Campaign Slide 2" fill style={{ objectFit: 'cover' }} />
           </div>
 
+          {/* 3 — landscape: cols 2-4, row 2 */}
           <div className={styles.galleryItem}>
-            <Image src="/case-studies/sting-night-life/slide-3.jpg" alt="Campaign Slide 3" width={1920} height={1080} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <Image src="/case-studies/sting-night-life/slide-3.jpg" alt="Campaign Slide 3" fill style={{ objectFit: 'cover' }} />
           </div>
 
+          {/* 4 — tall portrait: cols 1-2, rows 3-4 */}
           <div className={styles.galleryItem}>
-            <Image src="/case-studies/sting-night-life/event-poster.png" alt="Event Poster" width={2048} height={2500} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <Image src="/case-studies/sting-night-life/product-kv.png" alt="Product Key Visual" fill style={{ objectFit: 'cover' }} />
           </div>
 
+          {/* 5 — portrait: col 3, rows 3-4 */}
           <div className={styles.galleryItem}>
-            <Image src="/case-studies/sting-night-life/product-kv.png" alt="Product Key Visual" width={3656} height={4500} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <Image src="/case-studies/sting-night-life/event-poster.png" alt="Event Poster" fill style={{ objectFit: 'cover' }} />
           </div>
 
+          {/* 6 — square: col 4, rows 3-4 */}
           <div className={styles.galleryItem}>
-            <Image src="/case-studies/sting-night-life/kv-qr-code.png" alt="QR Code Key Visual" width={2000} height={2000} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <Image src="/case-studies/sting-night-life/kv-qr-code.png" alt="QR Code Key Visual" fill style={{ objectFit: 'cover' }} />
           </div>
 
         </div>
