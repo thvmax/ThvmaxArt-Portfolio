@@ -45,19 +45,30 @@ export default function StingNightLifeCaseStudy() {
 
       {/* ── Hero ────────────────────────────────────── */}
       <section className={styles.hero}>
+        <video
+          className={styles.heroVideo}
+          src="/case-studies/sting-night-life/Header-Video.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+        <div className={styles.heroGradient} />
         <div className={styles.heroGrain} />
 
         <div className={styles.heroContent}>
           <div className={styles.heroMeta}>
             <span className={styles.heroLabel}>Brand &amp; Campaign</span>
             <span className={styles.heroDivider} />
-            <span className={styles.heroYear}>2023</span>
+            <span className={styles.heroYear}>PepsiCo Myanmar · 2023</span>
           </div>
           <h1 className={styles.heroTitle}>
-            Sting
-            <br />
-            Night Life
+            <span className={styles.heroTitleOutline}>Sting</span>
+            <span className={styles.heroTitleSolid}>Night Life</span>
           </h1>
+          <p className={styles.heroTagline}>
+            The night belongs to those who refuse to stop.
+          </p>
         </div>
 
         <div className={styles.heroScroll}>
