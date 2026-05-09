@@ -139,28 +139,28 @@ export default function StingNightLifeCaseStudy() {
 
         <div className={styles.galleryGrid}>
 
-          <div className={styles.galleryItem1}>
-            <Image src="/case-studies/sting-night-life/thematic-kv.png" alt="Thematic Key Visual" fill style={{ objectFit: 'cover' }} />
+          <div className={styles.galleryItem}>
+            <Image src="/case-studies/sting-night-life/thematic-kv.png" alt="Thematic Key Visual" width={3000} height={4500} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
 
-          <div className={styles.galleryItem2}>
-            <Image src="/case-studies/sting-night-life/slide-2.jpg" alt="Campaign Slide 2" fill style={{ objectFit: 'cover' }} />
+          <div className={styles.galleryItem}>
+            <Image src="/case-studies/sting-night-life/slide-2.jpg" alt="Campaign Slide 2" width={1920} height={1080} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
 
-          <div className={styles.galleryItem3}>
-            <Image src="/case-studies/sting-night-life/slide-3.jpg" alt="Campaign Slide 3" fill style={{ objectFit: 'cover' }} />
+          <div className={styles.galleryItem}>
+            <Image src="/case-studies/sting-night-life/slide-3.jpg" alt="Campaign Slide 3" width={1920} height={1080} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
 
-          <div className={styles.galleryItem4}>
-            <Image src="/case-studies/sting-night-life/event-poster.png" alt="Event Poster" fill style={{ objectFit: 'cover' }} />
+          <div className={styles.galleryItem}>
+            <Image src="/case-studies/sting-night-life/event-poster.png" alt="Event Poster" width={2048} height={2500} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
 
-          <div className={styles.galleryItem5}>
-            <Image src="/case-studies/sting-night-life/product-kv.png" alt="Product Key Visual" fill style={{ objectFit: 'cover' }} />
+          <div className={styles.galleryItem}>
+            <Image src="/case-studies/sting-night-life/product-kv.png" alt="Product Key Visual" width={3656} height={4500} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
 
-          <div className={styles.galleryItem6}>
-            <Image src="/case-studies/sting-night-life/kv-qr-code.png" alt="QR Code Key Visual" fill style={{ objectFit: 'contain', backgroundColor: '#000' }} />
+          <div className={styles.galleryItem}>
+            <Image src="/case-studies/sting-night-life/kv-qr-code.png" alt="QR Code Key Visual" width={2000} height={2000} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
 
         </div>
