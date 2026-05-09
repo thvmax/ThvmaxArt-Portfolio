@@ -10,7 +10,7 @@
  */
 
 import type { Metadata } from 'next';
-// import Image from 'next/image'; // uncomment when adding real assets
+import Image from 'next/image';
 import styles from './case-study.module.css';
 
 export const metadata: Metadata = {
@@ -45,16 +45,14 @@ export default function StingNightLifeCaseStudy() {
 
       {/* ── Hero ────────────────────────────────────── */}
       <section className={styles.hero}>
-        {/*
-          Uncomment once the hero image is ready:
-          <Image
-            src="/case-studies/sting-night-life/hero.jpg"
-            alt="Sting Night Life — Hero Campaign Visual"
-            fill
-            style={{ objectFit: 'cover', objectPosition: 'center 35%' }}
-            priority
-          />
-        */}
+        <video
+          className={styles.heroVideo}
+          src="/case-studies/sting-night-life/hero-video.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
         <div className={styles.heroGradient} />
         <div className={styles.heroGrain} />
 
@@ -139,50 +137,30 @@ export default function StingNightLifeCaseStudy() {
       <section className={styles.gallerySection}>
         <p className={styles.sectionLabel}>Visual Assets</p>
 
-        {/*
-          Grid map:
-            Row 1 — land(×2col)  port(spans 2 rows)
-            Row 2 — sq1   sq2    port(continued)
-            Row 3 — wide(×3col, panoramic)
-
-          To populate: replace each placeholder div with an <Image fill> block.
-          Keep the outer wrapper div and its className — only swap the inner content.
-        */}
         <div className={styles.galleryGrid}>
 
-          <div className={styles.galleryLandscape}>
-            {/* <Image src="/case-studies/sting-night-life/01.jpg" alt="Key Visual — Landscape" fill style={{ objectFit: 'cover' }} /> */}
-            <div className={styles.galleryPlaceholder}>
-              <span className={styles.galleryPlaceholderSlot}>Key Visual · 01</span>
-            </div>
+          <div className={styles.galleryItem1}>
+            <Image src="/case-studies/sting-night-life/thematic-kv.png" alt="Thematic Key Visual" fill style={{ objectFit: 'cover' }} />
           </div>
 
-          <div className={styles.galleryPortrait}>
-            {/* <Image src="/case-studies/sting-night-life/02.jpg" alt="Key Visual — Portrait" fill style={{ objectFit: 'cover' }} /> */}
-            <div className={styles.galleryPlaceholder}>
-              <span className={styles.galleryPlaceholderSlot}>Portrait · 02</span>
-            </div>
+          <div className={styles.galleryItem2}>
+            <Image src="/case-studies/sting-night-life/slide-2.jpg" alt="Campaign Slide 2" fill style={{ objectFit: 'cover' }} />
           </div>
 
-          <div className={styles.gallerySquare1}>
-            {/* <Image src="/case-studies/sting-night-life/03.jpg" alt="Social Asset 01" fill style={{ objectFit: 'cover' }} /> */}
-            <div className={styles.galleryPlaceholder}>
-              <span className={styles.galleryPlaceholderSlot}>Social · 03</span>
-            </div>
+          <div className={styles.galleryItem3}>
+            <Image src="/case-studies/sting-night-life/slide-3.jpg" alt="Campaign Slide 3" fill style={{ objectFit: 'cover' }} />
           </div>
 
-          <div className={styles.gallerySquare2}>
-            {/* <Image src="/case-studies/sting-night-life/04.jpg" alt="Social Asset 02" fill style={{ objectFit: 'cover' }} /> */}
-            <div className={styles.galleryPlaceholder}>
-              <span className={styles.galleryPlaceholderSlot}>Social · 04</span>
-            </div>
+          <div className={styles.galleryItem4}>
+            <Image src="/case-studies/sting-night-life/event-poster.png" alt="Event Poster" fill style={{ objectFit: 'cover' }} />
           </div>
 
-          <div className={styles.galleryWide}>
-            {/* <Image src="/case-studies/sting-night-life/05.jpg" alt="OOH / Billboard" fill style={{ objectFit: 'cover' }} /> */}
-            <div className={styles.galleryPlaceholder}>
-              <span className={styles.galleryPlaceholderSlot}>OOH · Billboard · 05</span>
-            </div>
+          <div className={styles.galleryItem5}>
+            <Image src="/case-studies/sting-night-life/product-kv.png" alt="Product Key Visual" fill style={{ objectFit: 'cover' }} />
+          </div>
+
+          <div className={styles.galleryItem6}>
+            <Image src="/case-studies/sting-night-life/kv-qr-code.png" alt="QR Code Key Visual" fill style={{ objectFit: 'contain', backgroundColor: '#000' }} />
           </div>
 
         </div>
