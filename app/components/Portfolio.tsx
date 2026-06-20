@@ -54,7 +54,6 @@ export default function Portfolio() {
   const showcaseCanvasRefs = useRef<(HTMLCanvasElement | null)[]>([]);
   const detailHeroCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const detailGalleryRef = useRef<HTMLDivElement | null>(null);
-  const heroArtworkRef = useRef<HTMLImageElement | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
 
   // ─── INIT EVERYTHING ────────────────────────────────
@@ -103,24 +102,31 @@ export default function Portfolio() {
   }, []);
 
   // ─── CINEMATIC FRAME-SCRUB INTRO ──────────────────────
+  // ─── CINEMATIC FRAME-SCRUB INTRO ──────────────────────
   const initHeroIntro = () => {
     const canvas = document.getElementById('heroIntroCanvas') as HTMLCanvasElement | null;
-    if (!canvas) return;
+    const loader = document.getElementById('heroIntroLoader');
+    const loaderBar = document.getElementById('heroIntroLoaderBar');
+    const loaderPct = document.getElementById('heroIntroLoaderPct');
+    const scrubHint = document.getElementById('heroScrubHint');
+    if (!canvas || !loader || !loaderBar || !loaderPct || !scrubHint) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const frames: (HTMLImageElement | null)[] = new Array(FRAME_COUNT).fill(null);
     let currentFrame = -1;
+    let introActive = false;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     const resize = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      canvas.width = w * devicePixelRatio;
-      canvas.height = h * devicePixelRatio;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
       canvas.style.width = `${w}px`;
       canvas.style.height = `${h}px`;
-      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (currentFrame >= 0) drawFrame(currentFrame);
     };
 
@@ -138,45 +144,18 @@ export default function Portfolio() {
       ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
     };
 
-    const loadFrame = (i: number): Promise<void> =>
+    const loadFrame = (i: number): Promise<HTMLImageElement | null> =>
       new Promise((resolve) => {
         const img = new Image();
-        img.onload = () => {
-          frames[i] = img;
-          resolve();
-        };
-        img.onerror = () => resolve();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
         img.src = FRAME_PATH(i);
       });
 
-    const preloadWindow = async (center: number) => {
-      const start = Math.max(0, center - 4);
-      const end = Math.min(FRAME_COUNT, center + 5);
-      const toLoad: Promise<void>[] = [];
-      for (let i = start; i < end; i++) {
-        if (!frames[i]) toLoad.push(loadFrame(i));
-      }
-      await Promise.all(toLoad);
-    };
-
-    // ── Init ──
+    // ── Init hidden state ──
     window.addEventListener('resize', resize);
     resize();
-
-    const showHeroImmediately = () => {
-      canvas.style.display = 'none';
-      gsap.set('.hero-name .line span', { yPercent: 0, opacity: 1 });
-      gsap.set('#heroTagline', { opacity: 1, y: 0 });
-      gsap.set('.hero-label', { opacity: 1, y: 0 });
-      gsap.set('#heroScrollBtn', { scale: 1, opacity: 1 });
-      gsap.set('nav', { yPercent: 0, opacity: 1 });
-      gsap.set(['#cursor', '#cursor-follower'], { opacity: 1 });
-      const progressEl = document.querySelector('.hero-intro-progress') as HTMLElement;
-      if (progressEl) progressEl.style.display = 'none';
-      initCanvases();
-      initScrollTriggers();
-      initHeroParallax();
-    };
+    gsap.set(loaderBar, { width: '0%' });
 
     // Hide hero content behind canvas
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
@@ -186,18 +165,58 @@ export default function Portfolio() {
     gsap.set('nav', { opacity: 0, yPercent: -100 });
     gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
 
-    const totalDistance = window.innerHeight * (window.innerWidth < 768 ? 2.2 : 3.2);
+    const totalDistance = window.innerHeight * (window.innerWidth < 768 ? 5 : 8);
 
-    // Load first frame — if it fails, skip intro entirely
-    loadFrame(0).then(() => {
-      if (!frames[0]) {
-        showHeroImmediately();
+    // ── PRELOAD ALL 120 FRAMES SEQUENTIALLY ──
+    const preloadAllFrames = async (): Promise<boolean> => {
+      for (let i = 0; i < FRAME_COUNT; i++) {
+        const img = await loadFrame(i);
+        if (!img && i === 0) return false; // first frame failed — bail
+        frames[i] = img;
+        const pct = Math.round(((i + 1) / FRAME_COUNT) * 100);
+        loaderBar.style.width = `${pct}%`;
+        loaderPct.textContent = `${pct}%`;
+      }
+      return true;
+    };
+
+    // ── START INTRO: show loader → preload → show scrub hint → enable scroll ──
+    preloadAllFrames().then((ok) => {
+      if (!ok) {
+        // Fallback: just show hero text immediately
+        loader.style.display = 'none';
+        canvas.style.display = 'none';
+        gsap.set('.hero-name .line span', { yPercent: 0, opacity: 1 });
+        gsap.set('#heroTagline', { opacity: 1, y: 0 });
+        gsap.set('.hero-label', { opacity: 1, y: 0 });
+        gsap.set('#heroScrollBtn', { scale: 1, opacity: 1 });
+        gsap.set('nav', { yPercent: 0, opacity: 1 });
+        gsap.set(['#cursor', '#cursor-follower'], { opacity: 1 });
+        initCanvases();
+        initScrollTriggers();
+        initHeroParallax();
         return;
       }
-      currentFrame = 0;
-      resize();
-      preloadWindow(0);
 
+      // All frames loaded — fade out loader
+      currentFrame = 0;
+      drawFrame(0);
+
+      gsap.to(loader, {
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power2.in',
+        onComplete: () => {
+          loader.style.display = 'none';
+          // Show scrub hint
+          scrubHint.style.display = 'flex';
+          gsap.fromTo(scrubHint, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' });
+        },
+      });
+
+      introActive = true;
+
+      // ── SCRUB TRIGGER ──
       ScrollTrigger.create({
         trigger: '#home',
         start: 'top top',
@@ -213,80 +232,80 @@ export default function Portfolio() {
           if (frameIndex !== currentFrame) {
             currentFrame = frameIndex;
             drawFrame(frameIndex);
-            if (!frames[frameIndex]) preloadWindow(frameIndex);
           }
 
-          const fill = document.getElementById('heroIntroProgressFill');
-          if (fill) fill.style.width = `${progress * 100}%`;
+          // ── Single clean dissolve at 88%→100% ──
+          if (progress > 0.88) {
+            const t = Math.min((progress - 0.88) / 0.12, 1);
+            const ease = 1 - Math.pow(1 - t, 3);
 
-          // ── Dissolve transition: last 25% → canvas fades, hero reveals ──
-          if (progress > 0.75) {
-            const t = (progress - 0.75) / 0.25;
-            canvas.style.opacity = String(1 - t);
+            // Canvas settles at 0.15 opacity (frame 120 is the hero bg)
+            canvas.style.opacity = String(1 - ease * 0.85);
 
-            if (progress > 0.82) {
-              const tt = (progress - 0.82) / 0.18;
-              gsap.to('.hero-name .line span', {
-                yPercent: 110 * (1 - tt),
-                opacity: tt,
-                duration: 0,
-                overwrite: true,
-              });
+            // Hero text reveals
+            gsap.to('.hero-name .line span', {
+              yPercent: 110 * (1 - ease),
+              opacity: ease,
+              duration: 0,
+              overwrite: true,
+            });
+            gsap.to('#heroTagline', {
+              y: 20 * (1 - ease),
+              opacity: ease,
+              duration: 0,
+              overwrite: true,
+            });
+            gsap.to('.hero-label', {
+              y: 10 * (1 - ease),
+              opacity: ease,
+              duration: 0,
+              overwrite: true,
+            });
+            gsap.to('nav', {
+              yPercent: -100 * (1 - ease),
+              opacity: ease,
+              duration: 0,
+              overwrite: true,
+            });
+            gsap.to('#heroScrollBtn', {
+              scale: ease,
+              opacity: ease,
+              duration: 0,
+              overwrite: true,
+            });
+            gsap.to(['#cursor', '#cursor-follower'], {
+              opacity: ease,
+              duration: 0,
+              overwrite: true,
+            });
+
+            // Hide scrub hint
+            if (scrubHint.style.display !== 'none') {
+              gsap.to(scrubHint, { opacity: 0, duration: 0.2, onComplete: () => { scrubHint.style.display = 'none'; } });
             }
-            if (progress > 0.86) {
-              const tt = (progress - 0.86) / 0.14;
-              gsap.to('#heroTagline', {
-                y: 20 * (1 - tt),
-                opacity: tt,
-                duration: 0,
-                overwrite: true,
-              });
-            }
-            if (progress > 0.88) {
-              const tt = (progress - 0.88) / 0.12;
-              gsap.to('.hero-label', {
-                y: 10 * (1 - tt),
-                opacity: tt,
-                duration: 0,
-                overwrite: true,
-              });
-            }
-            if (progress > 0.90) {
-              const tt = (progress - 0.90) / 0.10;
-              gsap.to('nav', {
-                yPercent: -100 * (1 - tt),
-                opacity: tt,
-                duration: 0,
-                overwrite: true,
-              });
-              gsap.to('#heroScrollBtn', {
-                scale: tt,
-                opacity: tt,
-                duration: 0,
-                overwrite: true,
-              });
-              gsap.to(['#cursor', '#cursor-follower'], {
-                opacity: tt,
-                duration: 0,
-                overwrite: true,
-              });
-            }
+          } else {
+            canvas.style.opacity = '1';
           }
         },
         onLeave: () => {
-          canvas.style.opacity = '0';
+          // Lock final state: frame 120 visible at 0.15 opacity = hero bg
+          canvas.style.opacity = '1';
           gsap.set('.hero-name .line span', { yPercent: 0, opacity: 1 });
           gsap.set('#heroTagline', { opacity: 1, y: 0 });
           gsap.set('.hero-label', { opacity: 1, y: 0 });
           gsap.set('#heroScrollBtn', { scale: 1, opacity: 1 });
           gsap.set('nav', { yPercent: 0, opacity: 1 });
           gsap.set(['#cursor', '#cursor-follower'], { opacity: 1 });
+          scrubHint.style.display = 'none';
           const nav = document.getElementById('nav');
           if (nav) nav.classList.remove('hide');
 
           initCanvases();
           initScrollTriggers();
           initHeroParallax();
+        },
+        onEnterBack: () => {
+          introActive = true;
         },
       });
     });
@@ -491,7 +510,7 @@ export default function Portfolio() {
     });
 
     // ── Hero artwork scroll parallax ──
-    gsap.to('#heroArtworkWrap', {
+    gsap.to('#heroIntroCanvas', {
       yPercent: 30,
       ease: 'none',
       scrollTrigger: {
@@ -517,15 +536,16 @@ export default function Portfolio() {
   };
 
   // ─── HERO PARALLAX (mouse-move) ─────────────────────
+  // ─── HERO PARALLAX (mouse-move) ─────────────────────
   const initHeroParallax = () => {
     const heroEl = document.getElementById('home');
-    const wrap = document.getElementById('heroArtworkWrap');
+    const canvas = document.getElementById('heroIntroCanvas');
     const labelLeft = document.getElementById('heroLabelLeft');
     const labelRight = document.getElementById('heroLabelRight');
-    if (!heroEl || !wrap) return;
+    if (!heroEl || !canvas) return;
 
-    const wrapXTo = gsap.quickTo(wrap, 'x', { duration: 1.4, ease: 'power3.out' });
-    const wrapYTo = gsap.quickTo(wrap, 'y', { duration: 1.4, ease: 'power3.out' });
+    const canvasXTo = gsap.quickTo(canvas, 'x', { duration: 1.4, ease: 'power3.out' });
+    const canvasYTo = gsap.quickTo(canvas, 'y', { duration: 1.4, ease: 'power3.out' });
     const lxTo = labelLeft ? gsap.quickTo(labelLeft, 'x', { duration: 1.1, ease: 'power3.out' }) : null;
     const lyTo = labelLeft ? gsap.quickTo(labelLeft, 'y', { duration: 1.1, ease: 'power3.out' }) : null;
     const rxTo = labelRight ? gsap.quickTo(labelRight, 'x', { duration: 1.0, ease: 'power3.out' }) : null;
@@ -534,14 +554,14 @@ export default function Portfolio() {
     heroEl.addEventListener('mousemove', (e) => {
       const cx = e.clientX / window.innerWidth - 0.5;
       const cy = e.clientY / window.innerHeight - 0.5;
-      wrapXTo(cx * -28);
-      wrapYTo(cy * -20);
+      canvasXTo(cx * -28);
+      canvasYTo(cy * -20);
       if (lxTo && lyTo) { lxTo(cx * 20); lyTo(cy * 14); }
       if (rxTo && ryTo) { rxTo(cx * -16); ryTo(cy * -12); }
     });
 
     heroEl.addEventListener('mouseleave', () => {
-      wrapXTo(0); wrapYTo(0);
+      canvasXTo(0); canvasYTo(0);
       if (lxTo && lyTo) { lxTo(0); lyTo(0); }
       if (rxTo && ryTo) { rxTo(0); ryTo(0); }
     });
@@ -705,34 +725,36 @@ export default function Portfolio() {
       {/* HERO */}
       <section id="home">
         <div className="hero-bg">
-          <div className="hero-artwork-wrap" id="heroArtworkWrap">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              ref={heroArtworkRef}
-              className="hero-artwork-img"
-              src="/images/my-kind-of-vacation.jpg"
-              alt="My Kind of Vacation"
-            />
-          </div>
           <div className="hero-overlay"></div>
           <div className="hero-grain-overlay" aria-hidden="true"></div>
           <div className="hero-bg-grid"></div>
 
+          {/* Frame 120 stays as hero background — no separate img */}
           <canvas id="heroIntroCanvas" className="hero-intro-canvas" />
 
-          <div className="hero-intro-progress">
-            <div className="hero-intro-progress-fill" id="heroIntroProgressFill" />
+          {/* LOADING OVERLAY */}
+          <div className="hero-intro-loader" id="heroIntroLoader">
+            <div className="hero-intro-loader-label">LOADING FRAMES</div>
+            <div className="hero-intro-loader-track">
+              <div className="hero-intro-loader-bar" id="heroIntroLoaderBar" />
+            </div>
+            <div className="hero-intro-loader-pct" id="heroIntroLoaderPct">0%</div>
+          </div>
+
+          {/* SCRUB HINT — shown after loading completes */}
+          <div className="hero-scrub-hint" id="heroScrubHint">
+            <span>↓ SCROLL TO REVEAL</span>
           </div>
         </div>
 
         {/* Corner labels — parallax on mouse move */}
         <div className="hero-label hero-label-left" id="heroLabelLeft">
-          <span>My Kind of Vacation</span>
-          <span>Original Artwork · 2024</span>
+          <span>Frame-by-Frame</span>
+          <span>Cinematic Intro · 2026</span>
         </div>
         <div className="hero-label hero-label-right" id="heroLabelRight">
           <span>Art Direction</span>
-          <span>Photo Manipulation</span>
+          <span>Motion Design</span>
         </div>
 
         <div className="hero-scroll-btn" id="heroScrollBtn">

@@ -48,46 +48,80 @@ body {
   will-change: opacity;
 }
 
-.hero-intro-progress {
+/* ─── LOADING OVERLAY ─── */
+.hero-intro-loader {
   position: absolute;
-  bottom: 2rem;
-  left: 3rem;
-  right: 3rem;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  background: var(--black);
+  pointer-events: all;
+}
+
+.hero-intro-loader-label {
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.hero-intro-loader-track {
+  width: 220px;
   height: 1px;
   background: rgba(255, 255, 255, 0.06);
-  z-index: 12;
-}
-
-.hero-intro-progress-fill {
-  height: 100%;
-  width: 0%;
-  background: rgba(255, 255, 255, 0.25);
-  transition: width 0.08s linear;
-}
-
-@media (max-width: 768px) {
-  .hero-intro-progress {
-    left: 1.5rem;
-    right: 1.5rem;
-    bottom: 1.2rem;
-  }
-}
-
-/* ─── HERO ARTWORK ─── */
-.hero-artwork-wrap {
-  position: absolute;
-  inset: -6%;
-  will-change: transform;
   overflow: hidden;
 }
 
-.hero-artwork-img {
-  width: 100%;
+.hero-intro-loader-bar {
   height: 100%;
-  object-fit: cover;
-  object-position: center 28%;
-  display: block;
+  width: 0%;
+  background: rgba(255, 255, 255, 0.35);
+  transition: width 0.15s ease-out;
 }
+
+.hero-intro-loader-pct {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.55);
+  min-width: 4ch;
+  text-align: center;
+}
+
+/* ─── SCRUB HINT ─── */
+.hero-scrub-hint {
+  position: absolute;
+  bottom: 4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.hero-scrub-hint span {
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 768px) {
+  .hero-scrub-hint {
+    bottom: 2.5rem;
+  }
+}
+
 
 .hero-overlay {
   position: absolute;
