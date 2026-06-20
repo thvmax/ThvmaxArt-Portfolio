@@ -36,65 +36,40 @@ body {
   cursor: none;
 }
 
-/* ─── LOADER ─── */
-#loader {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: all;
-  overflow: hidden;
-  /* transparent so the SVG hole reveals the hero artwork beneath */
-  background: transparent;
-}
-
-.loader-svg {
+/* ─── HERO INTRO — cinematic frame-scrub canvas ─── */
+.hero-intro-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  display: block;
+  z-index: 4;
+  object-fit: cover;
   pointer-events: none;
+  will-change: opacity;
 }
 
-/* Letter container — centred, letters hidden below overflow mask initially */
-.loader-name-wrap {
+.hero-intro-progress {
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(2.5rem, 7vw, 6rem);
-  z-index: 10;
-  pointer-events: none;
+  bottom: 2rem;
+  left: 3rem;
+  right: 3rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  z-index: 12;
 }
 
-.loader-letter-mask {
-  overflow: hidden;
-  /* tiny bottom padding so descenders aren't clipped */
-  padding-bottom: 0.06em;
-  line-height: 0.88;
+.hero-intro-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: width 0.08s linear;
 }
 
-.loader-letter {
-  display: block;
-  font-family: var(--font-display), sans-serif;
-  font-size: clamp(4rem, 11vw, 10rem);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: var(--white);
-  line-height: 0.88;
-  will-change: transform;
-  /* initial visibility hidden — GSAP controls the transform exclusively */
-  visibility: hidden;
-}
-
-@media (max-width: 600px) {
-  .loader-letter {
-    font-size: clamp(2.8rem, 14vw, 5rem);
-  }
-
-  .loader-name-wrap {
-    gap: clamp(1.5rem, 5vw, 3rem);
+@media (max-width: 768px) {
+  .hero-intro-progress {
+    left: 1.5rem;
+    right: 1.5rem;
+    bottom: 1.2rem;
   }
 }
 
@@ -1492,17 +1467,6 @@ footer {
     min-height: 100svh;
   }
 
-  .hero-slider-ui {
-    bottom: 2rem;
-    left: 1.5rem;
-  }
-
-  .next-capsule {
-    width: 110px;
-    height: 55px;
-    border-radius: 30px;
-  }
-
   .hero-scroll-btn {
     bottom: calc(2rem - 10px);
     right: 1.5rem;
@@ -1548,10 +1512,6 @@ footer {
 
   .showcase-header {
     padding: 0 1.5rem;
-  }
-
-  .showcase-track-wrap {
-    padding: 1rem 1.5rem;
   }
 
   .showcase-card {

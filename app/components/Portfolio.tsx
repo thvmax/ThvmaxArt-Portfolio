@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import Image from 'next/image';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
@@ -9,7 +8,9 @@ import Lenis from 'lenis';
 import { projects, showcaseCards } from '@/lib/projects';
 import { drawGradientCanvas, drawPortrait } from '@/lib/canvas-helpers';
 
-
+const FRAME_COUNT = 120;
+const FRAME_PATH = (i: number) =>
+  `/intro-frames/frame-${String(i + 1).padStart(4, '0')}.jpg`;
 
 const marqueeItems = [
   'Pepsi-Cola', 'Sting Energy', '7UP', 'Mirinda', 'AIA Life Insurance',
@@ -88,7 +89,7 @@ export default function Portfolio() {
       gsap.set('nav', { opacity: 0, yPercent: -100 });
       initCursor();
       initNav();
-      runLoader();
+      initHeroIntro();
     });
 
     return () => {
@@ -101,127 +102,194 @@ export default function Portfolio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── LOADER ANIMATION ───────────────────────────────
-  const runLoader = () => {
-    const loader = document.getElementById('loader');
-    const holePath = document.getElementById('loaderHolePath') as SVGPathElement | null;
-    const loaderL1 = document.getElementById('loaderL1');
-    const loaderL2 = document.getElementById('loaderL2');
-    if (!loader) return;
+  // ─── CINEMATIC FRAME-SCRUB INTRO ──────────────────────
+  const initHeroIntro = () => {
+    const canvas = document.getElementById('heroIntroCanvas') as HTMLCanvasElement | null;
+    if (!canvas) return;
 
-    document.body.style.overflow = 'hidden';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const cx = vw / 2;
-    const cy = vh / 2;
+    const frames: (HTMLImageElement | null)[] = new Array(FRAME_COUNT).fill(null);
+    let currentFrame = -1;
 
-    // Exact-dimension outer boundary (replaces the huge SSR path)
-    const outerPath = `M 0 0 L ${vw} 0 L ${vw} ${vh} L 0 ${vh} Z`;
-    holePath?.setAttribute('d', outerPath);
-
-    // Animated proxy object — hole grows from center outward
-    const hole = { w: 0, h: 0 };
-    const updatePath = () => {
-      if (!holePath) return;
-      const x = cx - hole.w / 2;
-      const y = cy - hole.h / 2;
-      holePath.setAttribute(
-        'd',
-        `${outerPath} M ${x} ${y} L ${x + hole.w} ${y} L ${x + hole.w} ${y + hole.h} L ${x} ${y + hole.h} Z`
-      );
+    const resize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      canvas.width = w * devicePixelRatio;
+      canvas.height = h * devicePixelRatio;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      if (currentFrame >= 0) drawFrame(currentFrame);
     };
 
-    // Make letters visible but hidden below their overflow mask (CSS kept them display-hidden)
-    gsap.set([loaderL1, loaderL2], { visibility: 'visible', yPercent: 110 });
-    gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
+    const drawFrame = (index: number) => {
+      const img = frames[index];
+      if (!img) return;
+      const cw = window.innerWidth;
+      const ch = window.innerHeight;
+      ctx.clearRect(0, 0, cw, ch);
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+      const scale = Math.max(cw / iw, ch / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      ctx.drawImage(img, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+    };
+
+    const loadFrame = (i: number): Promise<void> =>
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          frames[i] = img;
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = FRAME_PATH(i);
+      });
+
+    const preloadWindow = async (center: number) => {
+      const start = Math.max(0, center - 4);
+      const end = Math.min(FRAME_COUNT, center + 5);
+      const toLoad: Promise<void>[] = [];
+      for (let i = start; i < end; i++) {
+        if (!frames[i]) toLoad.push(loadFrame(i));
+      }
+      await Promise.all(toLoad);
+    };
+
+    // ── Init ──
+    window.addEventListener('resize', resize);
+    resize();
+
+    const showHeroImmediately = () => {
+      canvas.style.display = 'none';
+      gsap.set('.hero-name .line span', { yPercent: 0, opacity: 1 });
+      gsap.set('#heroTagline', { opacity: 1, y: 0 });
+      gsap.set('.hero-label', { opacity: 1, y: 0 });
+      gsap.set('#heroScrollBtn', { scale: 1, opacity: 1 });
+      gsap.set('nav', { yPercent: 0, opacity: 1 });
+      gsap.set(['#cursor', '#cursor-follower'], { opacity: 1 });
+      const progressEl = document.querySelector('.hero-intro-progress') as HTMLElement;
+      if (progressEl) progressEl.style.display = 'none';
+      initCanvases();
+      initScrollTriggers();
+      initHeroParallax();
+    };
+
+    // Hide hero content behind canvas
     gsap.set('.hero-name .line span', { yPercent: 110, opacity: 0 });
-    gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
     gsap.set('#heroTagline', { opacity: 0, y: 20 });
     gsap.set('.hero-label', { opacity: 0, y: 10 });
+    gsap.set('#heroScrollBtn', { scale: 0, opacity: 0 });
+    gsap.set('nav', { opacity: 0, yPercent: -100 });
+    gsap.set(['#cursor', '#cursor-follower'], { opacity: 0 });
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        loader.style.display = 'none';
-        loader.style.pointerEvents = 'none';
-        document.body.style.overflow = '';
-        initCanvases();
-        initScrollTriggers();
-        initHeroParallax();
-      },
+    const totalDistance = window.innerHeight * (window.innerWidth < 768 ? 2.2 : 3.2);
+
+    // Load first frame — if it fails, skip intro entirely
+    loadFrame(0).then(() => {
+      if (!frames[0]) {
+        showHeroImmediately();
+        return;
+      }
+      currentFrame = 0;
+      resize();
+      preloadWindow(0);
+
+      ScrollTrigger.create({
+        trigger: '#home',
+        start: 'top top',
+        end: `+=${totalDistance}`,
+        pin: true,
+        pinSpacing: true,
+        scrub: 0.6,
+        anticipatePin: 1,
+        onUpdate: (self) => {
+          const progress = self.progress;
+          const frameIndex = Math.min(Math.floor(progress * FRAME_COUNT), FRAME_COUNT - 1);
+
+          if (frameIndex !== currentFrame) {
+            currentFrame = frameIndex;
+            drawFrame(frameIndex);
+            if (!frames[frameIndex]) preloadWindow(frameIndex);
+          }
+
+          const fill = document.getElementById('heroIntroProgressFill');
+          if (fill) fill.style.width = `${progress * 100}%`;
+
+          // ── Dissolve transition: last 25% → canvas fades, hero reveals ──
+          if (progress > 0.75) {
+            const t = (progress - 0.75) / 0.25;
+            canvas.style.opacity = String(1 - t);
+
+            if (progress > 0.82) {
+              const tt = (progress - 0.82) / 0.18;
+              gsap.to('.hero-name .line span', {
+                yPercent: 110 * (1 - tt),
+                opacity: tt,
+                duration: 0,
+                overwrite: true,
+              });
+            }
+            if (progress > 0.86) {
+              const tt = (progress - 0.86) / 0.14;
+              gsap.to('#heroTagline', {
+                y: 20 * (1 - tt),
+                opacity: tt,
+                duration: 0,
+                overwrite: true,
+              });
+            }
+            if (progress > 0.88) {
+              const tt = (progress - 0.88) / 0.12;
+              gsap.to('.hero-label', {
+                y: 10 * (1 - tt),
+                opacity: tt,
+                duration: 0,
+                overwrite: true,
+              });
+            }
+            if (progress > 0.90) {
+              const tt = (progress - 0.90) / 0.10;
+              gsap.to('nav', {
+                yPercent: -100 * (1 - tt),
+                opacity: tt,
+                duration: 0,
+                overwrite: true,
+              });
+              gsap.to('#heroScrollBtn', {
+                scale: tt,
+                opacity: tt,
+                duration: 0,
+                overwrite: true,
+              });
+              gsap.to(['#cursor', '#cursor-follower'], {
+                opacity: tt,
+                duration: 0,
+                overwrite: true,
+              });
+            }
+          }
+        },
+        onLeave: () => {
+          canvas.style.opacity = '0';
+          gsap.set('.hero-name .line span', { yPercent: 0, opacity: 1 });
+          gsap.set('#heroTagline', { opacity: 1, y: 0 });
+          gsap.set('.hero-label', { opacity: 1, y: 0 });
+          gsap.set('#heroScrollBtn', { scale: 1, opacity: 1 });
+          gsap.set('nav', { yPercent: 0, opacity: 1 });
+          gsap.set(['#cursor', '#cursor-follower'], { opacity: 1 });
+          const nav = document.getElementById('nav');
+          if (nav) nav.classList.remove('hide');
+
+          initCanvases();
+          initScrollTriggers();
+          initHeroParallax();
+        },
+      });
     });
-
-    // ── Phase 1: Letter groups slide up from below their masks ──
-    tl.to([loaderL1, loaderL2], {
-      yPercent: 0,
-      duration: 0.88,
-      ease: 'power4.out',
-      stagger: 0.1,
-    }, 0);
-
-    // ── Phase 2: Tiny square hole punches through centre ──
-    tl.addLabel('holeOpen', '+=0.24');
-    tl.to(hole, {
-      w: 48, h: 48,
-      duration: 0.28,
-      ease: 'power2.out',
-      onUpdate: updatePath,
-    }, 'holeOpen');
-
-    // ── Phase 3: Hole grows to mid-sized rectangle ──
-    tl.addLabel('holeRect', '>');
-    const midW = vw * 0.58;
-    const midH = vh * 0.58;
-    tl.to(hole, {
-      w: midW, h: midH,
-      duration: 1.05,
-      ease: 'power4.inOut',
-      onUpdate: updatePath,
-    }, 'holeRect');
-
-    // Letters exit during rect expansion
-    tl.to([loaderL1, loaderL2], {
-      yPercent: 110,
-      duration: 0.42,
-      ease: 'power3.in',
-      stagger: { amount: 0.07, from: 'center' },
-    }, 'holeRect+=0.32');
-
-    // ── Phase 4: Rectangle blows out to full screen ──
-    tl.addLabel('holeFull', 'holeRect+=0.78');
-    tl.to(hole, {
-      w: vw + 20, h: vh + 20,
-      duration: 0.66,
-      ease: 'power4.inOut',
-      onUpdate: updatePath,
-    }, 'holeFull');
-
-    // ── Hero content cascades in as overlay disappears ──
-    tl.to('.hero-name .line span', {
-      yPercent: 0, opacity: 1,
-      duration: 1.2, ease: 'power4.out', stagger: 0.12,
-    }, 'holeFull+=0.26');
-
-    tl.to('#heroTagline', {
-      y: 0, opacity: 1, duration: 0.9, ease: 'power3.out',
-    }, 'holeFull+=0.48');
-
-    tl.to('.hero-label', {
-      y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', stagger: 0.14,
-    }, 'holeFull+=0.52');
-
-    tl.to('nav', {
-      yPercent: 0, opacity: 1, duration: 0.8,
-      ease: 'power3.out', clearProps: 'transform',
-    }, 'holeFull+=0.36');
-
-    tl.to(['#cursor', '#cursor-follower'], {
-      opacity: 1, duration: 0.5, ease: 'power2.out',
-    }, 'holeFull+=0.36');
-
-    tl.to('#heroScrollBtn', {
-      scale: 1, opacity: 1, duration: 0.8, ease: 'back.out(1.7)',
-    }, 'holeFull+=0.62');
   };
 
   // ─── CANVASES ────────────────────────────────────────
@@ -518,13 +586,13 @@ export default function Portfolio() {
     // Delegate hover state
     document.addEventListener('mouseover', (e) => {
       const target = e.target as HTMLElement;
-      if (target.closest('a, button, .project-item, .showcase-card, .campaign-card, .next-capsule, .hero-scroll-btn')) {
+      if (target.closest('a, button, .project-item, .showcase-card, .campaign-card, .hero-scroll-btn')) {
         document.body.classList.add('cursor-hover');
       }
     });
     document.addEventListener('mouseout', (e) => {
       const target = e.target as HTMLElement;
-      if (target.closest('a, button, .project-item, .showcase-card, .campaign-card, .next-capsule, .hero-scroll-btn')) {
+      if (target.closest('a, button, .project-item, .showcase-card, .campaign-card, .hero-scroll-btn')) {
         document.body.classList.remove('cursor-hover');
       }
     });
@@ -597,39 +665,6 @@ export default function Portfolio() {
 
   return (
     <>
-      {/* LOADER — SVG hole-punch reveal */}
-      <div id="loader">
-        {/* Dark overlay with a growing transparent hole cut from centre */}
-        <svg
-          id="loaderSvg"
-          className="loader-svg"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <clipPath id="loaderClip" clipPathUnits="userSpaceOnUse">
-              {/*
-                evenodd: outer rect = dark, inner growing rect = transparent hole.
-                Starts huge to guarantee full coverage before JS updates exact dims.
-              */}
-              <path id="loaderHolePath" fillRule="evenodd" d="M -1 -1 L 9999 -1 L 9999 9999 L -1 9999 Z" />
-            </clipPath>
-          </defs>
-          {/* clipPath applied in JSX — no JS setup needed for initial dark state */}
-          <rect id="loaderBgRect" width="100%" height="100%" fill="#080808" clipPath="url(#loaderClip)" />
-        </svg>
-
-        {/* Logo letters — slide up from below their overflow-hidden masks */}
-        <div className="loader-name-wrap" id="loaderNameWrap">
-          <div className="loader-letter-mask">
-            <span className="loader-letter" id="loaderL1">THV</span>
-          </div>
-          <div className="loader-letter-mask">
-            <span className="loader-letter" id="loaderL2">MAX</span>
-          </div>
-        </div>
-      </div>
-
       {/* CUSTOM CURSOR */}
       <div id="cursor"></div>
       <div id="cursor-follower"></div>
@@ -682,6 +717,12 @@ export default function Portfolio() {
           <div className="hero-overlay"></div>
           <div className="hero-grain-overlay" aria-hidden="true"></div>
           <div className="hero-bg-grid"></div>
+
+          <canvas id="heroIntroCanvas" className="hero-intro-canvas" />
+
+          <div className="hero-intro-progress">
+            <div className="hero-intro-progress-fill" id="heroIntroProgressFill" />
+          </div>
         </div>
 
         {/* Corner labels — parallax on mouse move */}
@@ -698,7 +739,7 @@ export default function Portfolio() {
           <a href="#work" style={{ color: 'var(--black)', textDecoration: 'none' }}>SCROLL</a>
         </div>
 
-        <h1 className="hero-name thomas-title">
+        <h1 className="hero-name">
           <span className="line"><span>THIS IS THOMAS</span></span>
         </h1>
         <p className="hero-tagline" id="heroTagline">Creative Director &amp; Visual Artist</p>
@@ -863,7 +904,7 @@ export default function Portfolio() {
             ))}
           </div>
           <div className="contact-links reveal" id="contact">
-            <a href="mailto:thutasoe@example.com" className="contact-link">Email</a>
+            <a href="mailto:thutasoe24@gmail.com" className="contact-link">Email</a>
             <a href="https://linktr.ee/thvmax" target="_blank" rel="noopener noreferrer" className="contact-link">Linktree</a>
             <a href="tel:+971565776382" className="contact-link">+971 56 577 6382</a>
           </div>

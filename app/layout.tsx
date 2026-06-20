@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Syne, DM_Sans } from 'next/font/google';
 import './globals.css';
-import LenisProvider from './components/LenisProvider';
 
 const syne = Syne({
   subsets: ['latin'],
@@ -46,7 +45,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${syne.variable} ${dmSans.variable}`}>
-      <body><LenisProvider>{children}</LenisProvider></body>
+      <body>{children}</body>
     </html>
   );
 }
