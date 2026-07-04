@@ -409,6 +409,7 @@ export default function Portfolio() {
         role="dialog"
         aria-modal="true"
         aria-hidden={!activeProject}
+        data-lenis-prevent
       >
         {activeProject && (
           <div className="cs" onClick={(e) => e.stopPropagation()}>
