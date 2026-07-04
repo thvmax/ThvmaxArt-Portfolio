@@ -7,6 +7,7 @@ import Nav from './Nav';
 import Hero from './Hero';
 import Divisions from './Divisions';
 import ProjectsSlider from './ProjectsSlider';
+import Capabilities from './Capabilities';
 import About from './About';
 import Footer from './Footer';
 import CaseStudyModal from './CaseStudyModal';
@@ -31,6 +32,7 @@ export default function Site() {
         <Hero />
         <Divisions onOpen={openProject} />
         <ProjectsSlider works={works} onOpen={openProject} />
+        <Capabilities />
         <About />
       </main>
       <Footer />
