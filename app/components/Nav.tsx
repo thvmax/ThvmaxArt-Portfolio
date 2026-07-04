@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useSmoothScroll } from './SmoothScroll';
 
 const navLinks = [
   { label: 'Work', href: '#work' },
@@ -8,7 +9,8 @@ const navLinks = [
   { label: 'About', href: '#about' },
 ];
 
-export default function Nav({ scrollTo }: { scrollTo: (href: string) => void }) {
+export default function Nav() {
+  const { scrollTo } = useSmoothScroll();
   const [open, setOpen] = useState(false);
 
   // Close the mobile sheet if the viewport grows past the breakpoint

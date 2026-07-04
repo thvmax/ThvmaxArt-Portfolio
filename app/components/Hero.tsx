@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { useSmoothScroll } from './SmoothScroll';
 
-export default function Hero({ scrollTo }: { scrollTo: (href: string) => void }) {
+export default function Hero() {
+  const { scrollTo } = useSmoothScroll();
   const rootRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (!rootRef.current) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  useGSAP(
+    () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const ctx = gsap.context(() => {
       gsap.from('.hero-statement, .hero-browse', {
         y: 28,
         opacity: 0,
@@ -25,10 +27,9 @@ export default function Hero({ scrollTo }: { scrollTo: (href: string) => void })
         ease: 'power2.out',
         delay: 0.45,
       });
-    }, rootRef);
-
-    return () => ctx.revert();
-  }, []);
+    },
+    { scope: rootRef },
+  );
 
   return (
     <section id="top" className="hero" ref={rootRef}>

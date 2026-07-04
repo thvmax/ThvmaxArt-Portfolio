@@ -1,6 +1,9 @@
 "use client";
 
-export default function Footer({ scrollTo }: { scrollTo: (href: string) => void }) {
+import { useSmoothScroll } from './SmoothScroll';
+
+export default function Footer() {
+  const { scrollTo } = useSmoothScroll();
   const onClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     scrollTo(href);
