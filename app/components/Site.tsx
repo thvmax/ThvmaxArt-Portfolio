@@ -8,7 +8,7 @@ import { works, type Project } from '@/lib/data';
 import Nav from './Nav';
 import Hero from './Hero';
 import Divisions from './Divisions';
-import WorkCarousel from './WorkCarousel';
+import WorkStack from './WorkStack';
 import About from './About';
 import Footer from './Footer';
 import CaseStudyModal from './CaseStudyModal';
@@ -24,7 +24,8 @@ export default function Site() {
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const lenis = new Lenis({ lerp: 0.11, smoothWheel: !reduced });
+    // Low lerp → slow, heavy, cinematic glide
+    const lenis = new Lenis({ lerp: 0.055, smoothWheel: !reduced, touchMultiplier: 1.6 });
     lenisRef.current = lenis;
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((time) => lenis.raf(time * 1000));
@@ -38,7 +39,7 @@ export default function Site() {
 
   const scrollTo = useCallback((href: string) => {
     const target = document.querySelector(href);
-    if (target) lenisRef.current?.scrollTo(target as HTMLElement, { duration: 1.2 });
+    if (target) lenisRef.current?.scrollTo(target as HTMLElement, { duration: 1.8 });
   }, []);
 
   const openProject = useCallback((p: Project) => {
@@ -57,7 +58,7 @@ export default function Site() {
       <main>
         <Hero scrollTo={scrollTo} />
         <Divisions onOpen={openProject} />
-        <WorkCarousel works={works} onOpen={openProject} />
+        <WorkStack works={works} onOpen={openProject} />
         <About />
       </main>
       <Footer scrollTo={scrollTo} />
