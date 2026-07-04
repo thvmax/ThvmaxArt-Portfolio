@@ -402,7 +402,7 @@ export default function Portfolio() {
         <div className="footer-right">Design &amp; Strategy · Abu Dhabi, UAE</div>
       </footer>
 
-      {/* PROJECT MODAL */}
+      {/* PROJECT CASE-STUDY MODAL */}
       <div
         className={`modal ${activeProject ? 'open' : ''}`}
         onClick={closeProject}
@@ -411,47 +411,132 @@ export default function Portfolio() {
         aria-hidden={!activeProject}
       >
         {activeProject && (
-          <div className="modal-panel" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={closeProject} aria-label="Close">
-              Close ✕
+          <div className="cs" onClick={(e) => e.stopPropagation()}>
+            <button className="cs-close" onClick={closeProject} aria-label="Close">
+              <span>Close</span> ✕
             </button>
-            <div
-              className="modal-hero"
-              style={{ background: block(activeProject.hue) }}
-            >
-              <h2 className="modal-title">{activeProject.name}</h2>
-            </div>
-            <div className="modal-body">
-              <p className="modal-desc">
-                {activeProject.desc ?? 'A selected piece from the visual archive — full case notes coming soon.'}
-              </p>
-              <div className="modal-meta">
-                <div className="modal-meta-item">
-                  <span className="modal-meta-label">Year</span>
-                  <span className="modal-meta-value">{activeProject.year}</span>
-                </div>
-                <div className="modal-meta-item">
-                  <span className="modal-meta-label">Scope</span>
-                  <span className="modal-meta-value">{activeProject.cat}</span>
-                </div>
-                {activeProject.role && (
-                  <div className="modal-meta-item">
-                    <span className="modal-meta-label">Role</span>
-                    <span className="modal-meta-value">{activeProject.role}</span>
-                  </div>
-                )}
-                {activeProject.client && (
-                  <div className="modal-meta-item">
-                    <span className="modal-meta-label">Client</span>
-                    <span className="modal-meta-value">{activeProject.client}</span>
-                  </div>
+
+            {/* HERO */}
+            <header className="cs-hero" style={{ background: block(activeProject.hue) }}>
+              <div className="cs-hero-inner">
+                <span className="cs-eyebrow">{activeProject.cat}</span>
+                <h2 className="cs-title">{activeProject.name}</h2>
+                {activeProject.caseStudy && (
+                  <p className="cs-tagline">{activeProject.caseStudy.tagline}</p>
                 )}
               </div>
-              {activeProject.caseStudyHref && (
-                <a className="modal-cta" href={activeProject.caseStudyHref}>
-                  View full case study →
-                </a>
+            </header>
+
+            <div className="cs-body">
+              {/* META BAR */}
+              <div className="cs-meta">
+                <div className="cs-meta-item">
+                  <span className="cs-meta-label">Year</span>
+                  <span className="cs-meta-value">{activeProject.year}</span>
+                </div>
+                {activeProject.client && (
+                  <div className="cs-meta-item">
+                    <span className="cs-meta-label">Client</span>
+                    <span className="cs-meta-value">{activeProject.client}</span>
+                  </div>
+                )}
+                {activeProject.role && (
+                  <div className="cs-meta-item">
+                    <span className="cs-meta-label">Role</span>
+                    <span className="cs-meta-value">{activeProject.role}</span>
+                  </div>
+                )}
+                <div className="cs-meta-item">
+                  <span className="cs-meta-label">Scope</span>
+                  <span className="cs-meta-value">
+                    {activeProject.caseStudy
+                      ? activeProject.caseStudy.scope.join(' · ')
+                      : activeProject.cat}
+                  </span>
+                </div>
+              </div>
+
+              {/* LEAD */}
+              <p className="cs-lead">
+                {activeProject.caseStudy?.overview ?? activeProject.desc}
+              </p>
+
+              {activeProject.caseStudy && (
+                <>
+                  {/* GALLERY + NARRATIVE, interleaved */}
+                  {(() => {
+                    const cs = activeProject.caseStudy!;
+                    const fig = (im: (typeof cs.gallery)[number], key: number) => (
+                      <figure
+                        key={key}
+                        className={`cs-figure cs-figure--${im.span ?? 'half'} cs-figure--${im.ratio ?? 'wide'}`}
+                        style={{ background: im.img ? undefined : block(im.hue) }}
+                      >
+                        {im.img ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={im.img} alt={im.label ?? activeProject.name} />
+                        ) : (
+                          im.label && <figcaption>{im.label}</figcaption>
+                        )}
+                      </figure>
+                    );
+                    const halves = cs.gallery.filter((g) => (g.span ?? 'half') === 'half');
+                    const fulls = cs.gallery.filter((g) => g.span === 'full');
+                    return (
+                      <>
+                        {/* featured full image */}
+                        {fulls[0] && <div className="cs-figrow">{fig(fulls[0], 0)}</div>}
+
+                        {/* section 1 */}
+                        {cs.blocks[0] && (
+                          <section className="cs-section">
+                            <h3 className="cs-h">{cs.blocks[0].heading}</h3>
+                            <p className="cs-p">{cs.blocks[0].body}</p>
+                          </section>
+                        )}
+
+                        {/* paired half images */}
+                        {halves.length > 0 && (
+                          <div className="cs-figrow cs-figrow--pair">
+                            {halves.map((im, i) => fig(im, 100 + i))}
+                          </div>
+                        )}
+
+                        {/* section 2 */}
+                        {cs.blocks[1] && (
+                          <section className="cs-section">
+                            <h3 className="cs-h">{cs.blocks[1].heading}</h3>
+                            <p className="cs-p">{cs.blocks[1].body}</p>
+                          </section>
+                        )}
+
+                        {/* second full image */}
+                        {fulls[1] && <div className="cs-figrow">{fig(fulls[1], 1)}</div>}
+
+                        {/* remaining sections */}
+                        {cs.blocks.slice(2).map((b, i) => (
+                          <section className="cs-section" key={i}>
+                            <h3 className="cs-h">{b.heading}</h3>
+                            <p className="cs-p">{b.body}</p>
+                          </section>
+                        ))}
+                      </>
+                    );
+                  })()}
+                </>
               )}
+
+              {/* CTA */}
+              <div className="cs-cta-row">
+                {activeProject.caseStudyHref && (
+                  <a className="cs-cta" href={activeProject.caseStudyHref}>
+                    View full case study →
+                  </a>
+                )}
+                <a className="cs-cta cs-cta--ghost" href="mailto:thutasoe24@gmail.com">
+                  Start a project →
+                </a>
+              </div>
             </div>
           </div>
         )}

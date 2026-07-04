@@ -6,6 +6,30 @@
 // an optional real image later (`img`) — until then a hue color-block
 // placeholder renders. Rich entries also open a detail modal.
 
+// A single content block inside a case study (heading + copy).
+export interface CaseBlock {
+  heading: string;
+  body: string;
+}
+
+// An image placeholder in a case study. `span` controls grid width.
+// Drop `img` later to swap the hue-block for a real asset.
+export interface CaseImage {
+  hue: number;
+  span?: 'full' | 'half';   // full-width or half (paired) — default 'half'
+  ratio?: 'wide' | 'tall';  // aspect hint — default 'wide'
+  label?: string;           // caption shown on the placeholder
+  img?: string;
+}
+
+export interface CaseStudy {
+  tagline: string;      // one-line hero subtitle
+  overview: string;     // lead paragraph
+  scope: string[];      // discipline tags
+  blocks: CaseBlock[];  // narrative sections
+  gallery: CaseImage[]; // image placeholders, rendered in order
+}
+
 export interface Project {
   name: string;
   year: string;
@@ -16,7 +40,8 @@ export interface Project {
   desc?: string;
   client?: string;
   role?: string;
-  caseStudyHref?: string; // real case-study page, if one exists
+  caseStudyHref?: string; // real external/route case-study page, if one exists
+  caseStudy?: CaseStudy;  // in-modal Behance-style case study
 }
 
 export const works: Project[] = [
@@ -29,6 +54,23 @@ export const works: Project[] = [
     client: 'Sting Energy — PepsiCo Myanmar',
     role: 'Art Director',
     caseStudyHref: '/sting-night-life',
+    caseStudy: {
+      tagline: 'Charging the night with a bolder, high-energy Sting.',
+      overview:
+        'Sting needed to own the after-dark moment. We built a nightlife-first visual world — neon-charged, kinetic and unmistakably premium — spanning a national TV commercial, key visuals and a full digital rollout that pushed the brand deeper into Gen Z culture.',
+      scope: ['Art Direction', 'TVC Production', 'Key Visual', 'Digital Rollout'],
+      blocks: [
+        { heading: 'The Challenge', body: 'Energy drinks live or die on attitude. Sting was strong by day but invisible once the lights dropped. The brief: claim the night without losing the mass-market punch that made Sting a market leader.' },
+        { heading: 'The Direction', body: 'We leaned into contrast — deep black canvases cut by electric ambers and reds, motion-blur streaks and product hero shots that feel charged with voltage. Every frame was built to read at a glance on a phone and hold up on a billboard.' },
+        { heading: 'The Result', body: 'A cohesive campaign system that flexed from a 30-second TVC to stories, posters and in-store POSM — giving Sting a distinct nightlife identity that lifted recall across the target audience.' },
+      ],
+      gallery: [
+        { hue: 30, span: 'full', ratio: 'wide', label: 'Campaign key visual' },
+        { hue: 20, span: 'half', ratio: 'tall', label: 'TVC still' },
+        { hue: 45, span: 'half', ratio: 'tall', label: 'Product hero' },
+        { hue: 15, span: 'full', ratio: 'wide', label: 'Out-of-home rollout' },
+      ],
+    },
   },
   {
     name: 'Pepsi Titan Wall Art',
@@ -38,6 +80,23 @@ export const works: Project[] = [
     hue: 220,
     client: 'Pepsi-Cola Myanmar',
     role: 'Art Director · Illustrator',
+    caseStudy: {
+      tagline: 'Brand at monumental scale — a mural you can feel.',
+      overview:
+        'Pepsi wanted a landmark. We designed a large-format wall installation that turned a flat facade into a dimensional, illustrative statement — engineered through detailed 3D visualization before a single litre of paint was mixed.',
+      scope: ['Art Direction', '3D Visualization', 'Illustration', 'Mural Design'],
+      blocks: [
+        { heading: 'The Concept', body: 'A “titan” expression of the brand — bottle forms and brand marks reimagined at architectural scale, composed to draw the eye from across the street.' },
+        { heading: 'The Craft', body: 'Every panel was modeled and lit in 3D to preview shadow, depth and perspective on the real wall, then translated into a production-ready illustration guide for the paint team.' },
+        { heading: 'The Impact', body: 'A photographed, share-worthy landmark that generated organic social reach and gave the brand a permanent physical anchor in the city.' },
+      ],
+      gallery: [
+        { hue: 220, span: 'full', ratio: 'wide', label: 'Finished mural' },
+        { hue: 210, span: 'half', ratio: 'tall', label: '3D visualization' },
+        { hue: 235, span: 'half', ratio: 'tall', label: 'Illustration detail' },
+        { hue: 225, span: 'full', ratio: 'wide', label: 'On-site context' },
+      ],
+    },
   },
   {
     name: 'Velosi ERP Software UI/UX',
@@ -47,6 +106,23 @@ export const works: Project[] = [
     hue: 340,
     client: 'Velosi Asset Integrity — Abu Dhabi',
     role: 'Product & UI/UX Designer',
+    caseStudy: {
+      tagline: 'Turning a complex ERP into a calm, usable product.',
+      overview:
+        'Velosi’s teams ran on dense, legacy screens. I led the end-to-end redesign of the internal ERP — mapping real workflows, building a scalable design system and delivering high-fidelity screens that made heavy enterprise data feel effortless.',
+      scope: ['UX Research', 'Wireframing', 'Design System', 'UI Design'],
+      blocks: [
+        { heading: 'The Problem', body: 'Operators juggled dozens of data-heavy modules with inconsistent patterns, slow task flows and high training overhead. The system worked, but it fought its users.' },
+        { heading: 'The Approach', body: 'I audited the core journeys, restructured the information architecture, and defined a component-driven design system — consistent tables, forms, states and navigation — so every module felt like one product.' },
+        { heading: 'The Outcome', body: 'Cleaner high-fidelity screens with clearer hierarchy and faster task paths, plus a reusable UI library that lets the team ship new modules without reinventing the interface each time.' },
+      ],
+      gallery: [
+        { hue: 340, span: 'full', ratio: 'wide', label: 'Dashboard overview' },
+        { hue: 330, span: 'half', ratio: 'tall', label: 'Module screen' },
+        { hue: 350, span: 'half', ratio: 'tall', label: 'Component library' },
+        { hue: 345, span: 'full', ratio: 'wide', label: 'Responsive views' },
+      ],
+    },
   },
   {
     name: 'Pepsi Meals AR Campaign',
@@ -56,6 +132,23 @@ export const works: Project[] = [
     hue: 200,
     client: 'Pepsi-Cola Myanmar',
     role: 'Art Director · AR Visualization',
+    caseStudy: {
+      tagline: 'Where the meal becomes an interactive playground.',
+      overview:
+        'We turned everyday Pepsi meal moments into an augmented-reality experience — pairing bold visual identity with custom 3D assets that let audiences unlock playful, shareable interactions straight from the pack.',
+      scope: ['Art Direction', '3D Assets', 'AR Experience', 'Visual Identity'],
+      blocks: [
+        { heading: 'The Idea', body: 'Bridge the physical pack and the phone: scan, and the meal comes alive with branded 3D characters, effects and rewards designed to drive participation and reshare.' },
+        { heading: 'The Build', body: 'I directed the visual identity and modeled/optimized the 3D assets for smooth real-time AR performance across a wide range of devices.' },
+        { heading: 'The Payoff', body: 'A digital-physical loop that boosted engagement time and gave the campaign a novel, tech-forward edge in a crowded FMCG space.' },
+      ],
+      gallery: [
+        { hue: 200, span: 'full', ratio: 'wide', label: 'AR experience' },
+        { hue: 190, span: 'half', ratio: 'tall', label: '3D asset' },
+        { hue: 215, span: 'half', ratio: 'tall', label: 'In-app view' },
+        { hue: 205, span: 'full', ratio: 'wide', label: 'Pack integration' },
+      ],
+    },
   },
   {
     name: 'Pepsi Talent Development',
@@ -65,6 +158,23 @@ export const works: Project[] = [
     hue: 280,
     client: 'Pepsi-Cola Myanmar',
     role: 'Art Director',
+    caseStudy: {
+      tagline: 'A creative platform built for the next generation.',
+      overview:
+        'Pepsi set out to nurture young creators. We shaped the campaign’s creative direction and key visuals into a vibrant, culture-first platform that spoke Gen Z’s language and made the program feel like a movement, not an ad.',
+      scope: ['Art Direction', 'Key Visual', 'Campaign System', 'Social'],
+      blocks: [
+        { heading: 'The Brief', body: 'Position Pepsi as a genuine backer of emerging talent — credible to a skeptical Gen Z audience while staying unmistakably on-brand.' },
+        { heading: 'The Look', body: 'Energetic color, expressive type and a flexible layout system that let the program scale across social, stage and print without losing its identity.' },
+        { heading: 'The Result', body: 'A recognizable campaign world that gave the talent program a strong, ownable identity and a consistent presence across every touchpoint.' },
+      ],
+      gallery: [
+        { hue: 280, span: 'full', ratio: 'wide', label: 'Campaign key visual' },
+        { hue: 270, span: 'half', ratio: 'tall', label: 'Social series' },
+        { hue: 295, span: 'half', ratio: 'tall', label: 'Poster' },
+        { hue: 285, span: 'full', ratio: 'wide', label: 'Event branding' },
+      ],
+    },
   },
 ];
 
