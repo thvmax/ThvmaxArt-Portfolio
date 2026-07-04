@@ -1,18 +1,25 @@
 // ─── Central content for the portfolio ──────────────────────────────
 // Everything the page renders lives here so copy can be edited in one place.
 
+// ─── Works ───────────────────────────────────────────────────────────
+// One unified list drives the index-style showcase. Every entry can carry
+// an optional real image later (`img`) — until then a hue color-block
+// placeholder renders. Rich entries also open a detail modal.
+
 export interface Project {
   name: string;
   year: string;
   cat: string;        // short category line, e.g. "FMCG · TVC Campaign"
-  desc: string;
   hue: number;        // drives the placeholder color block
-  client: string;
-  role: string;
+  img?: string;       // real preview asset — drop a path here to swap in
+  // ── detail fields (present → row opens a full modal) ──
+  desc?: string;
+  client?: string;
+  role?: string;
   caseStudyHref?: string; // real case-study page, if one exists
 }
 
-export const projects: Project[] = [
+export const works: Project[] = [
   {
     name: 'STING Nightlife Campaign',
     year: '2024',
@@ -59,23 +66,15 @@ export const projects: Project[] = [
     client: 'AIA Life Insurance Myanmar',
     role: 'Brand & Creative',
   },
-];
-
-export interface ShowcaseCard {
-  name: string;
-  cat: string;
-  hue: number;
-}
-
-export const showcaseCards: ShowcaseCard[] = [
-  { name: 'Pepsi-Cola',          cat: 'Social Advertising', hue: 220 },
-  { name: 'Logo & Identity',     cat: 'Brand Identity',     hue: 0 },
-  { name: 'Velosi Asset',        cat: 'Social Advertising', hue: 30 },
-  { name: '7UP Social Series',   cat: 'Social Advertising', hue: 140 },
-  { name: 'STING & Pepsi',       cat: 'Motion Design',      hue: 280 },
-  { name: 'Iremia App',          cat: 'UI Design',          hue: 200 },
-  { name: 'Product Photography', cat: 'Retouching',         hue: 180 },
-  { name: 'Pepsi 2024 Calendar', cat: 'Offline Branding',   hue: 260 },
+  // ── lighter archive entries (preview only, no modal) ──
+  { name: '7UP Social Series',      year: '2023', cat: 'Social Advertising', hue: 140 },
+  { name: 'STING × Pepsi Motion',   year: '2023', cat: 'Motion Design',      hue: 300 },
+  { name: 'Iremia App',             year: '2022', cat: 'UI Design',          hue: 190 },
+  { name: 'Pepsi-Cola Social',      year: '2022', cat: 'Social Advertising', hue: 240 },
+  { name: 'Logo & Identity',        year: '2021', cat: 'Brand Identity',     hue: 10  },
+  { name: 'Velosi Asset',           year: '2024', cat: 'Brand & Digital',    hue: 340 },
+  { name: 'Product Photography',    year: '2023', cat: 'Retouching',         hue: 170 },
+  { name: 'Pepsi 2024 Calendar',    year: '2024', cat: 'Offline Branding',   hue: 260 },
 ];
 
 export interface Service {

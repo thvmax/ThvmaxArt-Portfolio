@@ -5,8 +5,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import {
-  projects,
-  showcaseCards,
+  works,
   services,
   experience,
   skills,
@@ -23,7 +22,11 @@ const block = (hue: number) =>
 export default function Portfolio() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [hovered, setHovered] = useState<number | null>(null);
   const lenisRef = useRef<Lenis | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const moveX = useRef<((v: number) => void) | null>(null);
+  const moveY = useRef<((v: number) => void) | null>(null);
 
   // ─── Smooth scroll + scroll animations ──────────────────────────
   useEffect(() => {
@@ -85,6 +88,20 @@ export default function Portfolio() {
       lenis.destroy();
       lenisRef.current = null;
     };
+  }, []);
+
+  // ─── Floating cursor preview for the works index ────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined' || !previewRef.current) return;
+    // fine-pointer only (skip touch)
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    moveX.current = gsap.quickTo(previewRef.current, 'x', { duration: 0.5, ease: 'power3' });
+    moveY.current = gsap.quickTo(previewRef.current, 'y', { duration: 0.5, ease: 'power3' });
+  }, []);
+
+  const onWorksMove = useCallback((e: React.MouseEvent) => {
+    moveX.current?.(e.clientX);
+    moveY.current?.(e.clientY);
   }, []);
 
   // Smooth anchor scrolling
@@ -236,61 +253,73 @@ export default function Portfolio() {
           ))}
         </section>
 
-        {/* WORK */}
-        <section id="work" className="section">
+        {/* WORK — index showcase */}
+        <section id="work" className="section works">
           <div className="section-head reveal">
             <h2 className="section-title">Selected Works</h2>
             <div className="section-meta">
               2019 — 2026<br />
-              {projects.length} featured projects
+              {works.length} projects
             </div>
           </div>
 
-          <div className="work-grid reveal-stagger">
-            {projects.map((p, i) => (
-              <button
+          <ul
+            className={`works-index reveal-stagger ${hovered !== null ? 'is-hovering' : ''}`}
+            onMouseMove={onWorksMove}
+            onMouseLeave={() => setHovered(null)}
+          >
+            {works.map((p, i) => (
+              <li
                 key={p.name}
-                className="work-card"
-                onClick={() => openProject(p)}
-                type="button"
+                className={`work-row ${hovered === i ? 'is-active' : ''}`}
+                onMouseEnter={() => setHovered(i)}
               >
-                <div className="work-card-media" style={{ background: block(p.hue) }}>
-                  <span className="work-card-num">{String(i + 1).padStart(2, '0')}</span>
-                  <span className="work-card-name-lg">{p.name}</span>
-                  {p.caseStudyHref && <span className="work-card-badge">Case study</span>}
-                </div>
-                <div className="work-card-foot">
-                  <div>
-                    <div className="work-card-name">{p.name}</div>
-                    <div className="work-card-cat">{p.cat}</div>
-                  </div>
-                  <div className="work-card-year">{p.year}</div>
-                </div>
-              </button>
+                <button
+                  className="work-row-btn"
+                  type="button"
+                  onClick={() => openProject(p)}
+                >
+                  <span className="work-row-num">{String(i + 1).padStart(2, '0')}</span>
+                  <span
+                    className="work-row-thumb"
+                    style={{ background: p.img ? undefined : block(p.hue) }}
+                  >
+                    {p.img && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.img} alt={p.name} />
+                    )}
+                  </span>
+                  <span className="work-row-name">{p.name}</span>
+                  <span className="work-row-cat">{p.cat}</span>
+                  <span className="work-row-year">{p.year}</span>
+                  <span className="work-row-arrow" aria-hidden="true">→</span>
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
 
-        {/* VISUAL ARCHIVE */}
-        <section id="archive" className="section">
-          <div className="section-head reveal">
-            <h2 className="section-title">Visual Archive</h2>
-            <div className="section-meta">
-              Selected visual experiments<br />
-              &amp; brand explorations
+        {/* FLOATING CURSOR PREVIEW (desktop) */}
+        <div
+          ref={previewRef}
+          className={`works-preview ${hovered !== null ? 'show' : ''}`}
+          aria-hidden="true"
+        >
+          {works.map((p, i) => (
+            <div
+              key={p.name}
+              className={`works-preview-media ${hovered === i ? 'active' : ''}`}
+              style={{ background: p.img ? undefined : block(p.hue) }}
+            >
+              {p.img ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.img} alt="" />
+              ) : (
+                <span className="works-preview-label">{p.name}</span>
+              )}
             </div>
-          </div>
-          <div className="archive-grid reveal-stagger">
-            {showcaseCards.map((c) => (
-              <div key={c.name} className="archive-card" style={{ background: block(c.hue) }}>
-                <div className="archive-card-info">
-                  <span className="archive-card-cat">{c.cat}</span>
-                  <span className="archive-card-name">{c.name}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+          ))}
+        </div>
 
         {/* SERVICES */}
         <section id="services" className="section">
@@ -386,7 +415,9 @@ export default function Portfolio() {
               <h2 className="modal-title">{activeProject.name}</h2>
             </div>
             <div className="modal-body">
-              <p className="modal-desc">{activeProject.desc}</p>
+              <p className="modal-desc">
+                {activeProject.desc ?? 'A selected piece from the visual archive — full case notes coming soon.'}
+              </p>
               <div className="modal-meta">
                 <div className="modal-meta-item">
                   <span className="modal-meta-label">Year</span>
@@ -396,14 +427,18 @@ export default function Portfolio() {
                   <span className="modal-meta-label">Scope</span>
                   <span className="modal-meta-value">{activeProject.cat}</span>
                 </div>
-                <div className="modal-meta-item">
-                  <span className="modal-meta-label">Role</span>
-                  <span className="modal-meta-value">{activeProject.role}</span>
-                </div>
-                <div className="modal-meta-item">
-                  <span className="modal-meta-label">Client</span>
-                  <span className="modal-meta-value">{activeProject.client}</span>
-                </div>
+                {activeProject.role && (
+                  <div className="modal-meta-item">
+                    <span className="modal-meta-label">Role</span>
+                    <span className="modal-meta-value">{activeProject.role}</span>
+                  </div>
+                )}
+                {activeProject.client && (
+                  <div className="modal-meta-item">
+                    <span className="modal-meta-label">Client</span>
+                    <span className="modal-meta-value">{activeProject.client}</span>
+                  </div>
+                )}
               </div>
               {activeProject.caseStudyHref && (
                 <a className="modal-cta" href={activeProject.caseStudyHref}>
