@@ -42,7 +42,9 @@ export default function WorkShowcase({ works, onOpen }: Props) {
 
       gsap.utils.toArray<HTMLElement>('.work-card').forEach((card) => {
         const media = card.querySelector('.work-card-media');
-        const inner = card.querySelector('.work-card-media img, .work-card-media .work-card-fill');
+        const inner = card.querySelector(
+          '.work-card-media img, .work-card-media video, .work-card-media .work-card-fill',
+        );
         const info = card.querySelector('.work-card-info');
 
         if (reduced) return;
@@ -116,7 +118,9 @@ export default function WorkShowcase({ works, onOpen }: Props) {
               aria-label={`Open case study: ${p.name}`}
             >
               <div className="work-card-media">
-                {p.img ? (
+                {p.video ? (
+                  <video src={p.video} autoPlay muted loop playsInline poster={p.img} />
+                ) : p.img ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.img} alt={p.name} />
                 ) : (

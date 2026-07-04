@@ -72,12 +72,14 @@ export default function Hero({ scrollTo }: { scrollTo: (href: string) => void })
           <div
             key={p.name}
             className={`hero-slide ${slide === i ? 'active' : ''}`}
-            style={{ background: p.img ? undefined : block(p.hue) }}
+            style={{ background: p.img || p.video ? undefined : block(p.hue) }}
           >
-            {p.img && (
+            {p.video ? (
+              <video src={p.video} autoPlay muted loop playsInline poster={p.img} />
+            ) : p.img ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={p.img} alt="" />
-            )}
+            ) : null}
           </div>
         ))}
         <div className="hero-scrim" />

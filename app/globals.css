@@ -288,7 +288,8 @@ nav#nav.nav--hidden { transform: translateY(-110%); }
 
 .hero-slide.active { opacity: 1; }
 
-.hero-slide img {
+.hero-slide img,
+.hero-slide video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -504,6 +505,7 @@ nav#nav.nav--hidden { transform: translateY(-110%); }
 .work-card--narrow .work-card-media { aspect-ratio: 4 / 4.6; }
 
 .work-card-media img,
+.work-card-media video,
 .work-card-fill {
   position: absolute;
   inset: -8% 0; /* headroom for the scrub parallax */
@@ -516,8 +518,10 @@ nav#nav.nav--hidden { transform: translateY(-110%); }
 
 @media (pointer: fine) {
   .work-card-btn:hover .work-card-media img,
+  .work-card-btn:hover .work-card-media video,
   .work-card-btn:hover .work-card-fill,
   .work-card-btn:focus-visible .work-card-media img,
+  .work-card-btn:focus-visible .work-card-media video,
   .work-card-btn:focus-visible .work-card-fill {
     scale: 1.05;
   }

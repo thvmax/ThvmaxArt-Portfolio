@@ -36,6 +36,7 @@ export interface Project {
   cat: string;        // short category line, e.g. "FMCG · TVC Campaign"
   hue: number;        // drives the placeholder color block
   img?: string;       // real preview asset — drop a path here to swap in
+  video?: string;     // looping cover video — takes priority over img
   // ── detail fields (present → row opens a full modal) ──
   desc?: string;
   client?: string;
@@ -51,7 +52,7 @@ export const works: Project[] = [
     cat: 'FMCG · TVC Campaign',
     desc: 'Led visual direction for the Sting Energy nightlife campaign — TV commercial production, key visuals and digital rollouts.',
     hue: 30,
-    img: '/case-studies/sting-night-life/slide-1.jpg',
+    video: '/case-studies/sting-night-life/hero-video.mp4',
     client: 'Sting Energy — PepsiCo Myanmar',
     role: 'Art Director',
     caseStudyHref: '/sting-night-life',
@@ -66,10 +67,10 @@ export const works: Project[] = [
         { heading: 'The Result', body: 'A cohesive campaign system that flexed from a 30-second TVC to stories, posters and in-store POSM — giving Sting a distinct nightlife identity that lifted recall across the target audience.' },
       ],
       gallery: [
-        { hue: 30, span: 'full', ratio: 'wide', label: 'Campaign key visual', img: '/case-studies/sting-night-life/thematic-kv.png' },
-        { hue: 20, span: 'half', ratio: 'tall', label: 'TVC still', img: '/case-studies/sting-night-life/slide-2.jpg' },
-        { hue: 45, span: 'half', ratio: 'tall', label: 'Product hero', img: '/case-studies/sting-night-life/product-kv.png' },
-        { hue: 15, span: 'full', ratio: 'wide', label: 'Out-of-home rollout', img: '/case-studies/sting-night-life/slide-3.jpg' },
+        { hue: 30, span: 'full', ratio: 'wide', label: 'KV breakdown', img: '/case-studies/sting-night-life/slide-1.jpg' },
+        { hue: 20, span: 'half', ratio: 'tall', label: 'Thematic key visual', img: '/case-studies/sting-night-life/thematic-kv.png' },
+        { hue: 45, span: 'half', ratio: 'tall', label: 'Product key visual', img: '/case-studies/sting-night-life/product-kv.png' },
+        { hue: 15, span: 'full', ratio: 'wide', label: 'Campaign rollout', img: '/case-studies/sting-night-life/slide-3.jpg' },
       ],
     },
   },

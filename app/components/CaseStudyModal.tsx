@@ -29,12 +29,22 @@ export default function CaseStudyModal({ project, onClose }: Props) {
           {/* HERO */}
           <header
             className="cs-hero"
-            style={{ background: project.img ? undefined : block(project.hue) }}
+            style={{ background: project.img || project.video ? undefined : block(project.hue) }}
           >
-            {project.img && (
+            {project.video ? (
+              <video
+                className="cs-hero-img"
+                src={project.video}
+                autoPlay
+                muted
+                loop
+                playsInline
+                poster={project.img}
+              />
+            ) : project.img ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img className="cs-hero-img" src={project.img} alt="" />
-            )}
+            ) : null}
             <div className="cs-hero-inner">
               <span className="cs-eyebrow">{project.cat}</span>
               <h2 className="cs-title">{project.name}</h2>
