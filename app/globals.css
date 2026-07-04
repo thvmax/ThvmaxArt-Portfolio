@@ -207,29 +207,13 @@ nav#nav {
 
 .hero-reel-play { font-size: 0.62em; }
 
-/* ── DIVISIONS (pinned clip-path reveal) ─────────────────────────── */
-.dpin { background: var(--bg); }
-
-.dpin-grid {
-  display: grid;
-  grid-template-columns: minmax(38%, 1fr) 1.2fr;
+/* ── DIVISIONS (pinned full-frame clip-path reveal) ──────────────── */
+.dpin {
+  position: relative;
   height: 100svh;
+  overflow: hidden;
+  background: var(--bg);
 }
-
-.dpin-left {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1.1rem;
-  padding: 0 var(--gutter);
-  border-right: 1px solid var(--line);
-}
-
-.dpin-heading { font-size: var(--h-lg); font-weight: 500; }
-
-.dpin-sub { color: var(--text-mid); max-width: 30ch; }
-
-.dpin-right { position: relative; overflow: hidden; }
 
 .dpin-card {
   position: absolute;
@@ -243,35 +227,48 @@ nav#nav {
 
 .dpin-card + .dpin-card { clip-path: inset(100% 0 0 0); }
 
-.dpin-card-band { height: clamp(40px, 6vh, 60px); flex: none; }
+.dpin-card-band { height: clamp(48px, 8vh, 76px); flex: none; }
 
+/* Reference row anatomy: title left column, everything else right */
 .dpin-card-body {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(1rem, 2.5vh, 1.8rem);
-  padding: clamp(1.4rem, 3.5vh, 2.4rem) var(--gutter);
+  display: grid;
+  grid-template-columns: 1fr minmax(50%, 1fr);
+  align-items: start;
+  padding: clamp(1.6rem, 4vh, 2.6rem) var(--gutter);
   min-height: 0;
+  border-top: 1px solid var(--line);
 }
-
-.dpin-card-head {
-  display: flex;
-  align-items: baseline;
-  gap: 1.4rem;
-}
-
-.dpin-card-num { font-size: var(--h-num); color: var(--text-dim); }
 
 .dpin-card-title { font-size: var(--h-lg); font-weight: 500; }
 
-.dpin-card-desc {
-  font-size: clamp(1.15rem, 1.7vw, 1.5rem);
-  font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: -0.015em;
-  max-width: 34ch;
-  color: var(--text);
+.dpin-card-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(1.4rem, 4vh, 2.4rem);
+  height: 100%;
+  min-height: 0;
 }
+
+.dpin-card-desc {
+  font-size: var(--h-lg);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  max-width: 26ch;
+}
+
+.dpin-learn {
+  display: inline;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: var(--text-dim);
+  transition: color 0.25s ease;
+}
+
+.dpin-learn:hover { color: var(--text); }
 
 .dpin-feature {
   display: flex;
@@ -279,7 +276,7 @@ nav#nav {
   text-align: left;
   flex: 1;
   min-height: 0;
-  max-width: 44rem;
+  max-width: 40rem;
 }
 
 .dpin-feature-caption {
@@ -316,19 +313,9 @@ nav#nav {
   }
 }
 
-.dpin-feature-link {
-  padding-top: 0.7rem;
-  font-weight: 500;
-  color: var(--text-mid);
-  transition: color 0.25s ease;
-}
-
-.dpin-feature:hover .dpin-feature-link { color: var(--text); }
-
 /* Reduced motion / no-JS sanity: cards flow normally */
 @media (prefers-reduced-motion: reduce) {
-  .dpin-grid { height: auto; }
-  .dpin-right { overflow: visible; }
+  .dpin { height: auto; overflow: visible; }
   .dpin-card { position: relative; clip-path: none !important; }
   .dpin-card + .dpin-card { clip-path: none; }
   .dpin-feature-media { aspect-ratio: 16 / 9; flex: none; }
@@ -754,15 +741,12 @@ nav#nav {
   .hero-statement, .hero-browse { margin-left: 0; }
   .hero-top { min-height: unset; gap: 2.2rem; }
 
-  .dpin-grid { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-  .dpin-left {
-    justify-content: flex-start;
-    padding-top: 4.6rem;
-    padding-bottom: 1.2rem;
-    border-right: none;
-    border-bottom: 1px solid var(--line);
+  .dpin-card-body {
+    grid-template-columns: 1fr;
+    row-gap: 1.4rem;
+    align-content: start;
   }
-  .dpin-card-desc { font-size: 1.05rem; }
+  .dpin-card-desc { font-size: 1.3rem; }
 
   .hs-card { width: 84vw; }
   .hs-caption-cat { display: none; }
