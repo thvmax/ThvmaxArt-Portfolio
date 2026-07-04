@@ -48,27 +48,34 @@ export default function Portfolio() {
         .from('.hero-meta > *', { y: 16, opacity: 0, duration: 0.6, stagger: 0.1 }, '-=0.5')
         .from('nav', { y: -30, opacity: 0, duration: 0.7 }, '-=0.9');
 
-      // Scroll reveals
+      // Scroll reveals — explicit fromTo so end state (opacity:1) is fixed,
+      // not inferred from the DOM (StrictMode double-invokes this effect).
       gsap.utils.toArray<HTMLElement>('.reveal').forEach((el) => {
-        gsap.from(el, {
-          y: 40,
-          opacity: 0,
-          duration: 0.9,
-          ease: 'power3.out',
-          scrollTrigger: { trigger: el, start: 'top 88%' },
-        });
+        gsap.fromTo(el,
+          { y: 40, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.9,
+            ease: 'power3.out',
+            scrollTrigger: { trigger: el, start: 'top 88%' },
+          },
+        );
       });
 
       // Stagger children marked .reveal-stagger
       gsap.utils.toArray<HTMLElement>('.reveal-stagger').forEach((wrap) => {
-        gsap.from(wrap.children, {
-          y: 40,
-          opacity: 0,
-          duration: 0.8,
-          ease: 'power3.out',
-          stagger: 0.08,
-          scrollTrigger: { trigger: wrap, start: 'top 85%' },
-        });
+        gsap.fromTo(wrap.children,
+          { y: 40, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            ease: 'power3.out',
+            stagger: 0.08,
+            scrollTrigger: { trigger: wrap, start: 'top 85%' },
+          },
+        );
       });
     });
 
