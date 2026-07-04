@@ -5,6 +5,8 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useSmoothScroll } from './SmoothScroll';
 
+gsap.registerPlugin(useGSAP);
+
 export default function Hero() {
   const { scrollTo } = useSmoothScroll();
   const rootRef = useRef<HTMLElement | null>(null);

@@ -28,7 +28,6 @@ export default function Footer() {
           <span className="footer-col-title">Discover</span>
           <a href="#work" onClick={(e) => onClick(e, '#work')}>Work</a>
           <a href="#about" onClick={(e) => onClick(e, '#about')}>About</a>
-          <a href="#capabilities" onClick={(e) => onClick(e, '#capabilities')}>Capabilities</a>
         </div>
         <div className="footer-col">
           <span className="footer-col-title">Disciplines</span>

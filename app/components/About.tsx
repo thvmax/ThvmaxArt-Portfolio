@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 import { experience, skills, stats } from '@/lib/data';
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export default function About() {
   const rootRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (!rootRef.current) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  useGSAP(
+    () => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const ctx = gsap.context(() => {
       gsap.from('.about-heading', {
         y: 50,
         opacity: 0,
@@ -28,10 +31,9 @@ export default function About() {
           scrollTrigger: { trigger: el, start: 'top 88%' },
         });
       });
-    }, rootRef);
-
-    return () => ctx.revert();
-  }, []);
+    },
+    { scope: rootRef },
+  );
 
   return (
     <section id="about" className="about" ref={rootRef}>
