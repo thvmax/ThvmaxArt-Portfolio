@@ -1,17 +1,28 @@
 "use client";
 
-import { useState } from 'react';
-import ThemeToggle from './ThemeToggle';
+import { useEffect, useState } from 'react';
 
 const navLinks = [
   { label: 'Work', href: '#work' },
-  { label: 'Services', href: '#services' },
+  { label: 'Disciplines', href: '#disciplines' },
   { label: 'About', href: '#about' },
-  { label: 'Contact', href: '#contact' },
 ];
 
 export default function Nav({ scrollTo }: { scrollTo: (href: string) => void }) {
   const [open, setOpen] = useState(false);
+
+  // Close the mobile sheet if the viewport grows past the breakpoint
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 901px)');
+    const onChange = () => {
+      if (mq.matches) {
+        setOpen(false);
+        document.body.style.overflow = '';
+      }
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   const close = () => {
     setOpen(false);
@@ -33,22 +44,24 @@ export default function Nav({ scrollTo }: { scrollTo: (href: string) => void }) 
   return (
     <>
       <nav id="nav">
-        <a href="#home" className="nav-logo" onClick={(e) => onClick(e, '#home')}>
+        <a href="#top" className="nav-logo" onClick={(e) => onClick(e, '#top')}>
+          <span className="nav-logo-mark" aria-hidden="true" />
           THVMAX
         </a>
 
-        <ul className="nav-links">
-          {navLinks.map((l) => (
-            <li key={l.href}>
-              <a href={l.href} onClick={(e) => onClick(e, l.href)}>
-                {l.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <div className="nav-actions">
-          <ThemeToggle />
+        <div className="nav-right">
+          <ul className="nav-links">
+            {navLinks.map((l) => (
+              <li key={l.href}>
+                <a href={l.href} onClick={(e) => onClick(e, l.href)}>
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <a className="nav-talk" href="mailto:thutasoe24@gmail.com">
+            Let&rsquo;s talk
+          </a>
           <button
             className={`nav-hamburger ${open ? 'open' : ''}`}
             onClick={toggle}
@@ -70,10 +83,16 @@ export default function Nav({ scrollTo }: { scrollTo: (href: string) => void }) 
             style={{ transitionDelay: `${0.05 + i * 0.06}s` }}
             onClick={(e) => onClick(e, l.href)}
           >
-            <span>{String(i + 1).padStart(2, '0')}</span>
             {l.label}
           </a>
         ))}
+        <a
+          href="mailto:thutasoe24@gmail.com"
+          className="mobile-menu-link"
+          style={{ transitionDelay: '0.23s' }}
+        >
+          Let&rsquo;s talk
+        </a>
         <div className="mobile-menu-footer">THVMAX © 2026 · Abu Dhabi</div>
       </div>
     </>

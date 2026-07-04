@@ -7,10 +7,10 @@ import Lenis from 'lenis';
 import { works, type Project } from '@/lib/data';
 import Nav from './Nav';
 import Hero from './Hero';
-import WorkShowcase from './WorkShowcase';
-import Services from './Services';
+import Divisions from './Divisions';
+import WorkCarousel from './WorkCarousel';
 import About from './About';
-import Contact from './Contact';
+import Footer from './Footer';
 import CaseStudyModal from './CaseStudyModal';
 
 export default function Site() {
@@ -24,23 +24,11 @@ export default function Site() {
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const lenis = new Lenis({ lerp: 0.09, smoothWheel: !reduced });
+    const lenis = new Lenis({ lerp: 0.11, smoothWheel: !reduced });
     lenisRef.current = lenis;
     lenis.on('scroll', ScrollTrigger.update);
     gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
-
-    // Nav hide on scroll down
-    let lastY = 0;
-    const onScroll = ({ scroll }: { scroll: number }) => {
-      const nav = document.getElementById('nav');
-      if (!nav) return;
-      if (scroll > lastY && scroll > 120) nav.classList.add('nav--hidden');
-      else nav.classList.remove('nav--hidden');
-      nav.classList.toggle('nav--solid', scroll > 40);
-      lastY = scroll;
-    };
-    lenis.on('scroll', onScroll);
 
     return () => {
       lenis.destroy();
@@ -48,10 +36,9 @@ export default function Site() {
     };
   }, []);
 
-  // Smooth anchor scrolling
   const scrollTo = useCallback((href: string) => {
     const target = document.querySelector(href);
-    if (target) lenisRef.current?.scrollTo(target as HTMLElement, { duration: 1.3 });
+    if (target) lenisRef.current?.scrollTo(target as HTMLElement, { duration: 1.2 });
   }, []);
 
   const openProject = useCallback((p: Project) => {
@@ -69,11 +56,11 @@ export default function Site() {
       <Nav scrollTo={scrollTo} />
       <main>
         <Hero scrollTo={scrollTo} />
-        <WorkShowcase works={works} onOpen={openProject} />
-        <Services />
+        <Divisions onOpen={openProject} />
+        <WorkCarousel works={works} onOpen={openProject} />
         <About />
-        <Contact />
       </main>
+      <Footer scrollTo={scrollTo} />
       <CaseStudyModal project={activeProject} onClose={closeProject} />
     </>
   );
