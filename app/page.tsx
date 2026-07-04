@@ -1,5 +1,5 @@
-import Portfolio from './components/Portfolio';
+import Site from './components/Site';
 
 export default function Home() {
-  return <Portfolio />;
+  return <Site />;
 }

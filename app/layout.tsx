@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { Syne, DM_Sans } from 'next/font/google';
+import { Archivo, DM_Sans } from 'next/font/google';
 import './globals.css';
 
-const syne = Syne({
+const archivo = Archivo({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700', '800', '900'],
   variable: '--font-display',
   display: 'swap',
 });
@@ -44,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${syne.variable} ${dmSans.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${archivo.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <head>
         {/* No-flash theme: set data-theme before paint. */}
         <script
