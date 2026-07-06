@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSmoothScroll } from './SmoothScroll';
+import { site } from '@/lib/data';
 
 const navLinks = [
   { label: 'Work', href: '#work' },
@@ -61,7 +62,7 @@ export default function Nav() {
               </li>
             ))}
           </ul>
-          <a className="nav-talk" href="mailto:thutasoe24@gmail.com">
+          <a className="nav-talk" href={`mailto:${site.email}`}>
             Let&rsquo;s talk
           </a>
           <button
@@ -89,7 +90,7 @@ export default function Nav() {
           </a>
         ))}
         <a
-          href="mailto:thutasoe24@gmail.com"
+          href={`mailto:${site.email}`}
           className="mobile-menu-link"
           style={{ transitionDelay: '0.23s' }}
         >

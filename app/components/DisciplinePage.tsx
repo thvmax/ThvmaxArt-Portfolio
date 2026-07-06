@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { disciplines, works, type Project } from '@/lib/data';
+import { disciplines, works, site, type Project } from '@/lib/data';
 import CaseStudyModal from './CaseStudyModal';
 import styles from './discipline.module.css';
 
@@ -85,7 +85,7 @@ export default function DisciplinePage({ slug }: { slug: string }) {
 
       <footer className={styles.footer}>
         <Link href="/#disciplines" className={styles.footerLink}>← All disciplines</Link>
-        <a href="mailto:thutasoe24@gmail.com" className={styles.footerLink}>Start a project →</a>
+        <a href={`mailto:${site.email}`} className={styles.footerLink}>Start a project →</a>
       </footer>
 
       <CaseStudyModal project={activeProject} onClose={closeProject} />

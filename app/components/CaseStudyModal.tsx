@@ -1,6 +1,6 @@
 "use client";
 
-import type { Project, CaseImage } from '@/lib/data';
+import { site, type Project, type CaseImage } from '@/lib/data';
 
 const block = (hue: number) =>
   `linear-gradient(145deg, hsl(${hue} 55% 42%), hsl(${(hue + 45) % 360} 60% 30%))`;
@@ -149,7 +149,7 @@ export default function CaseStudyModal({ project, onClose }: Props) {
                   View full case study →
                 </a>
               )}
-              <a className="cs-cta cs-cta--ghost" href="mailto:thutasoe24@gmail.com">
+              <a className="cs-cta cs-cta--ghost" href={`mailto:${site.email}`}>
                 Start a project →
               </a>
             </div>

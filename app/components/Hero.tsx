@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useSmoothScroll } from './SmoothScroll';
+import { site } from '@/lib/data';
 
 gsap.registerPlugin(useGSAP);
 
@@ -36,9 +37,7 @@ export default function Hero() {
   return (
     <section id="top" className="hero" ref={rootRef}>
       <div className="hero-top">
-        <h1 className="hero-statement">
-          Shaping brand visuals, campaigns and motion that audiences remember.
-        </h1>
+        <h1 className="hero-statement">{site.heroStatement}</h1>
         <a
           href="#work"
           className="hero-browse arrow-link"
@@ -50,7 +49,7 @@ export default function Hero() {
 
       <div className="hero-media">
         <video
-          src="/case-studies/sting-night-life/hero-video.mp4"
+          src={site.heroVideo}
           autoPlay
           muted
           loop

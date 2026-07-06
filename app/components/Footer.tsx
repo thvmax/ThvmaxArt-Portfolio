@@ -1,5 +1,7 @@
 "use client";
 
+import Link from 'next/link';
+import { disciplines, site } from '@/lib/data';
 import { useSmoothScroll } from './SmoothScroll';
 
 export default function Footer() {
@@ -14,12 +16,15 @@ export default function Footer() {
       {/* Contact block: quiet grey prompt left, underlined email right */}
       <div className="footer-contact">
         <p className="footer-prompt">
-          Have a project in mind?
-          <br />
-          I&rsquo;m ready to collaborate.
+          {site.footerPrompt.split('\n').map((line, i) => (
+            <span key={i}>
+              {i > 0 && <br />}
+              {line}
+            </span>
+          ))}
         </p>
-        <a className="footer-email" href="mailto:thutasoe24@gmail.com">
-          thutasoe24@gmail.com
+        <a className="footer-email" href={`mailto:${site.email}`}>
+          {site.email}
         </a>
       </div>
 
@@ -31,24 +36,26 @@ export default function Footer() {
         </div>
         <div className="footer-col">
           <span className="footer-col-title">Disciplines</span>
-          <a href="#disciplines" onClick={(e) => onClick(e, '#disciplines')}>Art Direction</a>
-          <a href="#disciplines" onClick={(e) => onClick(e, '#disciplines')}>Motion &amp; Production</a>
-          <a href="#disciplines" onClick={(e) => onClick(e, '#disciplines')}>Digital &amp; UI</a>
+          {disciplines.map((d) => (
+            <Link key={d.slug} href={`/${d.slug}`}>{d.title}</Link>
+          ))}
         </div>
         <div className="footer-col">
           <span className="footer-col-title">Contact</span>
-          <a href="tel:+971565776382">+971 56 577 6382</a>
-          <span>Abu Dhabi, UAE</span>
+          <a href={`tel:${site.phoneHref}`}>{site.phone}</a>
+          <span>{site.location}</span>
         </div>
       </div>
 
       <div className="footer-bottom">
         <div className="footer-social">
-          <a href="https://linktr.ee/thvmax" target="_blank" rel="noopener noreferrer">
-            Linktree
-          </a>
+          {site.social.map((s) => (
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer">
+              {s.label}
+            </a>
+          ))}
         </div>
-        <span>2026 © THVMAX — Thuta Soe</span>
+        <span>{site.copyright}</span>
       </div>
     </footer>
   );

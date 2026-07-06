@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import { experience, skills, stats } from '@/lib/data';
+import { experience, skills, stats, site } from '@/lib/data';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -41,12 +41,7 @@ export default function About() {
 
       <div className="about-grid">
         <div className="about-block about-intro">
-          <p className="about-bio">
-            Thuta Soe is a multidisciplinary creative with over 7 years of
-            experience across multinational companies and creative agencies —
-            building visually captivating experiences that communicate a
-            brand&rsquo;s message with clarity and craft.
-          </p>
+          <p className="about-bio">{site.aboutBio}</p>
           <div className="about-stats">
             {stats.map((s) => (
               <div key={s.label} className="about-stat">
