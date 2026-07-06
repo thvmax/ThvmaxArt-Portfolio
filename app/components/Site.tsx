@@ -30,7 +30,7 @@ export default function Site() {
       <main>
         <Hero />
         <Divisions onOpen={openProject} />
-        <WorkSlides works={works} onOpen={openProject} />
+        <WorkSlides works={works.filter((w) => !w.hideOnHome)} onOpen={openProject} />
         <About />
       </main>
       <Footer />

@@ -38,6 +38,7 @@ export interface Project {
   img?: string;       // real preview asset — drop a path here to swap in
   video?: string;     // looping cover video — takes priority over img
   disciplines?: string[]; // discipline slugs — controls which subpages list this project
+  hideOnHome?: boolean;   // true → listed on discipline subpages only, not the homepage showcase
   // ── detail fields (present → row opens a full modal) ──
   desc?: string;
   client?: string;
@@ -220,6 +221,49 @@ export const works: Project[] = [
         { hue: 285, span: 'full', ratio: 'wide', label: 'Event branding' },
       ],
     },
+  },
+  // ── Placeholder projects — swap name/desc/media for real work ──
+  {
+    name: 'AIA Brand & Social Films',
+    hideOnHome: true,
+    year: '2022',
+    cat: 'Insurance · Motion & Social',
+    desc: 'Placeholder — motion design and social film series for AIA Life Insurance: animated brand stories, reels and campaign cutdowns.',
+    hue: 160,
+    disciplines: ['motion-production'],
+    client: 'AIA Life Insurance Myanmar',
+    role: 'Motion Designer · Editor',
+  },
+  {
+    name: 'Showreel — Edit & Grade',
+    hideOnHome: true,
+    year: '2023',
+    cat: 'Showreel · Post-Production',
+    desc: 'Placeholder — selected edits, animation and color grading work across TVC, social and event films.',
+    hue: 260,
+    disciplines: ['motion-production'],
+    role: 'Editor · Colorist',
+  },
+  {
+    name: 'True Money App Concept',
+    hideOnHome: true,
+    year: '2021',
+    cat: 'Fintech · Mobile UI',
+    desc: 'Placeholder — mobile app interface exploration for True Money: onboarding flows, wallet screens and a lightweight design system.',
+    hue: 120,
+    disciplines: ['digital-ui'],
+    client: 'True Money Myanmar',
+    role: 'UI Designer',
+  },
+  {
+    name: 'THVMAX Studio Site',
+    hideOnHome: true,
+    year: '2024',
+    cat: 'Studio · Web Design',
+    desc: 'Placeholder — design and build of the THVMAX portfolio site: art direction, interaction design and front-end.',
+    hue: 40,
+    disciplines: ['digital-ui'],
+    role: 'Designer · Developer',
   },
 ];
 
