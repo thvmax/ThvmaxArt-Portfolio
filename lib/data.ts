@@ -37,6 +37,7 @@ export interface Project {
   hue: number;        // drives the placeholder color block
   img?: string;       // real preview asset — drop a path here to swap in
   video?: string;     // looping cover video — takes priority over img
+  disciplines?: string[]; // discipline slugs — controls which subpages list this project
   // ── detail fields (present → row opens a full modal) ──
   desc?: string;
   client?: string;
@@ -45,6 +46,43 @@ export interface Project {
   caseStudy?: CaseStudy;  // in-modal Behance-style case study
 }
 
+// ─── Disciplines ─────────────────────────────────────────────────────
+// Drives both the Divisions section on the homepage and the /<slug>
+// subpages. A project appears on a subpage when its `disciplines` array
+// includes that discipline's slug.
+
+export interface Discipline {
+  slug: string;       // route: /<slug>
+  title: string;
+  desc: string;
+  gradient: string;   // accent band
+  featured: string;   // project name featured on the homepage card
+}
+
+export const disciplines: Discipline[] = [
+  {
+    slug: 'art-direction',
+    title: 'Art Direction',
+    desc: 'I build campaign worlds for global brands — key visuals, TVCs and rollouts that cut through.',
+    gradient: 'linear-gradient(90deg, #ffb199, #ff4e33, #b8235a)',
+    featured: 'STING Nightlife Campaign',
+  },
+  {
+    slug: 'motion-production',
+    title: 'Motion & Production',
+    desc: 'From boards to final grade — animation, edit and production management across film and social.',
+    gradient: 'linear-gradient(90deg, #a8c6ff, #4d7dff, #6a4dff)',
+    featured: 'Pepsi Meals AR Campaign',
+  },
+  {
+    slug: 'digital-ui',
+    title: 'Digital & UI',
+    desc: 'Product interfaces and design systems that make heavy enterprise software feel effortless.',
+    gradient: 'linear-gradient(90deg, #ffd7a8, #ff9d4d, #ff5c33)',
+    featured: 'Velosi ERP Software UI/UX',
+  },
+];
+
 export const works: Project[] = [
   {
     name: 'STING Nightlife Campaign',
@@ -52,6 +90,7 @@ export const works: Project[] = [
     cat: 'FMCG · TVC Campaign',
     desc: 'Led visual direction for the Sting Energy nightlife campaign — TV commercial production, key visuals and digital rollouts.',
     hue: 30,
+    disciplines: ['art-direction'],
     video: '/case-studies/sting-night-life/hero-video.mp4',
     client: 'Sting Energy — PepsiCo Myanmar',
     role: 'Art Director',
@@ -80,6 +119,7 @@ export const works: Project[] = [
     cat: 'FMCG · Wall Art',
     desc: 'A massive wall art and mural project exploring the scale of the brand through detailed 3D visualization and illustration.',
     hue: 220,
+    disciplines: ['art-direction'],
     client: 'Pepsi-Cola Myanmar',
     role: 'Art Director · Illustrator',
     caseStudy: {
@@ -106,6 +146,7 @@ export const works: Project[] = [
     cat: 'Enterprise · UI/UX Design',
     desc: 'End-to-end interface and experience design for Velosi’s internal ERP platform — wireframing, design system and high-fidelity product screens.',
     hue: 340,
+    disciplines: ['digital-ui'],
     client: 'Velosi Asset Integrity — Abu Dhabi',
     role: 'Product & UI/UX Designer',
     caseStudy: {
@@ -132,6 +173,7 @@ export const works: Project[] = [
     cat: 'FMCG · AR Experience',
     desc: 'Visual identity and 3D assets for an interactive Augmented Reality campaign bridging digital and physical touchpoints.',
     hue: 200,
+    disciplines: ['motion-production', 'art-direction'],
     client: 'Pepsi-Cola Myanmar',
     role: 'Art Director · AR Visualization',
     caseStudy: {
@@ -158,6 +200,7 @@ export const works: Project[] = [
     cat: 'FMCG · Campaign',
     desc: 'Key visual and creative direction for Pepsi’s talent development program targeting Gen Z creators and audiences.',
     hue: 280,
+    disciplines: ['art-direction'],
     client: 'Pepsi-Cola Myanmar',
     role: 'Art Director',
     caseStudy: {

@@ -1,34 +1,13 @@
 "use client";
 
 import { useRef } from 'react';
+import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import { works, type Project } from '@/lib/data';
+import { disciplines, works, type Project } from '@/lib/data';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
-
-// Three discipline groups. Each card features one project.
-const divisions = [
-  {
-    title: 'Art Direction',
-    desc: 'I build campaign worlds for global brands — key visuals, TVCs and rollouts that cut through.',
-    project: 'STING Nightlife Campaign',
-    gradient: 'linear-gradient(90deg, #ffb199, #ff4e33, #b8235a)',
-  },
-  {
-    title: 'Motion & Production',
-    desc: 'From boards to final grade — animation, edit and production management across film and social.',
-    project: 'Pepsi Meals AR Campaign',
-    gradient: 'linear-gradient(90deg, #a8c6ff, #4d7dff, #6a4dff)',
-  },
-  {
-    title: 'Digital & UI',
-    desc: 'Product interfaces and design systems that make heavy enterprise software feel effortless.',
-    project: 'Velosi ERP Software UI/UX',
-    gradient: 'linear-gradient(90deg, #ffd7a8, #ff9d4d, #ff5c33)',
-  },
-];
 
 const block = (hue: number) =>
   `linear-gradient(145deg, hsl(${hue} 55% 42%), hsl(${(hue + 45) % 360} 60% 30%))`;
@@ -81,8 +60,8 @@ export default function Divisions({ onOpen }: { onOpen: (p: Project) => void }) 
 
   return (
     <section id="disciplines" className="dpin" ref={rootRef}>
-      {divisions.map((d) => {
-        const project = works.find((w) => w.name === d.project);
+      {disciplines.map((d) => {
+        const project = works.find((w) => w.name === d.featured);
         return (
           <article key={d.title} className="dpin-card">
             <div className="dpin-card-band" style={{ background: d.gradient }} />
@@ -92,13 +71,9 @@ export default function Divisions({ onOpen }: { onOpen: (p: Project) => void }) 
               <div className="dpin-card-right">
                 <p className="dpin-card-desc">
                   {d.desc}{' '}
-                  <button
-                    type="button"
-                    className="dpin-learn"
-                    onClick={() => project && onOpen(project)}
-                  >
+                  <Link href={`/${d.slug}`} className="dpin-learn">
                     <span aria-hidden="true">&#8627;</span> Learn more
-                  </button>
+                  </Link>
                 </p>
 
                 {project && (
