@@ -13,9 +13,15 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 interface SmoothScrollApi {
   scrollTo: (target: string) => void;
+  stop: () => void;
+  start: () => void;
 }
 
-const SmoothScrollContext = createContext<SmoothScrollApi>({ scrollTo: () => {} });
+const SmoothScrollContext = createContext<SmoothScrollApi>({
+  scrollTo: () => {},
+  stop: () => {},
+  start: () => {},
+});
 
 export const useSmoothScroll = () => useContext(SmoothScrollContext);
 
@@ -59,8 +65,11 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
     if (el) lenisRef.current?.scrollTo(el as HTMLElement, { duration: 1.8 });
   }, []);
 
+  const stop = useCallback(() => lenisRef.current?.stop(), []);
+  const start = useCallback(() => lenisRef.current?.start(), []);
+
   return (
-    <SmoothScrollContext.Provider value={{ scrollTo }}>
+    <SmoothScrollContext.Provider value={{ scrollTo, stop, start }}>
       {children}
     </SmoothScrollContext.Provider>
   );

@@ -708,6 +708,38 @@ nav#nav {
 
 .cs-cta--ghost:hover { opacity: 1; border-color: var(--text); }
 
+/* ── INTRO ───────────────────────────────────────────────────────── */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: var(--bg);
+  cursor: pointer;
+  transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+}
+
+.intro--leaving { transform: translateY(-100%); }
+
+.intro-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.intro-meta {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
 /* ── REDUCED MOTION ──────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

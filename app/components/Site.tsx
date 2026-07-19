@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { works, type Project } from '@/lib/data';
 import SmoothScroll from './SmoothScroll';
+import Intro from './Intro';
 import Nav from './Nav';
 import Hero from './Hero';
 import Divisions from './Divisions';
@@ -26,6 +27,7 @@ export default function Site() {
 
   return (
     <SmoothScroll>
+      <Intro />
       <Nav />
       <main>
         <Hero />

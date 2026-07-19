@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useSmoothScroll } from './SmoothScroll';
+import { INTRO_DISMISS_EVENT } from './Intro';
 import { site } from '@/lib/data';
 
 gsap.registerPlugin(useGSAP);
@@ -16,20 +17,30 @@ export default function Hero() {
     () => {
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-      gsap.from('.hero-statement, .hero-browse', {
-        y: 28,
-        opacity: 0,
-        duration: 1,
-        ease: 'power3.out',
-        stagger: 0.12,
-        delay: 0.15,
-      });
-      gsap.from('.hero-media', {
-        opacity: 0,
-        duration: 1.1,
-        ease: 'power2.out',
-        delay: 0.45,
-      });
+      const play = () => {
+        gsap.fromTo(
+          '.hero-statement, .hero-browse',
+          { y: 28, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1, ease: 'power3.out', stagger: 0.12, delay: 0.15 },
+        );
+        gsap.fromTo(
+          '.hero-media',
+          { opacity: 0 },
+          { opacity: 1, duration: 1.1, ease: 'power2.out', delay: 0.45 },
+        );
+      };
+
+      let introSeen = true;
+      try {
+        introSeen = !!sessionStorage.getItem('ts-intro-seen');
+      } catch {}
+
+      if (introSeen) {
+        play();
+      } else {
+        window.addEventListener(INTRO_DISMISS_EVENT, play, { once: true });
+        return () => window.removeEventListener(INTRO_DISMISS_EVENT, play);
+      }
     },
     { scope: rootRef },
   );
