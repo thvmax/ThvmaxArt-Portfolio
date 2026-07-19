@@ -713,31 +713,98 @@ nav#nav {
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: var(--bg);
+  background: #0d0d0d;
+  color: #f2f2f2;
   cursor: pointer;
-  transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1);
+  overflow: hidden;
+  transition: transform 0.95s cubic-bezier(0.76, 0, 0.24, 1);
   will-change: transform;
 }
 
 .intro--leaving { transform: translateY(-100%); }
 
-.intro-canvas {
+.intro-inner {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* wordmark — mask slide-up reveal */
+.intro-mark {
+  overflow: hidden;
+  padding: 0.12em 0.02em;
+}
+
+.intro-mark-line {
   display: block;
+  font-size: clamp(3.2rem, 12vw, 9rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  color: #fafafa;
+  transform: translateY(110%);
+  transition: transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.intro-inner.is-ready .intro-mark-line { transform: translateY(0); }
+
+/* leaving: mark eases back up with the curtain */
+.intro--leaving .intro-mark-line {
+  transform: translateY(-115%);
+  transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
 .intro-meta {
   position: absolute;
   left: var(--gutter);
   right: var(--gutter);
-  bottom: 1.1rem;
+  bottom: 1.15rem;
   display: flex;
   justify-content: space-between;
   font-size: 0.78rem;
   letter-spacing: 0.04em;
-  color: var(--text-dim);
+  color: rgba(242, 242, 242, 0.45);
   pointer-events: none;
+}
+
+/* percentage counter — bottom right */
+.intro-count {
+  position: absolute;
+  right: var(--gutter);
+  bottom: 2.6rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.12em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  line-height: 1;
+  color: #fafafa;
+  pointer-events: none;
+}
+
+.intro-count > span:first-child { font-size: clamp(2.6rem, 7vw, 5rem); letter-spacing: -0.02em; }
+.intro-count-pct { font-size: clamp(0.9rem, 1.6vw, 1.3rem); color: rgba(242, 242, 242, 0.6); margin-bottom: 0.35em; }
+
+/* thin progress line — bottom edge */
+.intro-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: rgba(242, 242, 242, 0.12);
+  pointer-events: none;
+}
+
+.intro-progress-bar {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  background: #fafafa;
+  will-change: transform;
 }
 
 /* ── REDUCED MOTION ──────────────────────────────────────────────── */
