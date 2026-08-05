@@ -717,11 +717,28 @@ nav#nav {
   color: #f2f2f2;
   cursor: pointer;
   overflow: hidden;
-  transition: transform 0.95s cubic-bezier(0.76, 0, 0.24, 1);
-  will-change: transform;
+  /* end state measured off .hero-media by Intro.tsx */
+  --to-top: 0px;
+  --to-right: 0px;
+  --to-bottom: 0px;
+  --to-left: 0px;
+  --mark-scale: 0.3;
+  --mark-x: 0px;
+  --mark-y: 0px;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 0.7s cubic-bezier(0.76, 0, 0.24, 1),
+              opacity 0.12s ease;
+  will-change: clip-path;
 }
 
-.intro--leaving { transform: translateY(-100%); }
+/* The panel contracts onto the hero video block instead of wiping away,
+   so the intro backdrop hands off to the showreel banner. */
+.intro--leaving {
+  clip-path: inset(var(--to-top) var(--to-right) var(--to-bottom) var(--to-left));
+}
+
+/* Once the panel matches the video frame it dissolves over the live footage */
+.intro--dissolving { opacity: 0; }
 
 .intro-inner {
   position: absolute;
@@ -731,81 +748,47 @@ nav#nav {
   justify-content: center;
 }
 
-/* wordmark — mask slide-up reveal */
+/* wordmark — per-character mask slide-up reveal (Ravi-style minimal) */
 .intro-mark {
+  display: flex;
+  gap: 0.04em;
+  /* rides the contraction: scales into the frame it collapses toward */
+  transform: translate3d(0, 0, 0) scale(1);
+  transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+}
+
+/* the mark rides the contraction but dissolves halfway through it, so the
+   panel is already empty by the time it opens onto the showreel */
+.intro--leaving .intro-mark {
+  transform: translate3d(var(--mark-x), var(--mark-y), 0) scale(var(--mark-scale));
+  opacity: 0;
+  transition: transform 0.7s cubic-bezier(0.76, 0, 0.24, 1),
+              opacity 0.26s ease 0.2s;
+}
+
+.intro-char-mask {
+  display: block;
   overflow: hidden;
   padding: 0.12em 0.02em;
 }
 
-.intro-mark-line {
+.intro-char {
   display: block;
   font-size: clamp(3.2rem, 12vw, 9rem);
   font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 0.9;
   color: #fafafa;
-  transform: translateY(110%);
-  transition: transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.intro-inner.is-ready .intro-mark-line { transform: translateY(0); }
-
-/* leaving: mark eases back up with the curtain */
-.intro--leaving .intro-mark-line {
-  transform: translateY(-115%);
-  transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.intro-meta {
-  position: absolute;
-  left: var(--gutter);
-  right: var(--gutter);
-  bottom: 1.15rem;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  color: rgba(242, 242, 242, 0.45);
-  pointer-events: none;
-}
-
-/* percentage counter — bottom right */
-.intro-count {
-  position: absolute;
-  right: var(--gutter);
-  bottom: 2.6rem;
-  display: flex;
-  align-items: flex-end;
-  gap: 0.12em;
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  line-height: 1;
-  color: #fafafa;
-  pointer-events: none;
-}
-
-.intro-count > span:first-child { font-size: clamp(2.6rem, 7vw, 5rem); letter-spacing: -0.02em; }
-.intro-count-pct { font-size: clamp(0.9rem, 1.6vw, 1.3rem); color: rgba(242, 242, 242, 0.6); margin-bottom: 0.35em; }
-
-/* thin progress line — bottom edge */
-.intro-progress {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  background: rgba(242, 242, 242, 0.12);
-  pointer-events: none;
-}
-
-.intro-progress-bar {
-  display: block;
-  height: 100%;
-  width: 100%;
-  transform-origin: left center;
-  background: #fafafa;
+  transform: translateY(112%);
+  transition: transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
 }
+
+.intro-inner.is-ready .intro-char { transform: translateY(0); }
+
+/* leaving: characters hold while the panel contracts around them */
+.intro--leaving .intro-char { transform: translateY(0); }
 
 /* ── REDUCED MOTION ──────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

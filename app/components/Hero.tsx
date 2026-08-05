@@ -20,13 +20,16 @@ export default function Hero() {
       const play = () => {
         gsap.fromTo(
           '.hero-statement, .hero-browse',
-          { y: 28, opacity: 0 },
-          { y: 0, opacity: 1, duration: 1, ease: 'power3.out', stagger: 0.12, delay: 0.15 },
+          { y: 24, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out', stagger: 0.09, delay: 0.05 },
         );
+        // The video block is already on screen: the intro panel contracts
+        // onto it, so only its label is introduced here. It lands a beat
+        // after the panel dissolves off the footage.
         gsap.fromTo(
-          '.hero-media',
-          { opacity: 0 },
-          { opacity: 1, duration: 1.1, ease: 'power2.out', delay: 0.45 },
+          '.hero-reel',
+          { y: 12, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out', delay: 0.46 },
         );
       };
 
