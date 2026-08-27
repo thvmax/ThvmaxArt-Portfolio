@@ -7,6 +7,7 @@ import { gsap } from 'gsap';
 import { useSmoothScroll } from '@/app/components/SmoothScroll';
 import { v2Nav, v2Site, v2Social } from '@/lib/v2content';
 import Pill from './Pill';
+import ThemeToggle from './ThemeToggle';
 
 /**
  * Floating nav + full-screen menu overlay ("State — Menu open").
@@ -16,7 +17,7 @@ export default function V2Nav() {
   const { stop, start } = useSmoothScroll();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const [onWhite, setOnWhite] = useState(false);
+  const [onInvert, setOnInvert] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const rowsRef = useRef<HTMLUListElement | null>(null);
 
@@ -41,7 +42,7 @@ export default function V2Nav() {
           if (entry.isIntersecting) seen.add(entry.target);
           else seen.delete(entry.target);
         });
-        setOnWhite(seen.size > 0);
+        setOnInvert(seen.size > 0);
       },
       // a thin strip at the top of the viewport, level with the nav
       { rootMargin: '0px 0px -94% 0px' },
@@ -114,7 +115,7 @@ export default function V2Nav() {
 
   return (
     <>
-      <nav className={`v2-nav ${onWhite ? 'v2-nav--on-white' : ''}`}>
+      <nav className={`v2-nav ${onInvert ? 'v2-nav--on-invert' : ''}`}>
         <Link className="v2-nav-logo" href="/" data-cursor="hover">
           <span className="v2-nav-mark" aria-hidden="true" />
           {v2Site.name}
@@ -136,6 +137,7 @@ export default function V2Nav() {
 
         <div className="v2-nav-right">
           <Pill href={`mailto:${v2Site.email}`} label="Let’s talk" />
+          <ThemeToggle />
           <button
             className="v2-burger"
             onClick={() => setOpen(true)}

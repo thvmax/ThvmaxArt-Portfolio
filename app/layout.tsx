@@ -50,6 +50,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="stylesheet" href={FONTS} />
+        {/* Resolve the theme before first paint, or a light-mode visitor
+            gets a dark flash on every navigation. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('thv-theme');" +
+              "if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}" +
+              "document.documentElement.setAttribute('data-theme',t);}" +
+              "catch(e){document.documentElement.setAttribute('data-theme','dark');}})();",
+          }}
+        />
       </head>
       <body>
         <SiteFrame>{children}</SiteFrame>
