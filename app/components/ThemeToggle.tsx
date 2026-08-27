@@ -92,9 +92,12 @@ export default function ThemeToggle() {
   }, [start]);
 
   /**
-   * The first transition pays for allocating the snapshot machinery.
-   * Hovering the dial is a reliable signal a click is coming, so pay it
-   * then and skip straight back out — by click time it is warm.
+   * The first transition pays for allocating the snapshot machinery: the
+   * browser rasterises two full-page snapshots and builds the
+   * pseudo-element tree. Skipping the warm-up only does half of that work,
+   * so let a real (visually identical) transition run once — `animation:
+   * none` on both roots makes it finish instantly, but by click time the
+   * capture + render pipeline is warm.
    */
   const prewarm = useCallback(() => {
     if (warmed.current) return;
@@ -103,10 +106,16 @@ export default function ThemeToggle() {
     if (typeof doc.startViewTransition !== 'function') return;
     try {
       const t = doc.startViewTransition(() => {});
-      t.skipTransition?.();
       t.finished.catch(() => {});
     } catch {}
   }, []);
+
+  // Warm the snapshot pipeline shortly after first paint, without waiting
+  // for a hover — keyboard and touch users get the same warm start.
+  useEffect(() => {
+    const id = window.setTimeout(prewarm, 600);
+    return () => window.clearTimeout(id);
+  }, [prewarm]);
 
   /** Fallback: the outgoing background sweeps up and off on the site curve. */
   const curveSweep = useCallback((prev: Theme) => {
@@ -192,6 +201,15 @@ export default function ThemeToggle() {
     quiet();
     const transition = doc.startViewTransition(() => apply(next));
 
+    // The incoming snapshot is clipped to a constant circle, then grown
+    // with a transform. clip-path is rasterised once; every frame after
+    // that is pure compositor (translate + scale), so the iris doesn't
+    // repaint the whole page on each frame. Scaling a circle's radius also
+    // grows its area with r², which the front-loaded curve cancels.
+    const irisClip = `circle(${reach}px at ${cx}px ${cy}px)`;
+    const irisFrom = `translate3d(${cx}px, ${cy}px, 0) scale(0.001) translate3d(${-cx}px, ${-cy}px, 0)`;
+    const irisTo = `translate3d(${cx}px, ${cy}px, 0) scale(1) translate3d(${-cx}px, ${-cy}px, 0)`;
+
     transition.ready
       .then(() => {
         document.documentElement.animate(
@@ -205,15 +223,11 @@ export default function ThemeToggle() {
         );
 
         document.documentElement.animate(
+          [
+            { clipPath: irisClip, transform: irisFrom },
+            { clipPath: irisClip, transform: irisTo },
+          ],
           {
-            clipPath: [`circle(0px at ${cx}px ${cy}px)`, `circle(${reach}px at ${cx}px ${cy}px)`],
-          },
-          {
-            // A circle's area grows with r², so an even radius reads as
-            // accelerating. The curve stays front-loaded to cancel that,
-            // but arrives with real velocity instead of an expo tail —
-            // expo spends its last 40% imperceptibly still, which is what
-            // made the end look stuck before it filled.
             duration: 760,
             easing: EASE,
             fill: 'forwards',
@@ -223,12 +237,17 @@ export default function ThemeToggle() {
       })
       .catch(() => {});
 
+    let settled = false;
+    let failsafe = 0;
     const done = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(failsafe);
       busy.current = false;
       restore();
     };
+    failsafe = window.setTimeout(done, 2000);
     transition.finished.then(done).catch(done);
-    window.setTimeout(done, 2000);
   }, [apply, curveSweep, quiet, restore, theme]);
 
   return (

@@ -427,7 +427,7 @@ html.is-theming .v2-nav { pointer-events: none; }
   mix-blend-mode: normal;
 }
 ::view-transition-old(root) { z-index: 1; }
-::view-transition-new(root) { z-index: 2; }
+::view-transition-new(root) { z-index: 2; transform-origin: 0 0; }
 
 /* the incoming background, swept up on the site's curve (fallback) */
 .v2-theme-sweep {
