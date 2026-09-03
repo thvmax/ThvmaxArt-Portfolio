@@ -464,6 +464,19 @@ html.is-morphing .v2 .v2-back:not(.v2-dial-disc):not(.v2-dial-ring) {
   html.is-morphing .v2, html.is-morphing .v2 * { transition: none !important; }
 }
 
+/* ── Glitch hover ─────────────────────────────────────────────────
+   A ripple of scrambled glyphs follows the cursor across the text, on
+   the same mono glyph set ScrambleLabel decodes from. Locked to an
+   inline-block box so the width freeze in the component doesn't shift
+   surrounding layout. */
+
+.v2-glitch {
+  display: inline-block;
+  cursor: pointer;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ── Menu overlay (State — Menu open) ─────────────────────────────── */
 
 .v2-menu {
