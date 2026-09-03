@@ -420,21 +420,22 @@ html.is-morphing .v2 *:not(.v2-dial-disc):not(.v2-dial-ring) {
 }
 html.is-morphing body { transition: background-color 460ms cubic-bezier(0.4, 0, 0.2, 1); }
 
-/* The nav leads the page rather than trailing it. Its pills are blurred
-   glass sampling a backdrop that is itself mid-transition, so matching
-   the page duration exactly reads as lag. Dropping the blur for the
-   swap and finishing sooner makes the header land with everything else. */
+/* The nav leads the page rather than trailing it — it finishes its own
+   colour swap faster than the rest of the page.
+
+   The glass blur is deliberately left alone here. An earlier version
+   also toggled backdrop-filter off during the morph (on the theory that
+   blurring a mid-transition backdrop was expensive), then restored it
+   only when the whole-page timer cleared ~520ms later — a full 240ms
+   after the nav's own 280ms colour swap had already finished. That gap
+   read as the header "still changing" long after it had settled, which
+   is the lag that was reported. backdrop-filter is not itself animated
+   here, so there is nothing expensive to interrupt by leaving it on. */
 html.is-morphing .v2 .v2-nav:not(.v2-dial-disc):not(.v2-dial-ring),
 html.is-morphing .v2 .v2-nav *:not(.v2-dial-disc):not(.v2-dial-ring),
 html.is-morphing .v2 .v2-back:not(.v2-dial-disc):not(.v2-dial-ring) {
   transition-duration: 280ms !important;
   transition-delay: 0s !important;
-}
-html.is-morphing .v2-nav-logo,
-html.is-morphing .v2-nav-menu,
-html.is-morphing .v2-back {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 /* the glow that leaves the dial — one element, transform + opacity only */
