@@ -3,7 +3,6 @@
 import { v2Contact, v2ContactLinks, v2Site } from '@/lib/v2content';
 import Reveal from './Reveal';
 import ScrambleLabel from './ScrambleLabel';
-import GlitchHover from './GlitchHover';
 import Pill from './Pill';
 
 /** 05 · CONTACT — dark closing frame. */
@@ -45,7 +44,7 @@ export default function ContactSection() {
             rel="noopener noreferrer"
             data-cursor="hover"
           >
-            <GlitchHover as="span" className="v2-link-title">{s.label}</GlitchHover>
+            <span className="v2-link-title">{s.label}</span>
             <span className="v2-link-handle">{s.handle}</span>
           </a>
         ))}
