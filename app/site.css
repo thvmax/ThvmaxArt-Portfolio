@@ -95,7 +95,7 @@ body.v2-locked { overflow: hidden; height: 100vh; }
 
 /* Inverted block — the white 30% of the page */
 .v2-invert { background: var(--fg); color: var(--bg); }
-.v2-invert .v2-label { color: rgba(11, 12, 13, 0.55); }
+.v2-invert .v2-label { color: color-mix(in srgb, var(--bg) 55%, transparent); }
 
 /* ── Shared atoms ─────────────────────────────────────────────────── */
 
@@ -170,12 +170,12 @@ body.v2-locked { overflow: hidden; height: 100vh; }
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(100deg, transparent 20%, rgba(11, 12, 13, 0.14) 50%, transparent 80%);
+  background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--pill-fg) 14%, transparent) 50%, transparent 80%);
   transform: translateX(-120%);
   transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .v2-pill:hover::after { transform: translateX(120%); }
-.v2-pill:hover { box-shadow: 0 14px 44px -20px rgba(242, 242, 240, 0.55); }
+.v2-pill:hover { box-shadow: 0 14px 44px -20px color-mix(in srgb, var(--fg) 55%, transparent); }
 
 .v2-pill--ghost {
   --pill-bg: transparent;
@@ -184,7 +184,7 @@ body.v2-locked { overflow: hidden; height: 100vh; }
   --knob-fg: var(--bg);
   box-shadow: inset 0 0 0 1px var(--line);
 }
-.v2-pill--ghost:hover { box-shadow: inset 0 0 0 1px rgba(242, 242, 240, 0.55); }
+.v2-pill--ghost:hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 55%, transparent); }
 .v2-pill--lg { gap: 1rem; padding-left: 30px; font-size: clamp(1.05rem, 1.15vw, 1.375rem); }
 
 .v2-pill-label {
@@ -236,12 +236,12 @@ body.v2-locked { overflow: hidden; height: 100vh; }
 
 .v2-nav-logo,
 .v2-nav-menu {
-  background: rgba(242, 242, 240, 0.06);
+  background: var(--wash);
   border: 1px solid var(--line);
   border-radius: 999px;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  transition: background 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, color 0.35s ease;
 }
 .v2-nav-logo {
   display: inline-flex;
@@ -262,7 +262,7 @@ body.v2-locked { overflow: hidden; height: 100vh; }
 }
 .v2-nav-logo:hover .v2-nav-mark {
   transform: scale(1.35);
-  box-shadow: 0 0 0 6px rgba(242, 242, 240, 0.22);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--fg) 22%, transparent);
 }
 
 .v2-nav-menu {
@@ -401,51 +401,61 @@ html[data-theme='light'] .v2-dial:hover .v2-dial-disc { transform: rotate(162deg
 html[data-theme='light'] .v2-dial-disc { transform: rotate(180deg); }
 html[data-theme='light'] .v2-dial-disc::after { transform: translate(42%, -22%); }
 
-/* While a theme transition is capturing, drop the expensive paints.
-   Blurred glass and grain are rasterised into the snapshot, and they are
-   the difference between a smooth open and a hitch. */
+/* ── Theme morph ──────────────────────────────────────────────────
+   The whole page eases from one palette to the other at once. The
+   transition is armed only for the length of the swap, so it never
+   interferes with hover states or the site's own motion afterwards.
+   Nothing is covered — the content stays on screen and simply changes
+   colour, which is why this cannot feel like an interruption. */
 
-html.is-theming .v2-nav-logo,
-html.is-theming .v2-nav-menu,
-html.is-theming .v2-back {
+html.is-morphing .v2,
+html.is-morphing .v2 *:not(.v2-dial-disc):not(.v2-dial-ring) {
+  transition:
+    background-color 460ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 460ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 460ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 460ms cubic-bezier(0.4, 0, 0.2, 1),
+    fill 460ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 460ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+html.is-morphing body { transition: background-color 460ms cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* The nav leads the page rather than trailing it. Its pills are blurred
+   glass sampling a backdrop that is itself mid-transition, so matching
+   the page duration exactly reads as lag. Dropping the blur for the
+   swap and finishing sooner makes the header land with everything else. */
+html.is-morphing .v2 .v2-nav:not(.v2-dial-disc):not(.v2-dial-ring),
+html.is-morphing .v2 .v2-nav *:not(.v2-dial-disc):not(.v2-dial-ring),
+html.is-morphing .v2 .v2-back:not(.v2-dial-disc):not(.v2-dial-ring) {
+  transition-duration: 280ms !important;
+  transition-delay: 0s !important;
+}
+html.is-morphing .v2-nav-logo,
+html.is-morphing .v2-nav-menu,
+html.is-morphing .v2-back {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-html.is-theming .v2-preview-grain,
-html.is-theming .v2-plate-core::after,
-html.is-theming .v2-mq-scan,
-html.is-theming .v2-still-scan { display: none; }
-html.is-theming .v2-nav { pointer-events: none; }
 
-/* ── Theme iris (View Transitions) ────────────────────────────────
-   The incoming theme is clipped open from the dial; the outgoing one
-   simply holds underneath, so there is no cross-fade mush. */
-
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-::view-transition-old(root) { z-index: 1; }
-::view-transition-new(root) { z-index: 2; transform-origin: 0 0; }
-
-/* the incoming background, swept up on the site's curve (fallback) */
-.v2-theme-sweep {
+/* the glow that leaves the dial — one element, transform + opacity only */
+.v2-glow {
   position: fixed;
-  inset: 0;
-  z-index: 160;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  visibility: hidden;
+  top: 0;
+  left: 0;
+  z-index: 155;
+  display: block;
+  border-radius: 50%;
   opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  contain: strict;
 }
-.v2-theme-sweep path { stroke: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .v2-dial-disc, .v2-dial-disc::after, .v2-dial { transition: none; }
   .v2-dial.is-spun .v2-dial-disc, .v2-dial.is-spun .v2-dial-ring { animation: none; }
-  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  .v2-glow { display: none; }
+  html.is-morphing .v2, html.is-morphing .v2 * { transition: none !important; }
 }
 
 /* ── Menu overlay (State — Menu open) ─────────────────────────────── */
@@ -499,7 +509,7 @@ html.is-theming .v2-nav { pointer-events: none; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(242, 242, 240, 0.16), transparent 60%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--fg) 16%, transparent), transparent 60%);
   transform: translateX(-100%);
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
@@ -568,7 +578,7 @@ html.is-theming .v2-nav { pointer-events: none; }
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: rgba(242, 242, 240, 0.05);
+  background: var(--wash);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1078,7 +1088,7 @@ body.v2-intro-open { overflow: hidden; }
   visibility: hidden;
   opacity: 0;
 }
-.v2-rise-edge path { fill: none; stroke: rgba(242, 242, 240, 0.45); stroke-width: 1; }
+.v2-rise-edge path { fill: none; stroke: color-mix(in srgb, var(--fg) 45%, transparent); stroke-width: 1; }
 
 /* ── Dark CTA band (work + about) ─────────────────────────────────── */
 
@@ -1442,7 +1452,7 @@ body.v2-intro-open { overflow: hidden; }
 }
 .v2-result-caption { font-size: clamp(1.05rem, 1.15vw, 1.375rem); line-height: 1.55; margin-top: 1rem; max-width: 39rem; }
 .v2-result-body { font-size: 1.125rem; line-height: 1.75; align-self: center; }
-.v2-result .v2-label { color: rgba(11, 12, 13, 0.55); }
+.v2-result .v2-label { color: color-mix(in srgb, var(--bg) 55%, transparent); }
 
 .v2-next { padding: clamp(3.5rem, 6.25vw, 7.5rem) var(--pad) clamp(2.5rem, 4vw, 4.5rem); }
 .v2-next-grid {
@@ -1491,8 +1501,8 @@ body.v2-intro-open { overflow: hidden; }
   gap: 0.6rem;
   padding: 12px 22px;
   border-radius: 999px;
-  background: rgba(242, 242, 240, 0.08);
-  border: 1px solid rgba(242, 242, 240, 0.16);
+  background: var(--wash);
+  border: 1px solid var(--line);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   color: var(--fg);
@@ -1501,7 +1511,7 @@ body.v2-intro-open { overflow: hidden; }
   letter-spacing: 0.08em;
   transition: background 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.v2-back:hover { background: rgba(242, 242, 240, 0.16); transform: translateX(-4px); }
+.v2-back:hover { background: color-mix(in srgb, var(--fg) 16%, transparent); transform: translateX(-4px); }
 
 /* ── Custom cursor ────────────────────────────────────────────────── */
 
@@ -1516,14 +1526,14 @@ body.v2-intro-open { overflow: hidden; }
   opacity: 0;
 }
 .v2-cursor { width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--fg); }
-.v2-cursor-ring { border-color: rgba(242, 242, 240, 0.35); }
-.v2-cursor-ring.is-light { border-color: rgba(11, 12, 13, 0.45); }
-.v2-cursor-ring.is-light.is-active { border-color: var(--bg); background: rgba(11, 12, 13, 0.08); }
+.v2-cursor-ring { border-color: color-mix(in srgb, var(--fg) 35%, transparent); }
+.v2-cursor-ring.is-light { border-color: color-mix(in srgb, var(--bg) 45%, transparent); }
+.v2-cursor-ring.is-light.is-active { border-color: var(--bg); background: color-mix(in srgb, var(--bg) 8%, transparent); }
 .v2-cursor-ring {
   width: 38px;
   height: 38px;
   margin: -19px 0 0 -19px;
-  border: 1px solid rgba(242, 242, 240, 0.4);
+  border: 1px solid color-mix(in srgb, var(--fg) 40%, transparent);
   transition: width 0.35s ease, height 0.35s ease, margin 0.35s ease, border-color 0.35s ease, background 0.35s ease;
 }
 .v2-cursor-ring.is-active {
@@ -1531,7 +1541,7 @@ body.v2-intro-open { overflow: hidden; }
   height: 62px;
   margin: -31px 0 0 -31px;
   border-color: var(--fg);
-  background: rgba(242, 242, 240, 0.1);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
 }
 
 /* ── Responsive ───────────────────────────────────────────────────── */
