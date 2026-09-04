@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^3.0.43",
+    "@ai-sdk/react": "^4.0.95",
     "@gsap/react": "^2.1.2",
+    "ai": "^7.0.92",
     "gsap": "^3.12.5",
     "jose": "^6.2.3",
     "lenis": "^1.3.23",
