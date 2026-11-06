@@ -1,8 +1,7 @@
 // ─── Content for the v2 layout (Figma: "ThvmaxArt Website 1") ────────
 // Copy is taken verbatim from the Figma frames 02 Work / 03 Project —
-// STING / 04 About / 05 Contact / State — Menu open. Kept separate from
-// content/data.json so the live homepage and /admin stay untouched
-// while v2 is in preview; merge it back when v2 becomes the homepage.
+// STING / 04 About / 05 Contact / State — Menu open. This file is the
+// single source of site copy.
 
 export interface V2Still {
   label: string;      // top-left caption
@@ -83,45 +82,45 @@ export const v2ContactLinks = v2Social.filter((s) => s.label !== 'Instagram');
 export const v2Work: V2Project[] = [
   {
     slug: 'sting-nightlife-repositioning',
-    name: 'STING Nightlife Repositioning',
-    nameLines: ['STING Nightlife', 'Repositioning'],
+    name: 'STING Nightlife Campaign',
+    nameLines: ['STING Nightlife', 'Campaign'],
     cat: 'FMCG · Campaign',
     year: '2024',
     accent: 'rgb(217, 199, 33)',
     study: {
-      lede: 'Moving an energy drink out of the gym and into the night — and taking share while doing it.',
+      lede: 'Taking an energy drink into the night — and growing its share while doing it.',
       client: 'Pepsi-Cola Myanmar',
       role: 'Senior Creative Designer',
       year: '2023 — 24',
-      deliverables: 'Key visual, TVC, OOH,\nsocial system, POSM',
+      deliverables: 'Key visual, TVC cutdown,\nend-frame KV animation',
       chapters: [
         {
           label: 'THE BRIEF',
-          heading: 'STING was winning on price and losing on meaning.',
-          body: 'The brand had strong distribution and a loyal daytime user, but it was read as a functional energy hit — something you drank before a shift or a workout. In a category where three competitors were spending harder on the same functional promise, there was no reason to reach for STING over anything else on the shelf. The ask was to find territory nobody else owned, and make it unmistakably ours.',
+          heading: 'Give STING a reason to be reached for after dark.',
+          body: 'Pepsi-Cola Myanmar took STING into nightlife — the late hours, where energy is about the night out rather than the next shift. The campaign needed one strong visual idea that could carry from the key visual through to broadcast.',
         },
         {
-          label: 'THE IDEA',
-          heading: 'Own the hours the category ignored.',
-          body: 'Everyone was selling energy for work. Nobody was selling it for the night — the gigs, the late shifts, the drive home at 2am, the second half of the day people actually look forward to. We built the brand world around that window: a nightlife identity with its own colour behaviour, its own light, and a visual language that only made sense after dark.',
+          label: 'THE WORK',
+          heading: 'One night-grade image, from key visual to final frame.',
+          body: 'The campaign was built on a single nightlife key visual, then carried into motion — a TVC cutdown and an animated end-frame KV — so every format closed on the same image.',
         },
         {
           label: 'MY ROLE',
-          heading: 'Art direction, key visual, and the system underneath.',
-          body: 'I led the visual development from territory boards through to the master key visual, then built the system that let it survive contact with reality — TVC frames, OOH, POSM, social cutdowns and retail. That meant defining how the palette behaved under different lighting, how the logo held on a dark field, and how a regional team could produce on-brand work without me in the room.',
+          heading: 'Art direction, key visual and motion.',
+          body: 'As Senior Creative Designer at Pepsi-Cola Myanmar I worked on the key visual and the motion pieces — the TVC cutdown and the end-frame KV animation — alongside TVC production. The same role covered Pepsi, Mirinda and 7UP work in parallel.',
         },
       ],
       stills: [
-        { label: 'Master key visual', note: 'Print + OOH', grade: 0.22, span: 'half' },
-        { label: 'TVC frame 04', note: 'Broadcast', grade: 0.44, span: 'half' },
-        { label: 'Social system', note: '9:16 cutdowns', grade: 0.22, span: 'third' },
-        { label: 'POSM', note: 'Retail cooler', grade: 0.44, span: 'third' },
-        { label: 'Palette behaviour', note: 'Night grade', grade: 0.22, span: 'third' },
+        { label: 'Key visual', note: 'Campaign master', grade: 0.22, span: 'half' },
+        { label: 'TVC cutdown', note: 'Broadcast', grade: 0.44, span: 'half' },
+        { label: 'End-frame KV', note: 'Animation', grade: 0.22, span: 'third' },
+        { label: 'TVC frame', note: 'Motion', grade: 0.44, span: 'third' },
+        { label: 'Night palette', note: 'Grade', grade: 0.22, span: 'third' },
       ],
       result: {
         figure: '≈10%',
-        caption: 'market share increase attributed to the nightlife repositioning.',
-        body: 'The territory outlived the campaign — the nightlife system became the brand’s default visual language for the following cycle, and the same framework was reused across Mirinda and 7UP activations.',
+        caption: 'market share increase for STING following the nightlife campaign.',
+        body: 'One image, carried from the key visual into the broadcast cutdown and the closing animated frame.',
       },
     },
   },
@@ -263,22 +262,22 @@ export const v2Work: V2Project[] = [
     },
   },
   {
-    slug: 'aia-life-insurance-refresh',
-    name: 'AIA Life Insurance Refresh',
-    nameLines: ['AIA Life', 'Insurance Refresh'],
-    cat: 'Financial · Identity',
+    slug: 'aia-mandalay-office-opening',
+    name: 'AIA Mandalay Office Opening',
+    nameLines: ['AIA Mandalay', 'Office Opening'],
+    cat: 'Financial · Key visual',
     year: '2022',
     accent: 'rgb(198, 68, 96)',
     study: {
-      lede: 'An identity refresh and campaign toolkit for a life insurer that needed to sound human.',
+      lede: 'A launch key visual for AIA’s new Mandalay office, built from the city’s own landmarks.',
       client: 'AIA Life Insurance Myanmar',
       role: 'Creative Designer',
-      year: '2022 — 23',
-      deliverables: 'Identity refresh, campaign\ntoolkit, social films',
+      year: 'Dec 2022',
+      deliverables: 'Office-opening key visual,\nto AIA Myanmar brand guidelines',
       chapters: [],
       stills: [
-        { label: 'Identity refresh', note: 'Core system', grade: 0.22, span: 'half' },
-        { label: 'Campaign toolkit', note: 'Rollout', grade: 0.44, span: 'half' },
+        { label: 'Launch key visual', note: 'Mandalay Palace', grade: 0.22, span: 'half' },
+        { label: 'Detail', note: 'Mandalay umbrella', grade: 0.44, span: 'half' },
       ],
     },
   },

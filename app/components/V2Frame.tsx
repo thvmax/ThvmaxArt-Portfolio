@@ -5,7 +5,6 @@ import SmoothScroll from '@/app/components/SmoothScroll';
 import PageTransition from './PageTransition';
 import V2Nav from './V2Nav';
 import Cursor from './Cursor';
-import ChatWidget from './ChatWidget';
 
 /**
  * Persistent frame for every v2 route. Lives in the layout, not in the
@@ -26,7 +25,6 @@ export default function V2Frame({ children }: { children: ReactNode }) {
           <Cursor />
           <V2Nav />
           {children}
-          <ChatWidget />
         </div>
       </PageTransition>
     </SmoothScroll>
