@@ -7,7 +7,7 @@ import Pill from '../components/Pill';
 export const metadata: Metadata = {
   title: 'About — THVMAX',
   description: v2About.lead,
-  robots: { index: false, follow: false },
+  alternates: { canonical: '/about' },
 };
 
 /** Figma frame: ThvmaxArt / 04 About. */

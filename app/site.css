@@ -61,6 +61,7 @@ a { color: inherit; text-decoration: none; }
   background: var(--bg);
   color: var(--fg);
   font-family: var(--sans);
+  color-scheme: dark;
   letter-spacing: -0.01em;
   min-height: 100vh;
   position: relative;
@@ -72,6 +73,7 @@ a { color: inherit; text-decoration: none; }
    role tokens change — nothing else in this file is theme-aware. */
 
 html[data-theme='light'] .v2 {
+  color-scheme: light;
   --bg: #f4f4f1;
   --raised: #e7e7e2;
   --fg: #101215;

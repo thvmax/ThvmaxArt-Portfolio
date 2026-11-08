@@ -6,7 +6,7 @@ import LockScroll from '../components/LockScroll';
 export const metadata: Metadata = {
   title: 'Work — THVMAX',
   description: v2WorkPage.intro,
-  robots: { index: false, follow: false },
+  alternates: { canonical: '/work' },
 };
 
 /**

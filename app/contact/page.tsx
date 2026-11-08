@@ -5,7 +5,7 @@ import ContactSection from '../components/ContactSection';
 export const metadata: Metadata = {
   title: 'Contact — THVMAX',
   description: v2Contact.intro,
-  robots: { index: false, follow: false },
+  alternates: { canonical: '/contact' },
 };
 
 /** Figma frame: ThvmaxArt / 05 Contact. */

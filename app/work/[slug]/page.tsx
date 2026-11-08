@@ -11,10 +11,17 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   const project = findProject(params.slug);
   if (!project) return { title: 'Case study — THVMAX' };
 
+  const lede = project.study?.lede ?? project.cat;
   return {
     title: `${project.name} — THVMAX`,
-    description: project.study?.lede ?? project.cat,
-    robots: { index: false, follow: false },
+    description: lede,
+    alternates: { canonical: `/work/${project.slug}` },
+    openGraph: {
+      title: `${project.name} — THVMAX`,
+      description: lede,
+      url: `/work/${project.slug}`,
+      type: 'article',
+    },
   };
 }
 
