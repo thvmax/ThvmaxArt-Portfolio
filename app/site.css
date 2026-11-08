@@ -1265,6 +1265,27 @@ body.v2-intro-open { overflow: hidden; }
 .v2-edu-title { font-size: 1.0625rem; font-weight: 500; line-height: 1.45; }
 .v2-edu-meta { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.02em; color: var(--muted); margin-top: 0.6rem; }
 
+/* ── Services ─────────────────────────────────────────────────────── */
+
+.v2-service-title { max-width: 60rem; margin-top: clamp(0.75rem, 1.4vw, 1.7rem); }
+.v2-service-intro { max-width: 44rem; margin-top: clamp(1.25rem, 2.4vw, 2.9rem); color: var(--muted); font-size: var(--t-lead); line-height: 1.65; }
+.v2-service-body { max-width: 44rem; margin-top: 1.5rem; }
+.v2-service-block { margin-top: clamp(3rem, 6vw, 7rem); }
+.v2-deliverables {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 2.5vw, 2.5rem) clamp(1rem, 2vw, 2.5rem);
+  margin-top: 1.5rem;
+}
+.v2-deliverable {
+  border-top: 1px solid var(--line);
+  padding-top: 0.9rem;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+
 /* ── Contact ──────────────────────────────────────────────────────── */
 
 .v2-contact {
@@ -1575,12 +1596,13 @@ body.v2-intro-open { overflow: hidden; }
   .v2-nav-menu { display: none; }
   .v2-preview { display: none; }
   .v2-toolkit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .v2-deliverables { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
   .v2-row { padding-inline: 8px; grid-template-columns: 40px minmax(0, 1fr) 38px; }
   .v2-row-arrow { width: 38px; height: 38px; }
-  .v2-stats, .v2-facts, .v2-links, .v2-toolkit { grid-template-columns: minmax(0, 1fr); }
+  .v2-stats, .v2-facts, .v2-links, .v2-toolkit, .v2-deliverables { grid-template-columns: minmax(0, 1fr); }
   .v2-band-foot, .v2-contact-foot { flex-direction: column; gap: 0.5rem; }
   .v2-plate { border-radius: 20px; padding: 6px; }
   .v2-plate-label { top: 20px; left: 20px; }
