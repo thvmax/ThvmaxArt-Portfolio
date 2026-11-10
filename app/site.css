@@ -1600,6 +1600,9 @@ body.v2-intro-open { overflow: hidden; }
 }
 
 @media (max-width: 640px) {
+  /* The CTA pill would push the burger off the right edge — the menu
+     overlay already carries the mail/phone contacts. */
+  .v2-nav-right .v2-pill { display: none; }
   .v2-row { padding-inline: 8px; grid-template-columns: 40px minmax(0, 1fr) 38px; }
   .v2-row-arrow { width: 38px; height: 38px; }
   .v2-stats, .v2-facts, .v2-links, .v2-toolkit, .v2-deliverables { grid-template-columns: minmax(0, 1fr); }
