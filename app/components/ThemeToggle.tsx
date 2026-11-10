@@ -9,7 +9,7 @@ type Theme = 'dark' | 'light';
 
 const INK_MS = 720;   // ink spreading until it covers the page
 const SWAP_MS = 60;   // hover transitions stay suspended this long after swap
-const MAX_DPR = 1.5;  // full-resolution ink (no blocky edges), capped on very dense screens
+const MAX_DPR = 2;    // true device resolution on Retina — grain stays one physical pixel
 const MAX_KEEP = 16;  // artwork rects the ink leaves untouched
 
 /**
@@ -69,7 +69,7 @@ void main(){
     vec2 c = r.xy + r.zw * 0.5;
     vec2 d = abs(px - c) - r.zw * 0.5 + rad;
     float sd = length(max(d, 0.0)) + min(max(d.x, d.y), 0.0) - rad;
-    ink *= smoothstep(-0.5, 0.5, sd);
+    ink *= step(0.0, sd);
   }
   gl_FragColor = vec4(ink, ink, ink, ink);
 }`;
@@ -84,34 +84,44 @@ type Ink = { gl: WebGLRenderingContext; uP: U; uO: U; uSeed: U; uRes: U; uT: U; 
  * along with that frame's corner radius. Returned in canvas pixels
  * (origin bottom-left, as gl_FragCoord sees them).
  */
-function artworkRects(dpr: number) {
-  const vw = window.innerWidth, vh = window.innerHeight;
-  const out: { x: number; y: number; w: number; h: number; r: number; a: number }[] = [];
+function artworkFrames(): { frame: Element; inner: Element }[] {
+  const out: { frame: Element; inner: Element }[] = [];
   const seen = new Set<Element>();
   const nodes = document.querySelectorAll('img, video, picture, canvas:not(.v2-ink), [data-ink-keep], [style*="gradient"]');
   nodes.forEach((n) => {
+    // hidden things (a parked hover preview, an intro frame) must not punch holes in the ink
+    const el = n as HTMLElement;
+    if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return;
     let frame: Element = n;
-    let rect = n.getBoundingClientRect();
-    let el: Element | null = n.parentElement;
-    for (let i = 0; i < 4 && el; i++, el = el.parentElement) {
-      const cs = getComputedStyle(el);
-      if (cs.overflow === 'hidden' || cs.overflow === 'clip' || cs.overflowX === 'hidden') {
-        const pr = el.getBoundingClientRect();
-        const l = Math.max(rect.left, pr.left), t = Math.max(rect.top, pr.top);
-        const r = Math.min(rect.right, pr.right), b = Math.min(rect.bottom, pr.bottom);
-        rect = new DOMRect(l, t, Math.max(0, r - l), Math.max(0, b - t));
-        frame = el;
-        break;
-      }
+    let p: Element | null = n.parentElement;
+    for (let i = 0; i < 4 && p; i++, p = p.parentElement) {
+      const cs = getComputedStyle(p);
+      if (cs.overflow === 'hidden' || cs.overflow === 'clip' || cs.overflowX === 'hidden') { frame = p; break; }
     }
     if (seen.has(frame)) return;
     seen.add(frame);
-    const l = Math.max(0, rect.left), t = Math.max(0, rect.top);
-    const w = Math.min(vw, rect.right) - l, h = Math.min(vh, rect.bottom) - t;
-    if (w < 8 || h < 8) return;
-    const rad = parseFloat(getComputedStyle(frame).borderTopLeftRadius) || 0;
-    out.push({ x: l * dpr, y: (vh - t - h) * dpr, w: w * dpr, h: h * dpr, r: Math.min(rad, w / 2, h / 2) * dpr, a: w * h });
+    out.push({ frame, inner: n });
   });
+  return out;
+}
+
+/** Measured every frame, so artwork that moves (the marquee, parallax) keeps its mask. */
+function artworkRects(frames: { frame: Element; inner: Element }[], dpr: number) {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const out: { x: number; y: number; w: number; h: number; r: number; a: number }[] = [];
+  for (const { frame, inner } of frames) {
+    const ir = inner.getBoundingClientRect();
+    const fr = frame === inner ? ir : frame.getBoundingClientRect();
+    const l = Math.max(0, ir.left, fr.left), t = Math.max(0, ir.top, fr.top);
+    const r = Math.min(vw, ir.right, fr.right), b = Math.min(vh, ir.bottom, fr.bottom);
+    if (r - l < 8 || b - t < 8) continue;
+    // snap to whole device pixels the way the browser places the element's
+    // edge, so the mask and the artwork share one crisp boundary
+    const x0 = Math.round(l * dpr), x1 = Math.round(r * dpr);
+    const y0 = Math.round((vh - b) * dpr), y1 = Math.round((vh - t) * dpr);
+    const rad = parseFloat(getComputedStyle(frame).borderTopLeftRadius) || 0;
+    out.push({ x: x0, y: y0, w: x1 - x0, h: y1 - y0, r: Math.min(rad * dpr, (x1 - x0) / 2, (y1 - y0) / 2), a: (r - l) * (b - t) });
+  }
   return out.sort((p, q) => q.a - p.a).slice(0, MAX_KEEP);
 }
 
@@ -228,18 +238,24 @@ export default function ThemeToggle() {
     k.gl.uniform2f(k.uO, r ? (r.left + r.width / 2) / window.innerWidth : 1, r ? 1 - (r.top + r.height / 2) / window.innerHeight : 1);
     k.gl.uniform1f(k.uSeed, Math.random() * 100);
     const dpr = c.width / window.innerWidth;
-    const keep = artworkRects(dpr);
+    const frames = artworkFrames();
     const rects = new Float32Array(MAX_KEEP * 4), rads = new Float32Array(MAX_KEEP);
-    keep.forEach((r, i) => { rects.set([r.x, r.y, r.w, r.h], i * 4); rads[i] = r.r; });
-    k.gl.uniform4fv(k.uKeep, rects);
-    k.gl.uniform1fv(k.uRad, rads);
-    k.gl.uniform1i(k.uN, keep.length);
+    const mask = () => {
+      const keep = artworkRects(frames, dpr);
+      rects.fill(0); rads.fill(0);
+      keep.forEach((r, i) => { rects.set([r.x, r.y, r.w, r.h], i * 4); rads[i] = r.r; });
+      k.gl.uniform4fv(k.uKeep, rects);
+      k.gl.uniform1fv(k.uRad, rads);
+      k.gl.uniform1i(k.uN, keep.length);
+    };
+    mask();
     draw(0);
     c.style.display = 'block';
 
     const start = performance.now();
     const frame = (now: number) => {
       const t = Math.min(1, (now - start) / INK_MS);
+      mask();
       draw(ease(t), (now - start) / 1000);
       if (t < 1) {
         requestAnimationFrame(frame);
