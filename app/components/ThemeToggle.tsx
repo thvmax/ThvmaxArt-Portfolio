@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const THEME_KEY = 'thv-theme';
 
-const FG = { dark: '#f2f2f0', light: '#101215' } as const;
-type Theme = keyof typeof FG;
+type Theme = 'dark' | 'light';
 
-const SWAP_MS = 60;  // how long hover transitions stay suspended after swap
-const PULSE = 620;   // glow leaving the dial
+const SWAP_MS = 60;   // how long hover transitions stay suspended after swap
+const WAVE_MS = 640;  // halftone ripple travelling across the page
+const SPARKS = 8;
 
 /**
  * Theme dial.
@@ -16,26 +16,54 @@ const PULSE = 620;   // glow leaving the dial
  * At rest: a hairline circle holding a disc with a bite out of it —
  * crescent in dark, gibbous in light.
  *
- * Switching is instant: every surface, rule and letter snaps to its
- * counterpart in the same paint, while a soft glow leaves the dial and
- * washes outward so the change still reads as sourced from the button.
- *
- * Nothing is ever covered. Earlier attempts (a snapshot iris, an
- * expanding disc, a staggered shutter) all hid the page to swap it
- * underneath, which is what made them feel heavy and, in the snapshot
- * case, stutter on the first run. Here the content never leaves the
- * screen: it just changes colour, and the glow is a single element.
+ * Switching is instant — every surface flips in the same paint as the
+ * click — and an art layer rides on top of it:
+ *   - a halftone ripple (a ring of dots in the new ink) bursts out of the
+ *     dial and crosses the page, led by a hairline ring;
+ *   - the dial throws a small spark burst while the moon flips.
+ * The art layer never covers content and never blocks input. It is built
+ * only from transform + opacity on layers that are rasterised once at
+ * mount (one per ink, so the swap never forces a repaint of them), which
+ * is what keeps even the very first click smooth.
  */
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('dark');
   const busy = useRef(false);
   const btnRef = useRef<HTMLButtonElement | null>(null);
-  const glowRef = useRef<HTMLSpanElement | null>(null);
+  const waveDark = useRef<HTMLSpanElement | null>(null);
+  const waveLight = useRef<HTMLSpanElement | null>(null);
+  const lineRef = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
     const current = document.documentElement.getAttribute('data-theme');
     setTheme(current === 'light' ? 'light' : 'dark');
   }, []);
+
+  // Park the ripple layers on the dial so they are pre-rasterised and the
+  // first switch has nothing to build.
+  const place = useCallback(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const reach = Math.hypot(Math.max(cx, window.innerWidth - cx), Math.max(cy, window.innerHeight - cy));
+    // drawn at half size and scaled past 1 — a quarter of the GPU memory
+    const size = Math.ceil(reach * 1.05);
+    for (const el of [waveDark.current, waveLight.current, lineRef.current]) {
+      if (!el) continue;
+      el.style.width = `${size}px`;
+      el.style.height = `${size}px`;
+      el.style.left = `${cx - size / 2}px`;
+      el.style.top = `${cy - size / 2}px`;
+    }
+  }, []);
+
+  useEffect(() => {
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [place]);
 
   const apply = useCallback((next: Theme) => {
     document.documentElement.setAttribute('data-theme', next);
@@ -50,16 +78,8 @@ export default function ThemeToggle() {
 
     const next: Theme = theme === 'dark' ? 'light' : 'dark';
     const btn = btnRef.current;
-    const glow = glowRef.current;
     const root = document.documentElement;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (btn && !reduced) {
-      btn.classList.remove('is-spun');
-      void btn.offsetWidth; // restart the pulse
-      btn.classList.add('is-spun');
-      window.setTimeout(() => btn.classList.remove('is-spun'), 900);
-    }
 
     if (reduced) {
       apply(next);
@@ -72,38 +92,43 @@ export default function ThemeToggle() {
     root.classList.add('is-morphing');
     apply(next);
 
-    // a glow leaves the dial and washes out across the page
-    if (btn && glow && typeof glow.animate === 'function') {
-      const r = btn.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      const reach = Math.hypot(
-        Math.max(cx, window.innerWidth - cx),
-        Math.max(cy, window.innerHeight - cy),
-      );
+    if (btn) {
+      btn.classList.remove('is-spun');
+      void btn.offsetWidth; // restart the burst
+      btn.classList.add('is-spun');
+      window.setTimeout(() => btn.classList.remove('is-spun'), 700);
+    }
 
-      const size = reach * 2;
-      glow.style.width = `${size}px`;
-      glow.style.height = `${size}px`;
-      glow.style.left = `${cx - reach}px`;
-      glow.style.top = `${cy - reach}px`;
-      glow.style.background =
-        `radial-gradient(circle, ${FG[next]}2e 0%, ${FG[next]}14 38%, transparent 68%)`;
-
-      glow.animate(
+    const wave = next === 'dark' ? waveDark.current : waveLight.current;
+    const line = lineRef.current;
+    if (wave && typeof wave.animate === 'function') {
+      place();
+      const easing = 'cubic-bezier(0.16, 1, 0.3, 1)';
+      wave.animate(
         [
-          { transform: 'scale(0.15)', opacity: 0.9 },
-          { transform: 'scale(1)', opacity: 0 },
+          { transform: 'scale(0.06)', opacity: 0 },
+          { transform: 'scale(0.5)', opacity: 0.85, offset: 0.18 },
+          { transform: 'scale(2.1)', opacity: 0 },
         ],
-        { duration: PULSE, easing: 'cubic-bezier(0.22, 0.9, 0.36, 1)' },
+        { duration: WAVE_MS, easing },
       );
+      if (line) {
+        line.dataset.ink = next;
+        line.animate(
+          [
+            { transform: 'scale(0.04)', opacity: 0.9 },
+            { transform: 'scale(2.15)', opacity: 0 },
+          ],
+          { duration: WAVE_MS - 80, easing },
+        );
+      }
     }
 
     window.setTimeout(() => {
       root.classList.remove('is-morphing');
       busy.current = false;
     }, SWAP_MS);
-  }, [apply, theme]);
+  }, [apply, place, theme]);
 
   return (
     <>
@@ -119,9 +144,19 @@ export default function ThemeToggle() {
       >
         <span className="v2-dial-disc" aria-hidden="true" />
         <span className="v2-dial-ring" aria-hidden="true" />
+        {Array.from({ length: SPARKS }, (_, i) => (
+          <i
+            key={i}
+            className="v2-dial-spark"
+            style={{ ['--a' as string]: `${(360 / SPARKS) * i + 22}deg`, ['--d' as string]: `${(i % 2) * 40}ms` }}
+            aria-hidden="true"
+          />
+        ))}
       </button>
 
-      <span className="v2-glow" ref={glowRef} aria-hidden="true" />
+      <span className="v2-wave v2-wave--dark" ref={waveDark} aria-hidden="true" />
+      <span className="v2-wave v2-wave--light" ref={waveLight} aria-hidden="true" />
+      <span className="v2-wave-line" ref={lineRef} aria-hidden="true" />
     </>
   );
 }
