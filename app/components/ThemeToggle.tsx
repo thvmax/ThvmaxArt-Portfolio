@@ -7,7 +7,7 @@ export const THEME_KEY = 'thv-theme';
 const FG = { dark: '#f2f2f0', light: '#101215' } as const;
 type Theme = keyof typeof FG;
 
-const MORPH = 400;   // whole-page colour dissolve (matches site.css)
+const SWAP_MS = 60;  // how long hover transitions stay suspended after swap
 const PULSE = 620;   // glow leaving the dial
 
 /**
@@ -16,10 +16,9 @@ const PULSE = 620;   // glow leaving the dial
  * At rest: a hairline circle holding a disc with a bite out of it —
  * crescent in dark, gibbous in light.
  *
- * Switching dissolves the entire page at once — every surface, rule and
- * letter eases to its counterpart over ~460ms — while a soft glow leaves
- * the dial and washes outward, so the change reads as sourced from the
- * button rather than merely happening.
+ * Switching is instant: every surface, rule and letter snaps to its
+ * counterpart in the same paint, while a soft glow leaves the dial and
+ * washes outward so the change still reads as sourced from the button.
  *
  * Nothing is ever covered. Earlier attempts (a snapshot iris, an
  * expanding disc, a staggered shutter) all hid the page to swap it
@@ -69,7 +68,7 @@ export default function ThemeToggle() {
 
     busy.current = true;
 
-    // arm the dissolve, then flip — every colour eases to its counterpart
+    // Suspend every element's own hover transition, then flip the tokens.
     root.classList.add('is-morphing');
     apply(next);
 
@@ -103,7 +102,7 @@ export default function ThemeToggle() {
     window.setTimeout(() => {
       root.classList.remove('is-morphing');
       busy.current = false;
-    }, MORPH + 60);
+    }, SWAP_MS);
   }, [apply, theme]);
 
   return (

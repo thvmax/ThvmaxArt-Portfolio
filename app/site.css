@@ -403,49 +403,18 @@ html[data-theme='light'] .v2-dial:hover .v2-dial-disc { transform: rotate(162deg
 html[data-theme='light'] .v2-dial-disc { transform: rotate(180deg); }
 html[data-theme='light'] .v2-dial-disc::after { transform: translate(42%, -22%); }
 
-/* ── Theme morph ──────────────────────────────────────────────────
-   The whole page eases from one palette to the other at once. The
-   transition is armed only for the length of the swap, so it never
-   interferes with hover states or the site's own motion afterwards.
-   Nothing is covered — the content stays on screen and simply changes
-   colour, which is why this cannot feel like an interruption.
-
-   Every element — including the nav — shares one duration and one curve.
-   An earlier pass ran the nav on its own shorter clock (280ms, then
-   120ms) so the header would "lead" the page. But a child that inherits
-   its colour while carrying a *different* transition duration has to
-   chase its parent's moving value: the nav text lagged the whole morph
-   and then kept crawling ~350ms after everything else had settled.
-   Keeping parent and children in phase removes that lag entirely.
-
-   The curve matters too: the previous ease-in-out starts near-flat, so
-   the first part of the swap reads as a delay before the colours move.
-   The site's ease-out starts fast and settles, matching the rest of the
-   motion language. */
+/* ── Theme swap ──────────────────────────────────────────────────
+   Theme colours flip instantly. The `.is-morphing` class is applied
+   around the token change purely to suspend every element's own hover
+   transition (nav, rows, labels, level bars all fade colour/background
+   over ~0.35s) for the one paint in which the tokens change — otherwise
+   those base transitions smear the swap into a lag. With `transition:
+   none` here, every surface lands on the new palette in the same paint,
+   and hover motion resumes as soon as the class is dropped. */
 html.is-morphing .v2,
-html.is-morphing .v2 *:not(.v2-dial-disc):not(.v2-dial-ring) {
-  transition:
-    background-color 400ms cubic-bezier(0.22, 1, 0.36, 1),
-    color 400ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 400ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 400ms cubic-bezier(0.22, 1, 0.36, 1),
-    fill 400ms cubic-bezier(0.22, 1, 0.36, 1),
-    stroke 400ms cubic-bezier(0.22, 1, 0.36, 1) !important;
-}
-html.is-morphing body { transition: background-color 400ms cubic-bezier(0.22, 1, 0.36, 1); }
-
-/* Nav text inherits its colour from .v2, so it must NOT carry its own
-   colour transition during the morph. An inherited value on a child that
-   also transitions colour has to chase its parent's moving value, so the
-   nav lags after the rest of the page and keeps crawling once the morph
-   class is gone. Chrome (backgrounds, borders, shadows, icon paint) is
-   set directly on the nav, so it keeps the same 400ms clock — nav and
-   page land together with no desync. */
-html.is-morphing .v2 .v2-nav:not(.v2-dial-disc):not(.v2-dial-ring),
-html.is-morphing .v2 .v2-nav *:not(.v2-dial-disc):not(.v2-dial-ring) {
-  transition-property: background-color, border-color, box-shadow, fill, stroke !important;
-  transition-duration: 400ms !important;
-  transition-delay: 0s !important;
+html.is-morphing .v2 *:not(.v2-dial-disc):not(.v2-dial-ring),
+html.is-morphing body {
+  transition: none !important;
 }
 
 /* the glow that leaves the dial — one element, transform + opacity only */
