@@ -1611,6 +1611,7 @@ body.v2-intro-open { overflow: hidden; }
 .v2-ed { padding-top: clamp(7rem, 11vw, 11rem); padding-bottom: clamp(3rem, 6vw, 6rem); }
 
 .v2-ed-head { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; text-align: center; padding: 0 var(--pad); }
+.v2-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .v2-ed-kicker { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .v2-ed-h1 { font-size: clamp(0.95rem, 1.05vw, 1.0625rem); font-weight: 500; letter-spacing: -0.01em; line-height: 1.4; max-width: 34rem; }
 .v2-ed-h1 em { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 1.12em; }
@@ -1675,16 +1676,19 @@ body.v2-intro-open { overflow: hidden; }
 .v2-ed-meta { font-family: var(--serif); font-size: 0.875rem; color: var(--muted); }
 
 /* Space */
-/* Space fills exactly one screen, like the reference's home — no page scroll */
-.v2-ed--space { height: 100svh; min-height: 34rem; display: flex; flex-direction: column; padding-bottom: 0; }
-.v2-ed--space .v2-ed-space { flex: 1 1 auto; height: auto; min-height: 0; }
+/* Space is the whole screen, like the reference's home: the sphere sits
+   behind the nav and the view switch floats just under it */
+.v2-ed--space { position: relative; height: 100svh; min-height: 32rem; padding: 0; }
+.v2-ed--space .v2-ed-head { position: absolute; top: clamp(5.5rem, 8vw, 8rem); left: 0; right: 0; z-index: 2; pointer-events: none; }
+.v2-ed--space .v2-ed-toggle { pointer-events: auto; margin: 0; }
+.v2-ed--space .v2-ed-space { position: absolute; inset: 0; height: auto; margin: 0; padding: 0; z-index: 1; }
 .v2-ed-space {
   position: relative; height: max(30rem, calc(100svh - clamp(13rem, 20vw, 17rem)));
   padding-bottom: 3rem;
   margin-top: 1rem; overflow: hidden; touch-action: none; cursor: grab; user-select: none;
 }
 .v2-ed-space:active { cursor: grabbing; }
-.v2-ed-node { position: absolute; left: 50%; top: 50%; width: clamp(40px, 3.7vw, 66px); will-change: transform, opacity; -webkit-user-drag: none; }
+.v2-ed-node { position: absolute; left: 50%; top: 53%; width: clamp(60px, 6.2vw, 136px); will-change: transform, opacity; -webkit-user-drag: none; }
 .v2-ed-node-card {
   position: relative; display: block; aspect-ratio: 4 / 5; padding: 3px; background: var(--raised);
   transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
@@ -1697,14 +1701,14 @@ body.v2-intro-open { overflow: hidden; }
 
 .v2-ed-side {
   position: absolute; top: 50%; transform: translateY(-50%);
-  font-size: 0.8125rem; font-weight: 500; color: var(--fg); pointer-events: none;
+  font-size: clamp(0.8125rem, 0.95vw, 1rem); font-weight: 500; color: var(--fg); pointer-events: none; z-index: 101;
 }
 .v2-ed-side--l { left: var(--pad); }
 .v2-ed-side--r { right: var(--pad); font-family: var(--serif); font-weight: 400; font-size: 0.9375rem; }
 
 .v2-ed-counter {
-  position: absolute; left: 0; right: 0; bottom: 1.25rem; text-align: center;
-  font-size: 0.8125rem; font-weight: 500; color: var(--fg); pointer-events: none;
+  position: absolute; left: 0; right: 0; bottom: clamp(1.25rem, 2.5vw, 2.25rem); text-align: center; z-index: 101;
+  font-size: clamp(0.8125rem, 0.95vw, 1rem); font-weight: 500; color: var(--fg); pointer-events: none;
 }
 .v2-ed-counter span { font-family: var(--mono); font-size: 0.6875rem; color: var(--muted); margin-right: 0.5em; }
 .v2-ed-counter em { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--muted); margin-left: 0.35em; }

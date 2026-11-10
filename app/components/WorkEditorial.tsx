@@ -119,8 +119,9 @@ function Space({ items }: { items: V2Project[] }) {
       if (!born.current) born.current = performance.now();
       const o = reduced ? 1 : Math.min(1, (performance.now() - born.current) / 1300);
       const open = 1 - Math.pow(1 - o, 4);
-      const wide = stage.clientWidth < 700 ? 0.33 : 0.2; // more room on phones
-      const R = Math.min(stage.clientWidth * wide, stage.clientHeight * 0.3) * (0.04 + 0.96 * open);
+      // sized to the screen: the sphere fills most of the viewport at any size
+      const wide = stage.clientWidth < 700 ? 0.4 : 0.3;
+      const R = Math.min(stage.clientWidth * wide, stage.clientHeight * 0.29) * (0.04 + 0.96 * open);
       const f = R * 3.4;
       st.ry += (reduced || st.hold || st.drag ? 0 : 0.0016) + st.vy + (1 - open) * 0.03;
       st.vy *= 0.93;
@@ -255,10 +256,7 @@ export default function WorkEditorial() {
   return (
     <section className={`v2-ed v2-ed--${view}`}>
       <header className="v2-ed-head">
-        <p className="v2-ed-kicker">Selected work · {pad2(v2Work.length)}</p>
-        <h1 className="v2-ed-h1">
-          Ten projects across <em>campaign, motion and product design</em>
-        </h1>
+        <h1 className="v2-sr-only">Selected work</h1>
         <div className="v2-ed-toggle" role="group" aria-label="Work view">
           {(['space', 'index'] as View[]).map((v, i) => (
             <button
