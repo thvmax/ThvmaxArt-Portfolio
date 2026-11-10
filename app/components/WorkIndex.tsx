@@ -6,6 +6,7 @@ import { gsap } from 'gsap';
 import { plate, v2Work, v2WorkSection, type V2Project } from '@/lib/v2content';
 import Reveal from './Reveal';
 import ScrambleLabel from './ScrambleLabel';
+import ArrowUpRight from './ArrowUpRight';
 
 /**
  * SELECTED WORK — the project index.
@@ -85,7 +86,7 @@ export default function WorkIndex({ limit, hint }: { limit?: number; hint?: bool
             <span className="v2-row-name">{p.name}</span>
             <span className="v2-row-meta">{p.cat}</span>
             <span className="v2-row-year">{p.year}</span>
-            <span className="v2-row-arrow" aria-hidden="true">↗</span>
+            <span className="v2-row-arrow" aria-hidden="true"><ArrowUpRight /></span>
           </Link>
         ))}
       </Reveal>

@@ -2,6 +2,7 @@
 
 import { useRef, type MouseEvent, type ReactNode } from 'react';
 import { gsap } from 'gsap';
+import ArrowUpRight from './ArrowUpRight';
 
 interface Props {
   href: string;
@@ -26,7 +27,7 @@ export default function Pill({
   className = '',
   ghost,
   large,
-  knob = '↗',
+  knob = <ArrowUpRight />,
   target,
   rel,
   onClick,

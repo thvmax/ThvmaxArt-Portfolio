@@ -7,7 +7,7 @@ export const THEME_KEY = 'thv-theme';
 const FG = { dark: '#f2f2f0', light: '#101215' } as const;
 type Theme = keyof typeof FG;
 
-const MORPH = 460;   // whole-page colour dissolve
+const MORPH = 400;   // whole-page colour dissolve (matches site.css)
 const PULSE = 620;   // glow leaving the dial
 
 /**

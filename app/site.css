@@ -408,50 +408,43 @@ html[data-theme='light'] .v2-dial-disc::after { transform: translate(42%, -22%);
    transition is armed only for the length of the swap, so it never
    interferes with hover states or the site's own motion afterwards.
    Nothing is covered — the content stays on screen and simply changes
-   colour, which is why this cannot feel like an interruption. */
+   colour, which is why this cannot feel like an interruption.
 
+   Every element — including the nav — shares one duration and one curve.
+   An earlier pass ran the nav on its own shorter clock (280ms, then
+   120ms) so the header would "lead" the page. But a child that inherits
+   its colour while carrying a *different* transition duration has to
+   chase its parent's moving value: the nav text lagged the whole morph
+   and then kept crawling ~350ms after everything else had settled.
+   Keeping parent and children in phase removes that lag entirely.
+
+   The curve matters too: the previous ease-in-out starts near-flat, so
+   the first part of the swap reads as a delay before the colours move.
+   The site's ease-out starts fast and settles, matching the rest of the
+   motion language. */
 html.is-morphing .v2,
 html.is-morphing .v2 *:not(.v2-dial-disc):not(.v2-dial-ring) {
   transition:
-    background-color 460ms cubic-bezier(0.4, 0, 0.2, 1),
-    color 460ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 460ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 460ms cubic-bezier(0.4, 0, 0.2, 1),
-    fill 460ms cubic-bezier(0.4, 0, 0.2, 1),
-    stroke 460ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    background-color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    fill 400ms cubic-bezier(0.22, 1, 0.36, 1),
+    stroke 400ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
-html.is-morphing body { transition: background-color 460ms cubic-bezier(0.4, 0, 0.2, 1); }
+html.is-morphing body { transition: background-color 400ms cubic-bezier(0.22, 1, 0.36, 1); }
 
-/* Nav chrome leads the page rather than trailing it.
-
-   280ms was tried first and measured correctly (0s delay, colour
-   genuinely covered) — but it still read as a lag. Small glanceable
-   chrome sitting right under the cursor has a much lower threshold for
-   "instant" than a big page-wide morph does; 280ms is smooth for a
-   headline, but perceptible on nav chrome. 120ms is under that
-   threshold while still being an actual transition rather than a hard
-   cut. Text colour is the exception — see the note inside the rule.
-
-   The glass blur is deliberately left alone here. An earlier version
-   also toggled backdrop-filter off during the morph (on the theory that
-   blurring a mid-transition backdrop was expensive), then restored it
-   only when the whole-page timer cleared ~520ms later — a gap that read
-   as the header "still changing" long after it had settled. That was
-   the original lag report; the colour-swap lag was a separate one. */
+/* Nav text inherits its colour from .v2, so it must NOT carry its own
+   colour transition during the morph. An inherited value on a child that
+   also transitions colour has to chase its parent's moving value, so the
+   nav lags after the rest of the page and keeps crawling once the morph
+   class is gone. Chrome (backgrounds, borders, shadows, icon paint) is
+   set directly on the nav, so it keeps the same 400ms clock — nav and
+   page land together with no desync. */
 html.is-morphing .v2 .v2-nav:not(.v2-dial-disc):not(.v2-dial-ring),
-html.is-morphing .v2 .v2-nav *:not(.v2-dial-disc):not(.v2-dial-ring),
-html.is-morphing .v2 .v2-back:not(.v2-dial-disc):not(.v2-dial-ring) {
-  /* Chrome (backgrounds, borders, shadows, icon paint) leads the page at
-     120ms. Colour is deliberately NOT in this list: nav text inherits its
-     colour from .v2, and an inherited value already slides with the
-     parent's 460ms morph. Giving the child its own (shorter) colour
-     transition makes it chase a moving target — it trails the whole morph,
-     then keeps crawling another ~350ms when is-morphing clears and the
-     element's own 0.35s rule re-arms mid-flight. That chase was the
-     recurring "nav text lags" report; the earlier duration-only overrides
-     (280ms, then 120ms) tuned the chase instead of removing it. */
+html.is-morphing .v2 .v2-nav *:not(.v2-dial-disc):not(.v2-dial-ring) {
   transition-property: background-color, border-color, box-shadow, fill, stroke !important;
-  transition-duration: 120ms !important;
+  transition-duration: 400ms !important;
   transition-delay: 0s !important;
 }
 
@@ -654,9 +647,9 @@ html.is-morphing .v2 .v2-back:not(.v2-dial-disc):not(.v2-dial-ring) {
   border-radius: 999px;
   background: var(--wash);
   font-size: 1rem;
-  transition: background 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background 0.4s ease, color 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.v2-row:hover .v2-row-arrow { background: var(--fg); transform: translate(3px, -3px) scale(1.08); }
+.v2-row:hover .v2-row-arrow { background: var(--fg); color: var(--bg); transform: translate(3px, -3px) scale(1.08); }
 
 /* Cursor-tracked preview plate */
 .v2-preview {

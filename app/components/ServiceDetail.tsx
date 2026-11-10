@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { findProject, v2Site, type V2Project, type V2Service } from '@/lib/v2content';
 import Reveal from './Reveal';
 import ScrambleLabel from './ScrambleLabel';
+import ArrowUpRight from './ArrowUpRight';
 import Pill from './Pill';
 
 /** A single service detail page: H1, lead, deliverables and related work. */
@@ -49,7 +50,7 @@ export default function ServiceDetail({ service }: { service: V2Service }) {
                 <span className="v2-row-name">{p.name}</span>
                 <span className="v2-row-meta">{p.cat}</span>
                 <span className="v2-row-year">{p.year}</span>
-                <span className="v2-row-arrow" aria-hidden="true">↗</span>
+                <span className="v2-row-arrow" aria-hidden="true"><ArrowUpRight /></span>
               </Link>
             ))}
           </Reveal>

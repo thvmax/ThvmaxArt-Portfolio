@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { v2Services, v2ServicesSection } from '@/lib/v2content';
 import Reveal from '../components/Reveal';
 import ScrambleLabel from '../components/ScrambleLabel';
+import ArrowUpRight from '../components/ArrowUpRight';
 
 export const metadata: Metadata = {
   title: 'Services — THVMAX',
@@ -31,7 +32,7 @@ export default function ServicesPage() {
             <span className="v2-row-name">{s.name}</span>
             <span className="v2-row-meta">{s.tagline}</span>
             <span className="v2-row-year" aria-hidden="true" />
-            <span className="v2-row-arrow" aria-hidden="true">↗</span>
+            <span className="v2-row-arrow" aria-hidden="true"><ArrowUpRight /></span>
           </Link>
         ))}
       </Reveal>
