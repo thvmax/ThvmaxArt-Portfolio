@@ -10,6 +10,7 @@ const nextConfig = {
     return [
       { source: '/thvmaxart', destination: '/', permanent: true },
       { source: '/sting-night-life', destination: '/work/sting-nightlife-repositioning', permanent: true },
+      { source: '/work-editorial', destination: '/work', permanent: true },
       { source: '/work/aia-life-insurance-refresh', destination: '/work/aia-mandalay-office-opening', permanent: true },
       { source: '/art-direction', destination: '/work', permanent: true },
       { source: '/motion-production', destination: '/work', permanent: true },

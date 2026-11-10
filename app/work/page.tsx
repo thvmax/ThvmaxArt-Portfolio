@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { v2WorkPage } from '@/lib/v2content';
-import WorkMarquee from '../components/WorkMarquee';
-import LockScroll from '../components/LockScroll';
+import WorkEditorial from '../components/WorkEditorial';
 
 export const metadata: Metadata = {
   title: 'Work — THVMAX',
@@ -10,16 +9,14 @@ export const metadata: Metadata = {
 };
 
 /**
- * Figma frame: ThvmaxArt / 02 Work — held in a single locked viewport
- * as an infinite marquee, so the page never repeats the home list.
+ * Work — two views of the ten projects: Space (a turning sphere of small
+ * cards, the default) and Index (an editorial grid). Adapted from the
+ * Creative Space / Projects pages on gionatannese.com.
  */
 export default function WorkPage() {
   return (
-    <>
-      <LockScroll />
-      <main>
-        <WorkMarquee />
-      </main>
-    </>
+    <main>
+      <WorkEditorial />
+    </main>
   );
 }
