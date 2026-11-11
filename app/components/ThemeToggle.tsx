@@ -10,7 +10,7 @@ type Theme = 'dark' | 'light';
 const INK_MS = 720;   // ink spreading until it covers the page
 const SWAP_MS = 60;   // hover transitions stay suspended this long after swap
 const MAX_DPR = 2;    // true device resolution on Retina — grain stays one physical pixel
-const MAX_KEEP = 16;  // artwork rects the ink leaves untouched
+const MAX_KEEP = 24;  // artwork rects the ink leaves untouched
 
 /**
  * Theme dial with an ink-blot dissolve.
@@ -36,7 +36,7 @@ const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`
 const FRAG = `
 precision highp float;
 uniform vec2 uRes; uniform float uP; uniform vec2 uO; uniform float uSeed; uniform float uT;
-uniform vec4 uKeep[16]; uniform float uRad[16]; uniform int uN;
+uniform vec4 uKeep[24]; uniform float uRad[24]; uniform int uN;
 float hash(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float noise(vec2 p){
   vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3.0 - 2.0 * f);
@@ -63,7 +63,7 @@ void main(){
   float grain = 0.08 * (1.0 - smoothstep(0.8, 1.0, uP));
   float ink = clamp(e + (g - 0.5) * (band * 1.1 + grain), 0.0, 1.0);
   // artwork (photos, video, colour plates) never inverts — it is theme-free
-  for (int i = 0; i < 16; i++){
+  for (int i = 0; i < 24; i++){
     if (i >= uN) break;
     vec4 r = uKeep[i]; float rad = uRad[i];
     vec2 c = r.xy + r.zw * 0.5;
@@ -84,8 +84,10 @@ type Ink = { gl: WebGLRenderingContext; uP: U; uO: U; uSeed: U; uRes: U; uT: U; 
  * along with that frame's corner radius. Returned in canvas pixels
  * (origin bottom-left, as gl_FragCoord sees them).
  */
-function artworkFrames(): { frame: Element; inner: Element }[] {
-  const out: { frame: Element; inner: Element }[] = [];
+type Art = { frame: Element; inner: Element; bl: number; bt: number; br: number; bb: number; rad: number };
+
+function artworkFrames(): Art[] {
+  const out: Art[] = [];
   const seen = new Set<Element>();
   const nodes = document.querySelectorAll('img, video, picture, canvas:not(.v2-ink), [data-ink-keep], [style*="gradient"]');
   nodes.forEach((n) => {
@@ -100,26 +102,34 @@ function artworkFrames(): { frame: Element; inner: Element }[] {
     }
     if (seen.has(frame)) return;
     seen.add(frame);
-    out.push({ frame, inner: n });
+    // the frame's own border is theme-coloured (a hairline in --line), so it
+    // must invert with the page — only what is inside the border is kept.
+    // Read once per switch: getComputedStyle every frame is what made it lag.
+    const cs = getComputedStyle(frame);
+    out.push({
+      frame, inner: n,
+      bl: parseFloat(cs.borderLeftWidth) || 0, bt: parseFloat(cs.borderTopWidth) || 0,
+      br: parseFloat(cs.borderRightWidth) || 0, bb: parseFloat(cs.borderBottomWidth) || 0,
+      rad: parseFloat(cs.borderTopLeftRadius) || 0,
+    });
   });
   return out;
 }
 
 /** Measured every frame, so artwork that moves (the marquee, parallax) keeps its mask. */
-function artworkRects(frames: { frame: Element; inner: Element }[], dpr: number) {
+function artworkRects(frames: Art[], dpr: number) {
   const vw = window.innerWidth, vh = window.innerHeight;
   const out: { x: number; y: number; w: number; h: number; r: number; a: number }[] = [];
-  for (const { frame, inner } of frames) {
+  for (const { frame, inner, bl, bt, br, bb, rad } of frames) {
     const ir = inner.getBoundingClientRect();
     const fr = frame === inner ? ir : frame.getBoundingClientRect();
-    const l = Math.max(0, ir.left, fr.left), t = Math.max(0, ir.top, fr.top);
-    const r = Math.min(vw, ir.right, fr.right), b = Math.min(vh, ir.bottom, fr.bottom);
+    const l = Math.max(0, ir.left, fr.left + bl), t = Math.max(0, ir.top, fr.top + bt);
+    const r = Math.min(vw, ir.right, fr.right - br), b = Math.min(vh, ir.bottom, fr.bottom - bb);
     if (r - l < 8 || b - t < 8) continue;
-    // snap to whole device pixels the way the browser places the element's
+    // snap to whole device pixels the way the browser paints the element's
     // edge, so the mask and the artwork share one crisp boundary
     const x0 = Math.round(l * dpr), x1 = Math.round(r * dpr);
     const y0 = Math.round((vh - b) * dpr), y1 = Math.round((vh - t) * dpr);
-    const rad = parseFloat(getComputedStyle(frame).borderTopLeftRadius) || 0;
     out.push({ x: x0, y: y0, w: x1 - x0, h: y1 - y0, r: Math.min(rad * dpr, (x1 - x0) / 2, (y1 - y0) / 2), a: (r - l) * (b - t) });
   }
   return out.sort((p, q) => q.a - p.a).slice(0, MAX_KEEP);

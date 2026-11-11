@@ -106,7 +106,10 @@ function Space({ cards }: { cards: Card[] }) {
         const k = f / (f - z2 * R);
         const depth = (z2 + 1) / 2;
         el.style.transform = `translate3d(${x1 * R * k}px, ${y2 * R * k}px, 0) translate(-50%, -50%) scale(${k})`;
-        el.style.opacity = String(0.3 + depth * 0.7);
+        // fully opaque: a see-through card shows the page behind it, which reads as
+        // a faded image and flashes during the theme switch. Depth is carried by
+        // scale and stacking alone; only the opening burst fades the cards in.
+        el.style.opacity = String(Math.min(1, open * 1.4));
         el.style.zIndex = String(Math.round(depth * 100));
       }
       raf = requestAnimationFrame(tick);
@@ -163,9 +166,6 @@ function Space({ cards }: { cards: Card[] }) {
       onClickCapture={(e) => { if (s.current.moved) { e.preventDefault(); e.stopPropagation(); s.current.moved = false; } }}
       data-lenis-prevent
     >
-      <span className="v2-ed-side v2-ed-side--l">Thu Ta Soe</span>
-      <span className="v2-ed-side v2-ed-side--r">Senior Creative Designer</span>
-
       {cards.map(({ key, p, src }, i) => (
         <Link
           key={key}
