@@ -115,12 +115,12 @@ export default function V2Nav() {
   return (
     <>
       <nav className={`v2-nav ${onInvert ? 'v2-nav--on-invert' : ''}`}>
-        <div className="v2-nav-group">
-          <Link className="v2-nav-logo" href="/" data-cursor="hover">
-            <span className="v2-nav-mark" aria-hidden="true" />
-            {v2Site.name}
-          </Link>
+        <Link className="v2-nav-logo" href="/" data-cursor="hover">
+          <span className="v2-nav-mark" aria-hidden="true" />
+          {v2Site.name}
+        </Link>
 
+        <div className="v2-nav-group">
           <div className="v2-nav-menu">
             {v2Nav.slice(1).map((l) => (
               <Link
