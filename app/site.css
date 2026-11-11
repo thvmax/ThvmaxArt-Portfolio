@@ -229,12 +229,21 @@ body.v2-locked { overflow: hidden; height: 100vh; }
   z-index: 80;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: flex-end;
   padding: clamp(1rem, 2.3vw, 2.75rem) var(--pad);
   pointer-events: none;
 }
 .v2-nav > * { pointer-events: auto; }
+
+.v2-nav-group {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 
 .v2-nav-logo,
 .v2-nav-menu {
@@ -1579,9 +1588,8 @@ body.v2-intro-open { overflow: hidden; }
 }
 
 @media (max-width: 640px) {
-  /* The CTA pill would push the burger off the right edge — the menu
-     overlay already carries the mail/phone contacts. */
-  .v2-nav-right .v2-pill { display: none; }
+  /* No room to centre the logo between the edges and the dial + burger */
+  .v2-nav-group { left: var(--pad); transform: translateY(-50%); }
   .v2-row { padding-inline: 8px; grid-template-columns: 40px minmax(0, 1fr) 38px; }
   .v2-row-arrow { width: 38px; height: 38px; }
   .v2-stats, .v2-facts, .v2-links, .v2-toolkit, .v2-deliverables { grid-template-columns: minmax(0, 1fr); }
@@ -1604,90 +1612,20 @@ body.v2-intro-open { overflow: hidden; }
   .v2-reveal { opacity: 1; transform: none; }
 }
 
-/* ── Work — Space / Index views (/work) ───────────────────────────── */
-/* Small type, tight grid, two views. Sizes sit well under the display
-   scale on purpose: the work carries the page, the type just labels it. */
+/* ── Work — Space view (/work) ─────────────────────────────────────── */
+/* The whole screen is the sphere, like the reference's home. Type stays
+   small on purpose: the work carries the page, the type just labels it. */
 
-.v2-ed { padding-top: clamp(7rem, 11vw, 11rem); padding-bottom: clamp(3rem, 6vw, 6rem); }
-
-.v2-ed-head { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; text-align: center; padding: 0 var(--pad); }
 .v2-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.v2-ed-kicker { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.v2-ed-h1 { font-size: clamp(0.95rem, 1.05vw, 1.0625rem); font-weight: 500; letter-spacing: -0.01em; line-height: 1.4; max-width: 34rem; }
-.v2-ed-h1 em { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: 1.12em; }
 
-.v2-ed-toggle { display: inline-flex; gap: 4px; margin-top: 0.4rem; }
-.v2-ed-toggle-btn {
-  font: 500 0.8125rem/1 var(--sans);
-  padding: 0.5rem 0.8rem; border-radius: 6px;
-  background: transparent; color: var(--muted);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-.v2-ed-toggle-btn sup { font-size: 0.6em; margin-left: 0.2em; vertical-align: super; }
-.v2-ed-toggle-btn[aria-pressed='true'] { background: var(--raised); color: var(--fg); }
-.v2-ed-toggle-btn:hover { color: var(--fg); }
-.v2-ed-toggle-btn:focus-visible { outline: 1px solid var(--fg); outline-offset: 2px; }
-
-/* Index */
-.v2-ed-grid {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px; padding: 0 4px; margin-top: clamp(3rem, 6vw, 6.5rem);
-}
-.v2-ed-tile {
-  display: block; color: var(--fg);
-  animation: v2EdIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(var(--i, 0) * 60ms);
-}
-@keyframes v2EdIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-
-.v2-ed-frame {
-  position: relative; display: block; aspect-ratio: 7 / 8; overflow: hidden;
-  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
-  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.v2-ed-media { position: absolute; inset: 0; display: block; overflow: hidden; }
-.v2-ed-img { object-fit: cover; transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
-.v2-ed-tile:hover .v2-ed-img { transform: scale(1.035); }
-.v2-ed-frame::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
-  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.16), transparent 45%);
-  transition: opacity 0.5s ease;
-}
-.v2-ed-tile:hover .v2-ed-frame::after { opacity: 1; }
-
-.v2-ed-tag {
-  position: absolute; top: 10px; left: 10px;
-  font: 500 0.6875rem/1 var(--sans); padding: 5px 7px; border-radius: 4px;
-  background: var(--bg); color: var(--fg);
-}
-.v2-ed-view {
-  position: absolute; left: 50%; top: 50%;
-  font: 500 0.75rem/1 var(--sans); padding: 8px 12px; border-radius: 999px;
-  background: var(--bg); color: var(--fg);
-  opacity: 0; transform: translate(-50%, calc(-50% + 8px));
-  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.v2-ed-tile:hover .v2-ed-view,
-.v2-ed-tile:focus-visible .v2-ed-view { opacity: 1; transform: translate(-50%, -50%); }
-.v2-ed-tile:focus-visible { outline: 1px solid var(--fg); outline-offset: 2px; }
-
-.v2-ed-cap { display: flex; flex-direction: column; gap: 3px; padding: 10px 6px 30px; }
-.v2-ed-title { font-size: 0.8125rem; font-weight: 500; letter-spacing: -0.005em; }
-.v2-ed-meta { font-family: var(--serif); font-size: 0.875rem; color: var(--muted); }
-
-/* Space */
-/* Space is the whole screen, like the reference's home: the sphere sits
-   behind the nav and the view switch floats just under it */
 .v2-ed--space { position: relative; height: 100svh; min-height: 32rem; padding: 0; }
-.v2-ed--space .v2-ed-head { position: absolute; top: clamp(5.5rem, 8vw, 8rem); left: 0; right: 0; z-index: 2; pointer-events: none; }
-.v2-ed--space .v2-ed-toggle { pointer-events: auto; margin: 0; }
-.v2-ed--space .v2-ed-space { position: absolute; inset: 0; height: auto; margin: 0; padding: 0; z-index: 1; }
 .v2-ed-space {
-  position: relative; height: max(30rem, calc(100svh - clamp(13rem, 20vw, 17rem)));
-  padding-bottom: 3rem;
-  margin-top: 1rem; overflow: hidden; touch-action: none; cursor: grab; user-select: none;
+  position: absolute; inset: 0; z-index: 1;
+  overflow: hidden; touch-action: none; cursor: grab; user-select: none;
 }
 .v2-ed-space:active { cursor: grabbing; }
+.v2-ed-media { position: absolute; inset: 0; display: block; overflow: hidden; }
+.v2-ed-img { object-fit: cover; }
 .v2-ed-node { position: absolute; left: 50%; top: 53%; width: clamp(60px, 6.2vw, 136px); will-change: transform, opacity; -webkit-user-drag: none; }
 .v2-ed-node-card {
   position: relative; display: block; aspect-ratio: 4 / 5; padding: 3px; background: var(--raised);
@@ -1714,13 +1652,5 @@ body.v2-intro-open { overflow: hidden; }
 .v2-ed-counter em { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--muted); margin-left: 0.35em; }
 
 @media (max-width: 900px) {
-  .v2-ed-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v2-ed-side { display: none; }
-}
-@media (max-width: 560px) {
-  .v2-ed-grid { grid-template-columns: minmax(0, 1fr); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .v2-ed-tile { animation: none; }
-  .v2-ed-frame { transform: none; }
 }

@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { useSmoothScroll } from '@/app/components/SmoothScroll';
 import { v2Nav, v2Site, v2Social } from '@/lib/v2content';
-import Pill from './Pill';
 import ThemeToggle from './ThemeToggle';
 
 /**
@@ -116,27 +115,28 @@ export default function V2Nav() {
   return (
     <>
       <nav className={`v2-nav ${onInvert ? 'v2-nav--on-invert' : ''}`}>
-        <Link className="v2-nav-logo" href="/" data-cursor="hover">
-          <span className="v2-nav-mark" aria-hidden="true" />
-          {v2Site.name}
-        </Link>
+        <div className="v2-nav-group">
+          <Link className="v2-nav-logo" href="/" data-cursor="hover">
+            <span className="v2-nav-mark" aria-hidden="true" />
+            {v2Site.name}
+          </Link>
 
-        <div className="v2-nav-menu">
-          {v2Nav.slice(1).map((l) => (
-            <Link
-              key={l.href}
-              className={`v2-nav-link ${isCurrent(l.href) ? 'is-current' : ''}`}
-              href={l.href}
-              aria-current={isCurrent(l.href) ? 'page' : undefined}
-              data-cursor="hover"
-            >
-              {l.label}
-            </Link>
-          ))}
+          <div className="v2-nav-menu">
+            {v2Nav.slice(1).map((l) => (
+              <Link
+                key={l.href}
+                className={`v2-nav-link ${isCurrent(l.href) ? 'is-current' : ''}`}
+                href={l.href}
+                aria-current={isCurrent(l.href) ? 'page' : undefined}
+                data-cursor="hover"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="v2-nav-right">
-          <Pill href={`mailto:${v2Site.email}`} label="Let’s talk" />
           <ThemeToggle />
           <button
             className="v2-burger"

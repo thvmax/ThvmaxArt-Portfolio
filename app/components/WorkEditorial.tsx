@@ -6,15 +6,14 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointer
 import { plate, v2Work, type V2Project } from '@/lib/v2content';
 
 /**
- * Work (/work) — adapted from the Creative Space on gionatannese.com.
+ * Work (/work) — an interactive gallery adapted from the Creative Space on
+ * gionatannese.com: the projects (plus extra real stills) as small cards
+ * on a turning sphere that fills the screen.
  *
- * Two views of the same ten projects, switched by a small segmented control:
- *   Index — a tight three-column grid, small captions, a hover tilt + sheen
- *           and a "View" label.
- *   Space — the projects as small, evenly spaced cards on a turning sphere.
- *           Cards always face the viewer; scroll, drag or move the pointer
- *           to turn it. Plain DOM + transforms, no WebGL, so every card is a
- *           real link (keyboard and screen-reader reachable).
+ * Cards always face the viewer; scroll, drag or move the pointer to turn
+ * the sphere. Plain DOM + transforms, no WebGL, so every card is a real
+ * link (keyboard and screen-reader reachable).
+ *
  * Real artwork is used where it exists; otherwise the project's own accent
  * plate stands in, as everywhere else on the site.
  */
@@ -23,66 +22,15 @@ const COVERS: Record<string, string> = {
   'sting-nightlife-repositioning': '/case-studies/sting-night-life/thematic-kv.png',
 };
 
-type View = 'index' | 'space';
-const VIEW_KEY = 'thv-work-view';
-
 const pad2 = (n: number) => String(n).padStart(2, '0');
-const lead = (p: V2Project) => p.cat.split(' · ')[0];
 const rest = (p: V2Project) => p.cat.split(' · ').slice(1).join(' · ') || p.cat;
 
-function Media({ p, sizes }: { p: V2Project; sizes: string }) {
-  const cover = COVERS[p.slug];
+function Media({ p, sizes, src }: { p: V2Project; sizes: string; src?: string }) {
+  const cover = src ?? COVERS[p.slug];
   return (
     <span className="v2-ed-media" style={{ background: plate(p.accent) }}>
       {cover && <Image src={cover} alt="" fill sizes={sizes} className="v2-ed-img" />}
     </span>
-  );
-}
-
-/* ── Index ─────────────────────────────────────────────────────────── */
-
-function GridTile({ p, i }: { p: V2Project; i: number }) {
-  const ref = useRef<HTMLAnchorElement | null>(null);
-
-  const onMove = (e: ReactPointerEvent<HTMLAnchorElement>) => {
-    const el = ref.current;
-    if (!el || e.pointerType !== 'mouse') return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.width;
-    el.style.setProperty('--rx', `${(0.5 - y) * 6}deg`);
-    el.style.setProperty('--ry', `${(x - 0.5) * 6}deg`);
-    el.style.setProperty('--mx', `${x * 100}%`);
-    el.style.setProperty('--my', `${y * 100}%`);
-  };
-  const onLeave = () => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.setProperty('--rx', '0deg');
-    el.style.setProperty('--ry', '0deg');
-  };
-
-  return (
-    <Link
-      ref={ref}
-      href={`/work/${p.slug}`}
-      className="v2-ed-tile"
-      style={{ ['--i' as string]: i }}
-      onPointerMove={onMove}
-      onPointerLeave={onLeave}
-      data-cursor="hover"
-    >
-      <span className="v2-ed-frame">
-        <Media p={p} sizes="(max-width: 560px) 100vw, (max-width: 900px) 50vw, 33vw" />
-        <span className="v2-ed-tag">{lead(p)}</span>
-        <span className="v2-ed-view" aria-hidden="true">View</span>
-      </span>
-      <span className="v2-ed-cap">
-        <span className="v2-ed-title">{p.name}</span>
-        <span className="v2-ed-meta">{rest(p)}, {p.year}</span>
-      </span>
-    </Link>
   );
 }
 
@@ -99,7 +47,25 @@ function lattice(n: number): [number, number, number][] {
   });
 }
 
-function Space({ items }: { items: V2Project[] }) {
+/** One card on the sphere: a project, optionally showing one of its stills. */
+type Card = { key: string; p: V2Project; src?: string };
+
+const STING_STILLS = ['product-kv.png', 'event-poster.png', 'kv-qr-code.png', 'slide-1.jpg', 'slide-2.jpg', 'slide-3.jpg'];
+
+/** Every project once, then the extra real stills that exist (all STING for now). */
+function buildCards(): Card[] {
+  const cards: Card[] = v2Work.map((p) => ({ key: p.slug, p }));
+  const sting = v2Work.find((p) => p.slug === 'sting-nightlife-repositioning');
+  if (sting) STING_STILLS.forEach((f) => cards.push({ key: `sting-${f}`, p: sting, src: `/case-studies/sting-night-life/${f}` }));
+  // interleave so the STING stills spread over the sphere instead of clumping
+  const out: Card[] = [];
+  const base = cards.slice(0, v2Work.length), extra = cards.slice(v2Work.length);
+  base.forEach((c, i) => { out.push(c); if (i % 2 === 1 && extra.length) out.push(extra.shift()!); });
+  return out.concat(extra);
+}
+
+function Space({ cards }: { cards: Card[] }) {
+  const items = cards.map((c) => c.p);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const nodes = useRef<(HTMLAnchorElement | null)[]>([]);
   const points = useMemo(() => lattice(items.length), [items.length]);
@@ -200,9 +166,9 @@ function Space({ items }: { items: V2Project[] }) {
       <span className="v2-ed-side v2-ed-side--l">Thu Ta Soe</span>
       <span className="v2-ed-side v2-ed-side--r">Senior Creative Designer</span>
 
-      {items.map((p, i) => (
+      {cards.map(({ key, p, src }, i) => (
         <Link
-          key={p.slug}
+          key={key}
           ref={(el) => { nodes.current[i] = el; }}
           href={`/work/${p.slug}`}
           className="v2-ed-node"
@@ -215,7 +181,7 @@ function Space({ items }: { items: V2Project[] }) {
           data-cursor="hover"
         >
           <span className="v2-ed-node-card">
-            <Media p={p} sizes="96px" />
+            <Media p={p} src={src} sizes="160px" />
           </span>
         </Link>
       ))}
@@ -227,7 +193,7 @@ function Space({ items }: { items: V2Project[] }) {
           </>
         ) : (
           <>
-            <span>{pad2(items.length)}</span> Projects <em>scroll or drag to turn</em>
+            <span>{pad2(v2Work.length)}</span> Projects <em>scroll or drag to turn</em>
           </>
         )}
       </p>
@@ -238,51 +204,11 @@ function Space({ items }: { items: V2Project[] }) {
 /* ── Page ──────────────────────────────────────────────────────────── */
 
 export default function WorkEditorial() {
-  // the sphere is the first thing you see, like the reference's home
-  const [view, setView] = useState<View>('space');
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(VIEW_KEY);
-      if (saved === 'index' || saved === 'space') setView(saved);
-    } catch {}
-  }, []);
-
-  const pick = (v: View) => {
-    setView(v);
-    try { localStorage.setItem(VIEW_KEY, v); } catch {}
-  };
-
+  const cards = useMemo(buildCards, []);
   return (
-    <section className={`v2-ed v2-ed--${view}`}>
-      <header className="v2-ed-head">
-        <h1 className="v2-sr-only">Selected work</h1>
-        <div className="v2-ed-toggle" role="group" aria-label="Work view">
-          {(['space', 'index'] as View[]).map((v, i) => (
-            <button
-              key={v}
-              type="button"
-              className="v2-ed-toggle-btn"
-              aria-pressed={view === v}
-              onClick={() => pick(v)}
-              data-cursor="hover"
-            >
-              {v === 'space' ? 'Space' : 'Index'}
-              <sup>{i + 1}</sup>
-            </button>
-          ))}
-        </div>
-      </header>
-
-      {view === 'index' ? (
-        <div className="v2-ed-grid">
-          {v2Work.map((p, i) => (
-            <GridTile key={p.slug} p={p} i={i} />
-          ))}
-        </div>
-      ) : (
-        <Space items={v2Work} />
-      )}
+    <section className="v2-ed v2-ed--space">
+      <h1 className="v2-sr-only">Selected work</h1>
+      <Space cards={cards} />
     </section>
   );
 }
