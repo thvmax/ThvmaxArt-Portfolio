@@ -8,11 +8,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/work' },
 };
 
-/**
- * Work — two views of the ten projects: Space (a turning sphere of small
- * cards, the default) and Index (an editorial grid). Adapted from the
- * Creative Space / Projects pages on gionatannese.com.
- */
+/** Work — the projects as a turning ring of cards (see WorkEditorial). */
 export default function WorkPage() {
   return (
     <main>
