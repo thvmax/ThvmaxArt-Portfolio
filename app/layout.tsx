@@ -3,13 +3,13 @@ import './site.css';
 import SiteFrame from './components/V2Frame';
 import { v2Site, v2Social } from '@/lib/v2content';
 
-// Geist / Geist Mono / Instrument Serif are not in this Next version's
-// next/font/google list, so they come from the Google CSS API instead.
+// Host Grotesk (text), Noto Serif Display (headlines) and Geist Mono
+// (labels), loaded from the Google CSS API.
 const FONTS =
-  'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@1&display=swap';
+  'https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500;600;700&family=Noto+Serif+Display:ital,wght@0,400;0,500;1,400&family=Geist+Mono:wght@400;500&display=swap';
 
 const DESCRIPTION =
-  'Campaign art direction, motion and product design for FMCG and enterprise brands across Myanmar and the UAE. Senior creative designer based in Abu Dhabi.';
+  'Campaign art direction, motion and product design for FMCG and enterprise brands across Myanmar and the UAE. Senior creative designer based in Dubai.';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://thvmaxart.com'),
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     'Motion Design',
     'Product Design',
     'Brand Design',
-    'Abu Dhabi Designer',
+    'Dubai Designer',
     'Portfolio',
   ],
   authors: [{ name: 'Thu Ta Soe' }],
@@ -64,7 +64,7 @@ const PERSON_JSONLD = JSON.stringify({
   email: `mailto:${v2Site.email}`,
   address: {
     '@type': 'PostalAddress',
-    addressLocality: 'Abu Dhabi',
+    addressLocality: 'Dubai',
     addressCountry: 'AE',
   },
   sameAs: v2Social.map((s) => s.href),

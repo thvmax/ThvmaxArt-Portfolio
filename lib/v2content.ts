@@ -48,16 +48,15 @@ export const v2Site = {
   email: 'thutasoe24@gmail.com',
   phone: '+971 56 577 6382',
   phoneHref: '+971565776382',
-  based: 'Abu Dhabi, UAE',
+  based: 'Dubai, UAE',
   status: 'Available immediately',
   languages: 'English · Burmese',
-  menuFooter: 'ABU DHABI, UAE  ·  AVAILABLE NOW',
+  menuFooter: 'DUBAI, UAE  ·  AVAILABLE NOW',
 };
 
 export const v2Intro = {
-  mark: 'THVMAX',
-  line: 'THU TA SOE — ABU DHABI',
-  words: ['CAMPAIGN', 'MOTION', 'PRODUCT', 'IDENTITY'],
+  // five lines, set three times down the screen like verses
+  lines: ['THVMAX — THU TA SOE', 'ART DIRECTION', 'MOTION & PRODUCTION', 'PRODUCT & UI DESIGN', 'DUBAI, UAE — 2026'],
 };
 
 // One route per page — the site is multi-page, not a one-pager.
@@ -101,7 +100,7 @@ export const v2ServicesSection = {
   headingLead: 'Three disciplines,',
   headingItalic: 'one standard',
   intro:
-    'Campaign art direction, motion and product design — for brands that need to be seen, moved and used. Based in Abu Dhabi, working across the UAE and remote.',
+    'Campaign art direction, motion and product design — for brands that need to be seen, moved and used. Based in Dubai, working across the UAE and remote.',
 };
 
 export const v2Services: V2Service[] = [
@@ -111,7 +110,7 @@ export const v2Services: V2Service[] = [
     label: 'ART DIRECTION',
     title: 'Art direction for campaigns that need to be remembered',
     tagline: 'Key visuals, campaign worlds and brand rollouts',
-    lead: 'Freelance art director in Abu Dhabi and the UAE, building campaign worlds for FMCG and enterprise brands — from the key visual through to the final broadcast frame.',
+    lead: 'Freelance art director in Dubai and the UAE, building campaign worlds for FMCG and enterprise brands — from the key visual through to the final broadcast frame.',
     body: 'Seven years across multinational and agency teams — Pepsi, Mirinda, 7UP, STING and AIA among them. I own the visual idea end to end: concept, key visual, TVC art direction and the rollout system that keeps every format on the same image.',
     deliverables: [
       'Campaign key visuals',
@@ -134,7 +133,7 @@ export const v2Services: V2Service[] = [
     label: 'MOTION & PRODUCTION',
     title: 'Motion design and production for film and social',
     tagline: 'Cutdowns, end-frame animation, reels and brand films',
-    lead: 'Motion designer and editor in Abu Dhabi producing brand films, social reels and campaign cutdowns — from boards to final grade.',
+    lead: 'Motion designer and editor in Dubai producing brand films, social reels and campaign cutdowns — from boards to final grade.',
     body: 'I take a still key visual into motion: TVC cutdowns, animated end-frames, social reels and brand films. The point is always the same — close on the one image the campaign is built around.',
     deliverables: [
       'Brand films',
@@ -151,7 +150,7 @@ export const v2Services: V2Service[] = [
     label: 'PRODUCT & UI',
     title: 'Product and UI design for software people actually use',
     tagline: 'UX research, design systems and high-fidelity UI',
-    lead: 'Product and UI designer in Abu Dhabi turning dense enterprise software into calm, usable interfaces — from UX research to a reusable design system.',
+    lead: 'Product and UI designer in Dubai turning dense enterprise software into calm, usable interfaces — from UX research to a reusable design system.',
     body: 'I audit the core journeys, restructure the information architecture and build a component-driven system, so new modules inherit the pattern instead of inventing one.',
     deliverables: [
       'UX research & audits',
@@ -542,13 +541,13 @@ export const v2About = {
   headingLines: ['Two brands taught me', 'everything: one shouts,'],
   headingRest: 'one ',
   headingItalic: 'can’t afford to',
-  lead: 'I’m Thu Ta Soe, a senior creative designer in Abu Dhabi working across campaign art direction, motion and product UI. I spent two years making energy drinks look like a night out, and the two after that making asset-integrity software look like something an engineer would actually want to open. The instinct is the same in both — find the one true thing the brand can say, then build a system disciplined enough that other people can say it without me.',
+  lead: 'I’m Thu Ta Soe, a senior creative designer in Dubai working across campaign art direction, motion and product UI. I spent two years making energy drinks look like a night out, and the two after that making asset-integrity software look like something an engineer would actually want to open. The instinct is the same in both — find the one true thing the brand can say, then build a system disciplined enough that other people can say it without me.',
   body: 'I work across corporate identity, campaign art direction, motion and product UI. Seven years, six organisations, four countries’ worth of brand guidelines. I use generative tools daily — Midjourney, Firefly, Runway, Kling — but the direction and the judgement stay mine; they compress execution, not thinking.',
   portrait: {
     src: '/portrait.jpg',
     label: 'PORTRAIT',
     name: 'Thu Ta Soe',
-    place: 'Abu Dhabi, UAE',
+    place: 'Dubai, UAE',
   },
   stats: [
     { value: '7+', label: 'Years experience' },
@@ -619,7 +618,7 @@ export const v2About = {
   cta: {
     label: 'OPEN TO WORK',
     headingItalic: 'Available now',
-    headingRest: ', based in Abu Dhabi.',
+    headingRest: ', based in Dubai.',
   },
 };
 
@@ -630,7 +629,7 @@ export const v2Contact = {
   headingLead: 'Let’s make something',
   headingItalic: 'worth stopping for',
   intro:
-    'Available for senior creative roles and freelance art direction, motion and product-design work — across the UAE and remote, from Abu Dhabi. I reply within a day.',
+    'Available for senior creative roles and freelance art direction, motion and product-design work — across the UAE and remote, from Dubai. I reply within a day.',
   facts: [
     { label: 'PHONE', value: v2Site.phone },
     { label: 'BASED', value: v2Site.based },

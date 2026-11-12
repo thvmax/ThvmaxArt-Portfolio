@@ -10,10 +10,15 @@ import { plate, v2Work, type V2Project } from '@/lib/v2content';
  * the projects (plus extra real stills) as overlapping landscape cards on
  * a slowly turning ring that fills the screen.
  *
+ * The ring is not a clean circle: like the reference it is a leaning
+ * oval, with each card sitting a little in or out of line and at its own
+ * size, so the frames stair-step over one another.
+ *
  * Scroll (either way) or drag turns the ring. Hovering a card lifts it in
  * full colour while every other card drops back to a dim greyscale, and
- * its number and title appear at the foot. Clicking draws the whole ring
- * into the centre before the page transition takes over.
+ * its number and title appear at the foot. A click goes straight to the
+ * site's page transition; coming back, the ring is where it was left and
+ * simply settles in.
  *
  * Plain DOM + transforms, no WebGL, so every card is a real link
  * (keyboard and screen-reader reachable).
@@ -41,7 +46,7 @@ function Media({ p, sizes, src }: { p: V2Project; sizes: string; src?: string })
 /** One card on the ring: a project, optionally showing one of its stills. */
 type Card = { key: string; p: V2Project; src?: string };
 
-const STING_STILLS = ['product-kv.png', 'event-poster.png', 'kv-qr-code.png', 'slide-1.jpg', 'slide-2.jpg', 'slide-3.jpg'];
+const STING_STILLS = ['product-kv.png', 'event-poster.png', 'kv-qr-code.png', 'slide-1.jpg'];
 
 /** Every project once, then the extra real stills that exist (all STING for now). */
 function buildCards(): Card[] {
@@ -55,7 +60,10 @@ function buildCards(): Card[] {
   return out.concat(extra);
 }
 
-const EXIT_MS = 620;
+/** Where the ring was left, so coming back to /work picks it up rather than restarting. */
+let savedRot: number | null = null;
+
+const LEAN = -0.38; // the oval leans: long axis runs lower-left to upper-right
 
 function Ring({ cards }: { cards: Card[] }) {
   const items = cards.map((c) => c.p);
@@ -63,39 +71,49 @@ function Ring({ cards }: { cards: Card[] }) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const nodes = useRef<(HTMLAnchorElement | null)[]>([]);
   const [active, setActive] = useState<number | null>(null);
-  const [leaving, setLeaving] = useState(false);
   const s = useRef({
-    rot: -0.6, v: 0, born: 0, exit: 0, last: 0,
+    rot: -0.6, v: 0, born: 0, last: 0, resume: false,
     hold: false, drag: false, moved: false, lx: 0, ly: 0,
-    px: 0, py: 0, tpx: 0, tpy: 0, active: -1, pass: false,
+    px: 0, py: 0, tpx: 0, tpy: 0, active: -1,
   });
+  // each card keeps its own place in the line and its own size (fixed, not random per load)
+  const quirk = useMemo(
+    () => Array.from({ length: n }, (_, i) => ({
+      r: 1 + 0.11 * Math.sin(i * 2.4 + 1),
+      a: 0.09 * Math.sin(i * 3.1),
+      k: 1 + 0.17 * Math.sin(i * 1.7 + 0.5),
+    })),
+    [n],
+  );
 
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const st = s.current;
+    if (savedRot !== null) { st.rot = savedRot; st.resume = true; }
+    const cosL = Math.cos(LEAN), sinL = Math.sin(LEAN);
     let raf = 0;
 
     const tick = (now: number) => {
-      const st = s.current;
       if (!st.born) { st.born = now; st.last = now; }
       const dt = Math.min(3, (now - st.last) / 16.67);
       st.last = now;
 
-      // opening: the cards start stacked in the centre and fan out into the ring;
-      // leaving plays the same move backwards
-      const o = reduced ? 1 : Math.min(1, (now - st.born) / 1400);
-      const open = 1 - Math.pow(1 - o, 4);
-      const x = st.exit ? Math.min(1, (now - st.exit) / EXIT_MS) : 0;
-      const close = x * x * (3 - 2 * x);
-      const spread = (0.03 + 0.97 * open) * (1 - close);
+      // first visit: the cards start stacked in the centre and fan out into the
+      // ring. Coming back: the ring is already formed and only eases up to size.
+      const o = reduced ? 1 : Math.min(1, (now - st.born) / (st.resume ? 900 : 1400));
+      const eased = 1 - Math.pow(1 - o, 4);
+      const spread = st.resume ? 0.9 + 0.1 * eased : 0.03 + 0.97 * eased;
+      const alpha = st.resume ? eased : Math.min(1, eased * 1.4);
 
       const w = stage.clientWidth, h = stage.clientHeight;
       const narrow = w < 700;
-      const Rx = (narrow ? w * 0.27 : Math.min(w * 0.3, h * 0.52)) * spread;
-      const Ry = (narrow ? h * 0.25 : h * 0.27) * spread;
+      const A = (narrow ? w * 0.27 : Math.min(w * 0.3, h * 0.56)) * spread;
+      const B = (narrow ? h * 0.25 : h * 0.245) * spread;
+      const cl = narrow ? 1 : cosL, sl = narrow ? 0 : sinL;
 
-      st.rot += ((reduced || st.hold || st.drag ? 0 : 0.0014) + st.v + (1 - open) * 0.035 + close * 0.05) * dt;
+      st.rot += ((reduced || st.hold || st.drag ? 0 : 0.0014) + st.v + (st.resume ? 0 : (1 - eased) * 0.035)) * dt;
       st.v *= Math.pow(0.94, dt);
       st.px += (st.tpx - st.px) * 0.06;
       st.py += (st.tpy - st.py) * 0.06;
@@ -103,14 +121,15 @@ function Ring({ cards }: { cards: Card[] }) {
       for (let i = 0; i < n; i++) {
         const el = nodes.current[i];
         if (!el) continue;
-        const t = (i / n) * Math.PI * 2 + st.rot;
-        // the ring leans toward the viewer at lower left, so cards swell as they pass it
+        const q = quirk[i];
+        const t = (i / n) * Math.PI * 2 + st.rot + q.a;
+        const u = Math.cos(t) * A * q.r, v = Math.sin(t) * B * q.r;
         const near = Math.cos(t - Math.PI * 0.75);
-        const k = (1 + 0.2 * near) * (1 - 0.55 * close);
-        const px = Math.cos(t) * Rx + st.px * (10 + 8 * near);
-        const py = Math.sin(t) * Ry + st.py * (10 + 8 * near);
+        const k = q.k * (1 + 0.06 * near);
+        const px = u * cl - v * sl + st.px * (10 + 8 * near);
+        const py = u * sl + v * cl + st.py * (10 + 8 * near);
         el.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%) scale(${k})`;
-        el.style.opacity = String(Math.min(1, open * 1.4) * (1 - close));
+        el.style.opacity = String(alpha);
         el.style.zIndex = String(i === st.active ? 400 : Math.round((near + 1) * 100));
       }
       raf = requestAnimationFrame(tick);
@@ -122,7 +141,6 @@ function Ring({ cards }: { cards: Card[] }) {
       s.current.v += Math.max(-0.06, Math.min(0.06, (e.deltaY + e.deltaX) * 0.00022));
     };
     const onMove = (e: PointerEvent) => {
-      const st = s.current;
       if (st.drag) {
         const dx = e.clientX - st.lx, dy = e.clientY - st.ly;
         if (Math.abs(dx) + Math.abs(dy) > 4) st.moved = true;
@@ -141,24 +159,14 @@ function Ring({ cards }: { cards: Card[] }) {
     };
     const onUp = () => { s.current.drag = false; };
 
-    // Clicks are taken on window, ahead of the site's page transition: a drag
-    // must not open a project, and a real click first draws the ring into
-    // the centre, then hands the same click on to the transition.
+    // Taken on window, ahead of the site's page transition: a drag must not
+    // open a project. A real click passes straight through to the transition.
     const onClick = (e: MouseEvent) => {
-      const st = s.current;
-      const link = (e.target as HTMLElement | null)?.closest?.('a.v2-ed-node') as HTMLAnchorElement | null;
-      if (!link || !stage.contains(link)) return;
-      if (st.pass) { st.pass = false; return; }
-      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link = (e.target as HTMLElement | null)?.closest?.('a.v2-ed-node');
+      if (!link || !stage.contains(link) || !st.moved) return;
+      st.moved = false;
       e.preventDefault();
       e.stopPropagation();
-      if (st.moved) { st.moved = false; return; }
-      if (st.exit) return;
-      if (reduced) { st.pass = true; link.click(); return; }
-      st.exit = performance.now();
-      st.hold = false;
-      setLeaving(true);
-      window.setTimeout(() => { st.pass = true; link.click(); }, EXIT_MS - 60);
     };
 
     stage.addEventListener('wheel', onWheel, { passive: false });
@@ -167,6 +175,7 @@ function Ring({ cards }: { cards: Card[] }) {
     window.addEventListener('pointercancel', onUp);
     window.addEventListener('click', onClick, true);
     return () => {
+      savedRot = st.rot;
       cancelAnimationFrame(raf);
       stage.removeEventListener('wheel', onWheel);
       window.removeEventListener('pointermove', onMove);
@@ -174,7 +183,7 @@ function Ring({ cards }: { cards: Card[] }) {
       window.removeEventListener('pointercancel', onUp);
       window.removeEventListener('click', onClick, true);
     };
-  }, [n]);
+  }, [n, quirk]);
 
   const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     const st = s.current;
@@ -182,7 +191,6 @@ function Ring({ cards }: { cards: Card[] }) {
   };
 
   const show = (i: number | null) => {
-    if (s.current.exit) return;
     s.current.hold = i !== null;
     s.current.active = i ?? -1;
     setActive(i);
@@ -192,7 +200,7 @@ function Ring({ cards }: { cards: Card[] }) {
   return (
     <div
       ref={stageRef}
-      className={`v2-ed-space${active !== null ? ' has-active' : ''}${leaving ? ' is-leaving' : ''}`}
+      className={`v2-ed-space${active !== null ? ' has-active' : ''}`}
       onPointerDown={onDown}
       data-lenis-prevent
     >
@@ -211,7 +219,7 @@ function Ring({ cards }: { cards: Card[] }) {
           data-cursor="hover"
         >
           <span className="v2-ed-node-card">
-            <Media p={p} src={src} sizes="(max-width: 700px) 45vw, 340px" />
+            <Media p={p} src={src} sizes="(max-width: 700px) 45vw, 420px" />
           </span>
         </Link>
       ))}

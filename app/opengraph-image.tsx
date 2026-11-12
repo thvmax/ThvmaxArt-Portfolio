@@ -53,7 +53,7 @@ export default function OgImage() {
             color: '#8a8f94',
           }}
         >
-          <span>Abu Dhabi, UAE</span>
+          <span>Dubai, UAE</span>
           <span>thvmaxart.com</span>
         </div>
       </div>

@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { v2Home } from '@/lib/v2content';
+import { v2Home, v2Site } from '@/lib/v2content';
 import { onIntroDone } from './V2Intro';
 
 gsap.registerPlugin(useGSAP);
@@ -63,6 +63,7 @@ export default function V2Hero() {
   return (
     <header className="v2-hero" ref={rootRef}>
       <span className="v2-hero-label">{v2Home.label}</span>
+      <span className="v2-hero-label v2-hero-label--r">Based in {v2Site.based}</span>
 
       <h1 className="v2-hero-head">
         {v2Home.headLines.map((line, i) => (
