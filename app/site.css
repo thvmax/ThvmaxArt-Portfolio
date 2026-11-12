@@ -23,7 +23,7 @@ a { color: inherit; text-decoration: none; }
    THVMAX — v2 (Figma: ThvmaxArt Website 1)
    Monochrome: ~70% black canvas, ~30% white — inverted blocks, rules
    and type. No third colour; colour enters through the work itself.
-   Host Grotesk / Noto Serif Display / Geist Mono. Scoped under .v2 so the
+   One family: Host Grotesk. Hierarchy is weight and size only. Scoped under .v2 so the
    current homepage (globals.css) is untouched while v2 is in preview.
    =================================================================== */
 
@@ -55,8 +55,9 @@ a { color: inherit; text-decoration: none; }
   --t-mono: clamp(0.66rem, 0.63vw, 0.75rem);  /* 12px */
 
   --sans: 'Host Grotesk', 'Helvetica Neue', Arial, sans-serif;
-  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --serif: 'Noto Serif Display', 'Times New Roman', Georgia, serif;
+  /* one family: the old label and display roles now point at the grotesk */
+  --mono: var(--sans);
+  --serif: var(--sans);
 
   background: var(--bg);
   color: var(--fg);
@@ -91,15 +92,19 @@ html[data-theme='light'] body { background: #f4f4f1; color: #101215; }
 body.v2-locked { overflow: hidden; height: 100vh; }
 
 .v2 h1, .v2 h2, .v2 h3, .v2 h4 { font-weight: 700; }
-/* Pairing: headlines are set in the display serif at regular weight, with
-   the grotesk carrying everything else — rows, labels, body, navigation.
-   One rule, so every page's headings change together. */
+/* Type system — one grotesk, three voices:
+     headlines  500, pulled tight
+     emphasis   300 and quieter, inside a headline (the old italic)
+     labels     500, small, upper-case, tracked (the old mono)            */
 .v2 :is(h1, h2), .v2 .v2-display {
-  font-family: var(--serif) !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.022em !important;
+  font-family: var(--sans) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.045em !important;
 }
-.v2 :is(h1, h2) em, .v2 .v2-display em { font-weight: 400; }
+.v2 :is(h1, h2) em, .v2 .v2-display em { font-weight: 300; }
+/* one family, no italics: emphasis is carried by weight, never by a slant */
+.v2 em, .v2 i, .v2 .v2-italic { font-style: normal !important; }
+.v2 { font-variant-numeric: tabular-nums; font-feature-settings: 'ss01', 'cv11'; }
 .v2 ::selection { background: var(--fg); color: var(--bg); }
 .v2 img, .v2 video { display: block; max-width: 100%; }
 .v2 :where(a) { color: inherit; text-decoration: none; }
@@ -128,10 +133,11 @@ body.v2-locked { overflow: hidden; height: 100vh; }
 }
 .v2-display--lg { font-size: var(--t-display-lg); }
 .v2-italic {
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-family: var(--sans);
+  font-style: normal;
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  color: var(--muted);
 }
 
 .v2-lead {
@@ -712,10 +718,11 @@ body.v2-intro-open { overflow: hidden; }
 .v2-intro-txt {
   position: absolute; inset: 0;
   display: flex; flex-direction: column; justify-content: center;
-  font-family: var(--serif);
-  font-size: clamp(1.25rem, 2.1vw, 2.4rem);
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 1.95vw, 2.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
   text-transform: uppercase;
 }
 /* a verse sits between two hairlines; its lines are centred, then stepped */
@@ -1638,8 +1645,8 @@ body.v2-intro-open { overflow: hidden; }
 .v2-ed-img { object-fit: cover; }
 .v2-ed-node {
   position: absolute; left: 50%; top: 54%;
-  width: clamp(150px, 19.5vw, 400px);
-  will-change: transform, opacity; -webkit-user-drag: none;
+  width: clamp(120px, 13.5vw, 270px);
+  will-change: transform; -webkit-user-drag: none; backface-visibility: hidden;
 }
 .v2-ed-node-card {
   position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden;
@@ -1653,9 +1660,7 @@ body.v2-intro-open { overflow: hidden; }
   background: var(--bg); opacity: 0;
   transition: opacity 0.55s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.v2-ed-media { transition: filter 0.55s cubic-bezier(0.32, 0.72, 0, 1); }
-.v2-ed-space.has-active .v2-ed-node:not(.is-active) .v2-ed-node-card::after { opacity: 0.72; }
-.v2-ed-space.has-active .v2-ed-node:not(.is-active) .v2-ed-media { filter: grayscale(1); }
+.v2-ed-space.has-active .v2-ed-node:not(.is-active) .v2-ed-node-card::after { opacity: 0.8; }
 .v2-ed-node.is-active .v2-ed-node-card { transform: scale(1.12); }
 .v2-ed-node:active .v2-ed-node-card { transform: scale(1.12); }
 .v2-ed-node:focus-visible { outline: none; }
@@ -1671,7 +1676,7 @@ body.v2-intro-open { overflow: hidden; }
   transition: opacity 0.4s ease;
 }
 @media (max-width: 700px) {
-  .v2-ed-node { width: 36vw; }
+  .v2-ed-node { width: 30vw; }
 }
 .v2-ed-counter span { font-family: var(--mono); font-size: 0.6875rem; color: var(--muted); margin-right: 0.5em; }
-.v2-ed-counter em { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--muted); margin-left: 0.35em; }
+.v2-ed-counter em { font-style: normal; font-weight: 400; color: var(--muted); margin-left: 0.35em; }

@@ -15,7 +15,7 @@ import { plate, v2Work, type V2Project } from '@/lib/v2content';
  * size, so the frames stair-step over one another.
  *
  * Scroll (either way) or drag turns the ring. Hovering a card lifts it in
- * full colour while every other card drops back to a dim greyscale, and
+ * full colour while every other card drops right back, and
  * its number and title appear at the foot. A click goes straight to the
  * site's page transition; coming back, the ring is where it was left and
  * simply settles in.
@@ -72,7 +72,7 @@ function Ring({ cards }: { cards: Card[] }) {
   const nodes = useRef<(HTMLAnchorElement | null)[]>([]);
   const [active, setActive] = useState<number | null>(null);
   const s = useRef({
-    rot: -0.6, v: 0, born: 0, last: 0, resume: false,
+    rot: -0.6, v: 0, auto: 0, born: 0, last: 0, resume: false, faded: false,
     hold: false, drag: false, moved: false, lx: 0, ly: 0,
     px: 0, py: 0, tpx: 0, tpy: 0, active: -1,
   });
@@ -109,11 +109,13 @@ function Ring({ cards }: { cards: Card[] }) {
 
       const w = stage.clientWidth, h = stage.clientHeight;
       const narrow = w < 700;
-      const A = (narrow ? w * 0.27 : Math.min(w * 0.3, h * 0.56)) * spread;
-      const B = (narrow ? h * 0.25 : h * 0.245) * spread;
+      const A = (narrow ? w * 0.3 : Math.min(w * 0.25, h * 0.5)) * spread;
+      const B = (narrow ? h * 0.25 : h * 0.215) * spread;
       const cl = narrow ? 1 : cosL, sl = narrow ? 0 : sinL;
 
-      st.rot += ((reduced || st.hold || st.drag ? 0 : 0.0014) + st.v + (st.resume ? 0 : (1 - eased) * 0.035)) * dt;
+      // the idle turn eases off and back on, so hovering never jolts the ring
+      st.auto += ((reduced || st.hold || st.drag ? 0 : 0.0014) - st.auto) * Math.min(1, 0.06 * dt);
+      st.rot += (st.auto + st.v + (st.resume ? 0 : (1 - eased) * 0.035)) * dt;
       st.v *= Math.pow(0.94, dt);
       st.px += (st.tpx - st.px) * 0.06;
       st.py += (st.tpy - st.py) * 0.06;
@@ -128,10 +130,13 @@ function Ring({ cards }: { cards: Card[] }) {
         const k = q.k * (1 + 0.06 * near);
         const px = u * cl - v * sl + st.px * (10 + 8 * near);
         const py = u * sl + v * cl + st.py * (10 + 8 * near);
-        el.style.transform = `translate3d(${px}px, ${py}px, 0) translate(-50%, -50%) scale(${k})`;
-        el.style.opacity = String(alpha);
-        el.style.zIndex = String(i === st.active ? 400 : Math.round((near + 1) * 100));
+        // transform is the only thing written every frame. Stacking is fixed
+        // (each card over the one before it, like tiles) so cards never swap
+        // front-to-back as the ring turns; opacity is only touched while fading in.
+        el.style.transform = `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0) translate(-50%, -50%) scale(${k.toFixed(4)})`;
+        if (!st.faded) el.style.opacity = String(alpha);
       }
+      if (!st.faded && alpha >= 1) st.faded = true;
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -210,6 +215,7 @@ function Ring({ cards }: { cards: Card[] }) {
           ref={(el) => { nodes.current[i] = el; }}
           href={`/work/${p.slug}`}
           className={`v2-ed-node${active === i ? ' is-active' : ''}`}
+          style={{ zIndex: active === i ? 400 : i + 1 }}
           aria-label={`${p.name} — ${p.cat}, ${p.year}`}
           onPointerEnter={() => show(i)}
           onPointerLeave={() => show(null)}
@@ -219,7 +225,7 @@ function Ring({ cards }: { cards: Card[] }) {
           data-cursor="hover"
         >
           <span className="v2-ed-node-card">
-            <Media p={p} src={src} sizes="(max-width: 700px) 45vw, 420px" />
+            <Media p={p} src={src} sizes="(max-width: 700px) 40vw, 300px" />
           </span>
         </Link>
       ))}

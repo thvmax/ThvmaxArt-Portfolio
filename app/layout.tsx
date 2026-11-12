@@ -3,10 +3,10 @@ import './site.css';
 import SiteFrame from './components/V2Frame';
 import { v2Site, v2Social } from '@/lib/v2content';
 
-// Host Grotesk (text), Noto Serif Display (headlines) and Geist Mono
-// (labels), loaded from the Google CSS API.
+// One family for the whole site — Host Grotesk — in five weights, loaded
+// from the Google CSS API. Hierarchy comes from weight and size alone.
 const FONTS =
-  'https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@400;500;600;700&family=Noto+Serif+Display:ital,wght@0,400;0,500;1,400&family=Geist+Mono:wght@400;500&display=swap';
+  'https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300;400;500;600;700&display=swap';
 
 const DESCRIPTION =
   'Campaign art direction, motion and product design for FMCG and enterprise brands across Myanmar and the UAE. Senior creative designer based in Dubai.';
