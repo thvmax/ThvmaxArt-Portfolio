@@ -18,7 +18,7 @@ import { plate, v2Work, v2WorkPage, type V2Project } from '@/lib/v2content';
  * and the ring glides after it, opening out a little while it is moving
  * fast and closing up as it settles. Hovering a card lifts it in full
  * colour while every other card drops right back, and its number and
- * title set in the middle of the ring. A click goes straight to the
+ * title appear at the foot. A click goes straight to the
  * site's page transition; coming back, the ring is where it was left and
  * simply settles in.
  *
@@ -247,27 +247,19 @@ function Ring({ cards }: { cards: Card[] }) {
         </Link>
       ))}
 
-      {/* the middle of the ring is the caption: the page line at rest, the
-          project under the pointer otherwise */}
-      <div className={`v2-ed-centre${cur ? ' is-project' : ''}`} aria-live="polite">
-        <div className="v2-ed-centre-rest">
-          <span className="v2-ed-kicker">{v2WorkPage.label}</span>
-          <p>
-            {v2WorkPage.headingLead} <span>{v2WorkPage.headingItalic}</span>.
-          </p>
-        </div>
-        <div className="v2-ed-centre-project">
-          <span className="v2-ed-kicker">{cur ? `${pad2(v2Work.indexOf(cur) + 1)} / ${pad2(v2Work.length)}` : ''}</span>
-          <p>{cur?.name}</p>
-          <span className="v2-ed-centre-meta">{cur ? `${cur.cat} — ${cur.year}` : ''}</span>
-        </div>
-      </div>
-
-      <div className="v2-ed-foot" aria-hidden="true">
-        <span>{pad2(v2Work.length)} Projects</span>
-        <span>Scroll or drag to turn</span>
-        <span>{v2WorkPage.scope}</span>
-      </div>
+      {/* one quiet line at the foot: the count at rest, the project under
+          the pointer otherwise */}
+      <p className="v2-ed-counter" aria-live="polite">
+        {cur ? (
+          <>
+            <span>{pad2(v2Work.indexOf(cur) + 1)}</span> {cur.name} <em>{cur.cat}, {cur.year}</em>
+          </>
+        ) : (
+          <>
+            <span>{pad2(v2Work.length)}</span> Projects <em>scroll or drag to turn</em>
+          </>
+        )}
+      </p>
     </div>
   );
 }
