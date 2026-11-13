@@ -16,8 +16,8 @@ import ArrowUpRight from './ArrowUpRight';
  * direction, and it glides to rest when let go. At rest nothing moves
  * except the thumbnails that are videos, which play.
  *
- * A line at the foot gives the count. With a mouse, it names the card
- * under the pointer instead, and a
+ * The cluster leans a few degrees toward the pointer. With a mouse, the
+ * card under the pointer is named at the foot, and a
  * click opens it. By touch there is no hover, so the first tap names the
  * card and the foot line becomes the way in; a second tap also opens it.
  *
@@ -28,8 +28,6 @@ import ArrowUpRight from './ArrowUpRight';
 const COVERS: Record<string, string> = {
   'sting-nightlife-repositioning': '/case-studies/sting-night-life/thematic-kv.png',
 };
-
-const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /* ── Cards ─────────────────────────────────────────────────────────── */
 
@@ -122,6 +120,7 @@ function Cloud({ cards }: { cards: Card[] }) {
   const s = useRef({
     m: START, ax: 0, ay: 0, vx: 0, vy: 0, frames: 0, born: 0, resume: false,
     drag: false, moved: false, touch: false, lx: 0, ly: 0, active: -1,
+    px: 0, py: 0, tpx: 0, tpy: 0,
   });
 
   // Each card's fixed seat on the unit sphere: evenly spread (a Fibonacci
@@ -154,11 +153,11 @@ function Cloud({ cards }: { cards: Card[] }) {
         sized = w * 10000 + h;
         // The cluster keeps clear of the nav above and the line at the foot,
         // and is spread wider than it is tall where there is room for it.
-        const cw = Math.max(56, Math.min(h * 0.092, w * 0.165));
-        const top = w < 700 ? 112 : 136, foot = w < 700 ? 124 : 116;
+        const cw = Math.max(52, Math.min(h * 0.086, w * 0.155));
+        const top = w < 700 ? 78 : 84, foot = w < 700 ? 104 : 84;
         const room = Math.max(160, h - top - foot);
         RY = Math.max(60, (room / 2 - cw * 0.85) / 1.06);
-        RX = Math.min(w * 0.38, RY * 1.4);
+        RX = Math.min(w * 0.38, RY * 1.22);
         stage.style.setProperty('--cw', `${cw.toFixed(1)}px`);
         stage.style.setProperty('--cy', `${(top + room / 2).toFixed(1)}px`);
         lastKey = '';
@@ -168,18 +167,22 @@ function Cloud({ cards }: { cards: Card[] }) {
       // follows smoothly and runs on a little after it is let go
       const dx = st.ax * 0.16, dy = st.ay * 0.16;
       st.ax -= dx; st.ay -= dy;
-      if (Math.abs(dx) + Math.abs(dy) > 0.0005) {
+      if (Math.abs(st.ax) + Math.abs(st.ay) < 0.05) { st.ax = 0; st.ay = 0; }
+      if (Math.abs(dx) + Math.abs(dy) > 0.008) {
         st.m = turn(st.m, dx / RX, -dy / RY);
         if (++st.frames % 240 === 0) st.m = square(st.m);
       }
 
       // nothing to redraw once it has opened and come to rest
       const o = reduced || st.resume ? 1 : clamp01((now - st.born) / 1900);
-      const key = o < 1 ? '' : st.m.map((v) => v.toFixed(4)).join() + st.active;
+      // the whole cluster leans a few degrees toward the pointer, and back
+      st.px += (st.tpx - st.px) * 0.07; st.py += (st.tpy - st.py) * 0.07;
+      if (Math.abs(st.tpx - st.px) + Math.abs(st.tpy - st.py) < 0.0008) { st.px = st.tpx; st.py = st.tpy; }
+      const key = o < 1 ? '' : st.m.map((v) => v.toFixed(4)).join() + st.px.toFixed(3) + st.py.toFixed(3);
       if (key && key === lastKey) { raf = requestAnimationFrame(tick); return; }
       lastKey = key;
 
-      const m = st.m;
+      const m = turn(st.m, st.px * 0.22, -st.py * 0.16);
       for (let i = 0; i < n; i++) {
         const el = nodes.current[i];
         if (!el) continue;
@@ -207,6 +210,11 @@ function Cloud({ cards }: { cards: Card[] }) {
       st.ay -= Math.max(-120, Math.min(120, e.deltaY)) * 0.6;
     };
     const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && !reduced) {
+        const r = stage.getBoundingClientRect();
+        st.tpx = (e.clientX - r.left) / r.width - 0.5;
+        st.tpy = (e.clientY - r.top) / r.height - 0.5;
+      }
       if (!st.drag) return;
       const dx = e.clientX - st.lx, dy = e.clientY - st.ly;
       if (Math.abs(dx) + Math.abs(dy) > 5) st.moved = true;
@@ -302,19 +310,15 @@ function Cloud({ cards }: { cards: Card[] }) {
         </Link>
       ))}
 
-      {/* one quiet line at the foot: the count at rest, the chosen card's name otherwise */}
+      {/* one quiet line at the foot, only while a card is chosen: its name, then what it is */}
       <p className="v2-ed-counter" aria-live="polite">
         {cur && tapped ? (
           <Link href={`/work/${cur.slug}`} className="v2-ed-open">
             <span className="v2-ed-open-text">{line}</span>
             <span className="v2-ed-open-knob"><ArrowUpRight /></span>
           </Link>
-        ) : cur ? (
-          line
         ) : (
-          <>
-            <span>{pad2(v2Work.length)}</span> Projects <em>drag to turn</em>
-          </>
+          line
         )}
       </p>
     </div>
