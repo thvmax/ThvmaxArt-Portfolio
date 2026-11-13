@@ -3,12 +3,12 @@
 import Image from 'next/image';
 import { useRef, type MouseEvent } from 'react';
 import { gsap } from 'gsap';
-import { v2About } from '@/lib/v2content';
+import { v2About, v2Reach } from '@/lib/v2content';
 import Reveal from './Reveal';
 import ScrambleLabel from './ScrambleLabel';
 import StatCounter from './StatCounter';
 
-/** 04 · ABOUT — bio, portrait plate, stats, experience, toolkit, education. */
+/** 04 · ABOUT — bio, portrait plate, stats, experience, reach, toolkit, education. */
 export default function AboutSection() {
   const portraitRef = useRef<HTMLDivElement | null>(null);
 
@@ -102,6 +102,20 @@ export default function AboutSection() {
               </div>
               <p className="v2-exp-note">{x.note}</p>
               <span className="v2-exp-year">{x.year}</span>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+
+      <Reveal className="v2-sub">
+        <ScrambleLabel accent>{v2Reach.label}</ScrambleLabel>
+        <h2 className="v2-reach-heading">{v2Reach.heading}</h2>
+        <div className="v2-reach">
+          {v2Reach.regions.map((r) => (
+            <div className="v2-reach-region" key={r.name}>
+              <h3 className="v2-reach-name">{r.name}</h3>
+              <div className="v2-reach-place">{r.place}</div>
+              <p className="v2-reach-body">{r.body}</p>
             </div>
           ))}
         </div>

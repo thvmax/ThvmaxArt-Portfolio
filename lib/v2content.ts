@@ -63,7 +63,6 @@ export const v2Intro = {
 export const v2Nav = [
   { label: 'Home', href: '/' },
   { label: 'Work', href: '/work' },
-  { label: 'Services', href: '/services' },
   { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
@@ -79,91 +78,46 @@ export const v2Social = [
 // lists LinkedIn / Behance / Instagram.
 export const v2ContactLinks = v2Social.filter((s) => s.label !== 'Instagram');
 
-// ─── Services ────────────────────────────────────────────────────────
-// Three discipline pages, one URL and H1 per service so each can rank
-// for its own service + location query.
+// ─── Reach ───────────────────────────────────────────────────────────
+// Where the work has been made and where it is offered. Shown on About
+// and mirrored in the structured data (areaServed), so search engines
+// connect the name to Myanmar, the UAE / Middle East and remote work.
 
-export interface V2Service {
-  slug: string;
-  name: string;          // short name for rows / nav
-  label: string;         // mono section label
-  title: string;         // H1 keyword phrase on the detail page
-  tagline: string;       // one-line summary for the hub row
-  lead: string;          // SEO lead paragraph (also the meta description)
-  body: string;          // supporting paragraph
-  deliverables: string[];
-  projectSlugs: string[]; // related case studies, pulled from v2Work
-}
-
-export const v2ServicesSection = {
-  label: 'SERVICES',
-  headingLead: 'Three disciplines,',
-  headingItalic: 'one standard',
-  intro:
-    'Campaign art direction, motion and product design — for brands that need to be seen, moved and used. Based in Dubai, working across the UAE and remote.',
+export const v2Reach = {
+  label: 'WHERE I WORK',
+  heading: 'Rooted in Myanmar, based in Dubai, working worldwide.',
+  regions: [
+    {
+      name: 'Myanmar',
+      place: 'Yangon',
+      body: 'Where the career started — campaign art direction and production for Pepsi-Cola Myanmar (STING, Pepsi, Mirinda, 7UP), AIA, A Life Insurance and BUC. Native Burmese, so local briefs need no translation.',
+    },
+    {
+      name: 'UAE & Middle East',
+      place: 'Dubai · Abu Dhabi · GCC',
+      body: 'Based in Dubai. Design lead at Velosi Asset Integrity in Abu Dhabi — brand, social and product UI. Available for senior creative roles and freelance across the UAE, Saudi Arabia, Qatar and the wider GCC.',
+    },
+    {
+      name: 'Worldwide',
+      place: 'Remote',
+      body: 'Art direction, motion and product design delivered remotely for brands and agencies in any time zone, in English or Burmese.',
+    },
+  ],
 };
 
-export const v2Services: V2Service[] = [
-  {
-    slug: 'art-direction',
-    name: 'Art Direction',
-    label: 'ART DIRECTION',
-    title: 'Art direction for campaigns that need to be remembered',
-    tagline: 'Key visuals, campaign worlds and brand rollouts',
-    lead: 'Freelance art director in Dubai and the UAE, building campaign worlds for FMCG and enterprise brands — from the key visual through to the final broadcast frame.',
-    body: 'Seven years across multinational and agency teams — Pepsi, Mirinda, 7UP, STING and AIA among them. I own the visual idea end to end: concept, key visual, TVC art direction and the rollout system that keeps every format on the same image.',
-    deliverables: [
-      'Campaign key visuals',
-      'Brand & campaign identity',
-      'TVC art direction',
-      'Rollout & social systems',
-      'Event & environmental branding',
-    ],
-    projectSlugs: [
-      'sting-nightlife-repositioning',
-      'pepsi-meals-ar-campaign',
-      'pepsi-titan-wall-art',
-      'pepsi-talent-development',
-      'aia-mandalay-office-opening',
-    ],
-  },
-  {
-    slug: 'motion-production',
-    name: 'Motion & Production',
-    label: 'MOTION & PRODUCTION',
-    title: 'Motion design and production for film and social',
-    tagline: 'Cutdowns, end-frame animation, reels and brand films',
-    lead: 'Motion designer and editor in Dubai producing brand films, social reels and campaign cutdowns — from boards to final grade.',
-    body: 'I take a still key visual into motion: TVC cutdowns, animated end-frames, social reels and brand films. The point is always the same — close on the one image the campaign is built around.',
-    deliverables: [
-      'Brand films',
-      'TVC cutdowns',
-      'End-frame & key-visual animation',
-      'Social reels & shorts',
-      'Edit & finishing',
-    ],
-    projectSlugs: ['sting-nightlife-repositioning', 'aia-brand-social-films'],
-  },
-  {
-    slug: 'product-ui',
-    name: 'Product & UI Design',
-    label: 'PRODUCT & UI',
-    title: 'Product and UI design for software people actually use',
-    tagline: 'UX research, design systems and high-fidelity UI',
-    lead: 'Product and UI designer in Dubai turning dense enterprise software into calm, usable interfaces — from UX research to a reusable design system.',
-    body: 'I audit the core journeys, restructure the information architecture and build a component-driven system, so new modules inherit the pattern instead of inventing one.',
-    deliverables: [
-      'UX research & audits',
-      'Information architecture',
-      'Design systems',
-      'High-fidelity UI',
-      'Prototyping',
-    ],
-    projectSlugs: ['velosi-erp-software', 'true-money-app-concept', 'velosi-brand-channel'],
-  },
+// Countries and regions, for structured data (schema.org areaServed).
+export const v2AreaServed = [
+  'Myanmar',
+  'United Arab Emirates',
+  'Saudi Arabia',
+  'Qatar',
+  'Kuwait',
+  'Bahrain',
+  'Oman',
+  'Middle East',
+  'Southeast Asia',
+  'Worldwide',
 ];
-
-export const findService = (slug: string) => v2Services.find((s) => s.slug === slug);
 
 export const v2Work: V2Project[] = [
   {
@@ -485,7 +439,7 @@ export const v2Home = {
     [{ t: 'that ' }, { t: 'audiences remember', i: true }, { t: '.' }],
   ] as V2HeadSeg[][],
   intro2:
-    'Senior creative designer — campaign art direction, motion and product UI.',
+    'Senior creative designer from Myanmar, based in Dubai — campaign art direction, motion and product UI for brands across the UAE, the Middle East and worldwide.',
   scrollCue: 'SCROLL',
   headingLead: 'Shaping brand visuals, campaigns and motion that ',
   headingItalic: 'audiences remember',
@@ -629,7 +583,7 @@ export const v2Contact = {
   headingLead: 'Let’s make something',
   headingItalic: 'worth stopping for',
   intro:
-    'Available for senior creative roles and freelance art direction, motion and product-design work — across the UAE and remote, from Dubai. I reply within a day.',
+    'Available for senior creative roles and freelance art direction, motion and product-design work — across Myanmar, the UAE and the wider Middle East, and remote worldwide, from Dubai. I reply within a day.',
   facts: [
     { label: 'PHONE', value: v2Site.phone },
     { label: 'BASED', value: v2Site.based },

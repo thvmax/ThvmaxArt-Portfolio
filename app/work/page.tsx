@@ -3,7 +3,7 @@ import { v2WorkPage } from '@/lib/v2content';
 import WorkEditorial from '../components/WorkEditorial';
 
 export const metadata: Metadata = {
-  title: 'Work — THVMAX',
+  title: 'Work — Campaigns & Product Design, Myanmar & UAE',
   description: v2WorkPage.intro,
   alternates: { canonical: '/work' },
 };

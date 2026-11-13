@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'THVMAX — Thu Ta Soe | Art Direction, Motion & Product Design';
+export const alt = 'Thu Ta Soe (THVMAX) — Art Direction, Motion & Product Design. Dubai, UAE · Myanmar';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -53,7 +53,7 @@ export default function OgImage() {
             color: '#8a8f94',
           }}
         >
-          <span>Dubai, UAE</span>
+          <span>Dubai, UAE · Myanmar · Worldwide</span>
           <span>thvmaxart.com</span>
         </div>
       </div>
