@@ -15,6 +15,9 @@ const nextConfig = {
       { source: '/art-direction', destination: '/work', permanent: true },
       { source: '/motion-production', destination: '/work', permanent: true },
       { source: '/digital-ui', destination: '/work', permanent: true },
+      // the services pages are retired — disciplines live on About and Work
+      { source: '/services', destination: '/about', permanent: true },
+      { source: '/services/:slug*', destination: '/work', permanent: true },
       // the admin panel is retired — content now comes from the codebase
       { source: '/admin', destination: '/', permanent: true },
       { source: '/admin/:path*', destination: '/', permanent: true },

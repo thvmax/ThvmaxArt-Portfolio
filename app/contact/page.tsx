@@ -3,7 +3,7 @@ import { v2Contact } from '@/lib/v2content';
 import ContactSection from '../components/ContactSection';
 
 export const metadata: Metadata = {
-  title: 'Contact — THVMAX',
+  title: 'Contact — Hire an Art Director in Dubai, UAE',
   description: v2Contact.intro,
   alternates: { canonical: '/contact' },
 };

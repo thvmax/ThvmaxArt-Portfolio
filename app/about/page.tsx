@@ -5,15 +5,25 @@ import Band from '../components/Band';
 import Pill from '../components/Pill';
 
 export const metadata: Metadata = {
-  title: 'About — THVMAX',
-  description: v2About.lead,
+  title: 'About Thu Ta Soe — Art Director from Myanmar, based in Dubai',
+  description:
+    'Thu Ta Soe (THVMAX): Myanmar-born senior creative designer and art director in Dubai. Seven years across Pepsi-Cola Myanmar, AIA and Velosi Abu Dhabi — working across the UAE, the Middle East and worldwide.',
   alternates: { canonical: '/about' },
+  openGraph: { type: 'profile', url: '/about' },
 };
+
+const PROFILE_JSONLD = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  url: 'https://thvmaxart.com/about',
+  mainEntity: { '@id': 'https://thvmaxart.com/#person' },
+});
 
 /** Figma frame: ThvmaxArt / 04 About. */
 export default function AboutPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: PROFILE_JSONLD }} />
       <main>
         <AboutSection />
 
