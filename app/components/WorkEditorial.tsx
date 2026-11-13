@@ -7,17 +7,16 @@ import { plate, v2Work, type V2Project } from '@/lib/v2content';
 import ArrowUpRight from './ArrowUpRight';
 
 /**
- * Work (/work) — the projects as a loose cloud of portrait thumbnails
- * hanging in the middle of an otherwise empty page. Every card faces
- * the viewer; nothing turns. Depth is told by size alone: near cards are
- * large, far ones small, and they overlap where they happen to.
+ * Work (/work) — the projects as a cluster of portrait thumbnails hung
+ * on an invisible sphere in the middle of an otherwise empty page.
  *
- * The cloud is alive but quiet. Each card drifts a few pixels on its own
- * slow cycle, the whole field leans against the pointer (near cards move
- * further than far ones), and scroll or drag travels through the depth:
- * cards come forward, pass, and return small at the back.
+ * Every card faces the viewer at all times; only its place on the sphere
+ * changes. Near cards are large and sit in front, far ones small and
+ * behind. Dragging turns the whole cluster like a trackball, in any
+ * direction, and it glides to rest when let go. At rest nothing moves
+ * except the thumbnails that are videos, which play.
  *
- * With a mouse, hovering a card lifts it and names it at the foot, and a
+ * With a mouse, the card under the pointer is named at the foot, and a
  * click opens it. By touch there is no hover, so the first tap names the
  * card and the foot line becomes the way in; a second tap also opens it.
  *
@@ -33,29 +32,45 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /* ── Cards ─────────────────────────────────────────────────────────── */
 
-/** One thumbnail in the cloud: a project, optionally showing one of its stills. */
-type Card = { key: string; p: V2Project; src?: string };
+/** One thumbnail in the cluster: a project, optionally showing one of its stills or films. */
+type Card = { key: string; p: V2Project; src?: string; video?: string };
 
-const STING_STILLS = ['product-kv.png', 'event-poster.png', 'kv-qr-code.png', 'slide-1.jpg', 'slide-3.jpg'];
+const STING = '/case-studies/sting-night-life/';
+const STING_EXTRA: Pick<Card, 'src' | 'video'>[] = [
+  { video: 'hero-video.mp4' },
+  { src: 'product-kv.png' },
+  { src: 'event-poster.png' },
+  { video: 'Header-Video.mp4' },
+  { src: 'kv-qr-code.png' },
+  { src: 'slide-1.jpg' },
+  { src: 'slide-3.jpg' },
+];
 
-/** Every project once, then the extra real stills that exist (all STING for now), spread through. */
+/** Every project once, then the extra real stills and films that exist (all STING for now), spread through. */
 function buildCards(): Card[] {
   const base: Card[] = v2Work.map((p) => ({ key: p.slug, p }));
   const sting = v2Work.find((p) => p.slug === 'sting-nightlife-repositioning');
   const extra: Card[] = sting
-    ? STING_STILLS.map((f) => ({ key: `sting-${f}`, p: sting, src: `/case-studies/sting-night-life/${f}` }))
+    ? STING_EXTRA.map((x) => ({
+        key: `sting-${x.src ?? x.video}`,
+        p: sting,
+        src: x.src && STING + x.src,
+        video: x.video && STING + x.video,
+      }))
     : [];
   const out: Card[] = [];
-  base.forEach((c, i) => { out.push(c); if (i % 2 === 1 && extra.length) out.push(extra.shift()!); });
+  base.forEach((c, i) => { out.push(c); if (extra.length) out.push(extra.shift()!); if (i > 6 && extra.length) out.push(extra.shift()!); });
   return out.concat(extra);
 }
 
 function Thumb({ card, index }: { card: Card; index: number }) {
-  const { p, src } = card;
-  const cover = src ?? COVERS[p.slug];
+  const { p, src, video } = card;
+  const cover = src ?? (video ? undefined : COVERS[p.slug]);
   return (
     <span className="v2-ed-media" style={{ background: plate(p.accent) }}>
-      {cover ? (
+      {video ? (
+        <video className="v2-ed-img" src={video} autoPlay muted loop playsInline preload="metadata" />
+      ) : cover ? (
         <Image src={cover} alt="" fill sizes="(max-width: 700px) 34vw, 220px" className="v2-ed-img" />
       ) : (
         // no artwork yet: the plate carries the project's own name, set small,
@@ -77,11 +92,36 @@ function Thumb({ card, index }: { card: Card; index: number }) {
 
 const frac = (v: number) => v - Math.floor(v);
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-const smooth = (a: number, b: number, v: number) => { const t = clamp01((v - a) / (b - a)); return t * t * (3 - 2 * t); };
 const hash = (i: number, k: number) => frac(Math.sin(i * 127.1 + k * 311.7) * 43758.5453);
 
-/** Where the travel was left, so coming back to /work picks it up rather than restarting. */
-let savedTravel: number | null = null;
+type Mat = [number, number, number, number, number, number, number, number, number];
+
+/** Turn `m` by `a` about the screen's vertical axis and `b` about its horizontal one. */
+function turn(m: Mat, a: number, b: number): Mat {
+  const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+  // T = Ry(a) · Rx(b), then T · m
+  const t = [ca, sa * sb, sa * cb, 0, cb, -sb, -sa, ca * sb, ca * cb];
+  const o = new Array(9) as Mat;
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+    o[r * 3 + c] = t[r * 3] * m[c] + t[r * 3 + 1] * m[3 + c] + t[r * 3 + 2] * m[6 + c];
+  }
+  return o;
+}
+
+/** Thousands of small turns drift; square the matrix back up now and then. */
+function square(m: Mat): Mat {
+  let [a, b, c, d, e, f] = m;
+  let l = Math.hypot(a, b, c); a /= l; b /= l; c /= l;
+  const dot = a * d + b * e + c * f; d -= dot * a; e -= dot * b; f -= dot * c;
+  l = Math.hypot(d, e, f); d /= l; e /= l; f /= l;
+  return [a, b, c, d, e, f, b * f - c * e, c * d - a * f, a * e - b * d];
+}
+
+const START: Mat = turn([1, 0, 0, 0, 1, 0, 0, 0, 1], 0.5, -0.35);
+const EYE = 3;        // viewer's distance, in sphere radii: sets how much nearer cards grow
+
+/** How the cluster was left, so coming back to /work picks it up rather than restarting. */
+let savedTurn: Mat | null = null;
 
 function Cloud({ cards }: { cards: Card[] }) {
   const n = cards.length;
@@ -90,24 +130,19 @@ function Cloud({ cards }: { cards: Card[] }) {
   const [active, setActive] = useState<number | null>(null);
   const [tapped, setTapped] = useState(false);   // chosen by touch: the foot line becomes the way in
   const s = useRef({
-    travel: 0, target: 0, v: 0, auto: 0, born: 0, last: 0, resume: false,
-    hold: false, drag: false, moved: false, touch: false, lx: 0, ly: 0,
-    px: 0, py: 0, tpx: 0, tpy: 0, active: -1,
+    m: START, ax: 0, ay: 0, vx: 0, vy: 0, frames: 0, born: 0, resume: false,
+    drag: false, moved: false, touch: false, lx: 0, ly: 0, active: -1,
   });
 
-  // Each card's fixed place: scattered over a disc (a sunflower spiral, then
-  // knocked off-grid), with its own depth and its own slow drift. Fixed per
-  // card, not random per load, so the page is the same page every visit.
+  // Each card's fixed seat on the unit sphere: evenly spread (a Fibonacci
+  // lattice), then knocked a little off it and in or out, so the cluster
+  // reads as scattered rather than plotted. Fixed per card, not random per load.
   const seat = useMemo(
     () => Array.from({ length: n }, (_, i) => {
-      const r = Math.sqrt((i + 0.6) / n), a = i * 2.39996 + 0.5;
-      return {
-        x: Math.cos(a) * r + (hash(i, 1) - 0.5) * 0.24,
-        y: Math.sin(a) * r + (hash(i, 2) - 0.5) * 0.24,
-        z: ((i * 5 + 2) % n) / n,
-        ph: hash(i, 3) * Math.PI * 2,
-        sp: 0.25 + hash(i, 4) * 0.3,
-      };
+      const y = 1 - (2 * (i + 0.5)) / n + (hash(i, 1) - 0.5) * 0.16;
+      const r = Math.sqrt(Math.max(0, 1 - y * y)), a = i * 2.39996 + (hash(i, 2) - 0.5) * 0.5;
+      const d = 0.82 + hash(i, 3) * 0.24;
+      return [Math.cos(a) * r * d, y * d, Math.sin(a) * r * d] as const;
     }),
     [n],
   );
@@ -117,58 +152,56 @@ function Cloud({ cards }: { cards: Card[] }) {
     if (!stage) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const st = s.current;
-    if (savedTravel !== null) { st.travel = savedTravel; st.target = savedTravel; st.resume = true; }
-    const shown: boolean[] = new Array(n).fill(true);
-    let raf = 0, sized = 0;
+    if (savedTurn) { st.m = savedTurn; st.resume = true; }
+    let raf = 0, sized = 0, RX = 0, RY = 0, lastKey = '';
 
     const tick = (now: number) => {
       const w = stage.clientWidth, h = stage.clientHeight;
       if (!w) { raf = requestAnimationFrame(tick); return; }
-      if (!st.born) { st.born = now; st.last = now; }
-      const dt = Math.min(3, (now - st.last) / 16.67);
-      st.last = now;
+      if (!st.born) st.born = now;
 
-      // the field is a disc sized off the height, held in on narrow screens
-      const RX = Math.min(w * 0.36, h * 0.36), RY = h * (w < 700 ? 0.3 : 0.33);
       if (sized !== w * 10000 + h) {
         sized = w * 10000 + h;
-        stage.style.setProperty('--cw', `${Math.max(64, Math.min(h * 0.105, w * 0.24)).toFixed(1)}px`);
+        // a sphere sized off the height; on a narrow screen it is held in to
+        // the width and stands taller than it is wide
+        RX = Math.min(h * 0.3, w * 0.36);
+        RY = Math.min(h * 0.3, Math.max(RX, h * 0.28));
+        stage.style.setProperty('--cw', `${Math.max(56, Math.min(h * 0.092, w * 0.165)).toFixed(1)}px`);
+        lastKey = '';
       }
 
-      // input moves a target; the travel glides after it and never snaps
-      st.auto += ((reduced || st.hold || st.drag ? 0 : 0.00011) - st.auto) * Math.min(1, 0.05 * dt);
-      st.target += (st.auto + st.v) * dt;
-      st.v *= Math.pow(0.95, dt);
-      const k = 1 - Math.pow(1 - 0.085, dt);
-      st.travel += (st.target - st.travel) * k;
-      st.px += (st.tpx - st.px) * 0.06 * dt;
-      st.py += (st.tpy - st.py) * 0.06 * dt;
+      // the hand's movement is paid out a share per frame, so the cluster
+      // follows smoothly and runs on a little after it is let go
+      const dx = st.ax * 0.16, dy = st.ay * 0.16;
+      st.ax -= dx; st.ay -= dy;
+      if (Math.abs(dx) + Math.abs(dy) > 0.0005) {
+        st.m = turn(st.m, dx / RX, -dy / RY);
+        if (++st.frames % 240 === 0) st.m = square(st.m);
+      }
 
-      const t = (now - st.born) / 1000;
+      // nothing to redraw once it has opened and come to rest
+      const o = reduced || st.resume ? 1 : clamp01((now - st.born) / 1900);
+      const key = o < 1 ? '' : st.m.map((v) => v.toFixed(4)).join() + st.active;
+      if (key && key === lastKey) { raf = requestAnimationFrame(tick); return; }
+      lastKey = key;
+
+      const m = st.m;
       for (let i = 0; i < n; i++) {
         const el = nodes.current[i];
         if (!el) continue;
-        const q = seat[i];
+        const [px, py, pz] = seat[i];
+        const x = m[0] * px + m[1] * py + m[2] * pz;
+        const y = m[3] * px + m[4] * py + m[5] * pz;
+        const z = m[6] * px + m[7] * py + m[8] * pz;    // +1 nearest … −1 furthest
 
-        // arriving: the cards start as one small stack and open out in turn
-        const o = reduced || st.resume ? 1 : clamp01((now - st.born - i * 40) / 1500);
-        const e = 1 - Math.pow(1 - o, 4);
+        // arriving: the cards open out from one small stack, in turn
+        const oi = reduced || st.resume ? 1 : clamp01((now - st.born - i * 35) / 1300);
+        const e = 1 - Math.pow(1 - oi, 4);
 
-        const z = frac(q.z + st.travel);                   // 0 far … 1 passing
-        const reach = (0.8 + 0.42 * z) * e;                // nearer cards sit further out
-        const lean = 6 + 44 * z;                           // …and lean further against the pointer
-        const bob = reduced ? 0 : Math.sin(t * q.sp + q.ph) * (3 + 5 * z);
-        const x = q.x * RX * reach - st.px * lean;
-        const y = q.y * RY * reach - st.py * lean + bob;
-        const size = (0.52 + 0.9 * Math.pow(z, 1.25)) * (0.35 + 0.65 * e);
-        // far cards fade up out of the page, near ones fade as they pass
-        const alpha = smooth(0, 0.09, z) * (1 - smooth(0.9, 1, z)) * Math.min(1, e * 1.6);
-
-        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%) scale(${size.toFixed(4)})`;
-        el.style.opacity = alpha.toFixed(3);
-        el.style.zIndex = st.active === i ? '400' : String(1 + Math.round(z * 200));
-        const on = alpha > 0.5;
-        if (on !== shown[i]) { shown[i] = on; el.style.pointerEvents = on ? '' : 'none'; }
+        const k = EYE / (EYE - z);                       // perspective: nearer is larger and further out
+        el.style.transform = `translate3d(${(x * RX * k * e).toFixed(1)}px, ${(y * RY * k * e).toFixed(1)}px, 0) translate(-50%, -50%) scale(${(k * (0.3 + 0.7 * e)).toFixed(4)})`;
+        el.style.opacity = Math.min(1, e * 1.6).toFixed(3);
+        el.style.zIndex = String(100 + Math.round(z * 90));
       }
       raf = requestAnimationFrame(tick);
     };
@@ -176,27 +209,23 @@ function Cloud({ cards }: { cards: Card[] }) {
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      st.target += Math.max(-0.09, Math.min(0.09, (e.deltaY + e.deltaX) * 0.0003));
+      st.ax -= Math.max(-120, Math.min(120, e.deltaX)) * 0.6;
+      st.ay -= Math.max(-120, Math.min(120, e.deltaY)) * 0.6;
     };
     const onMove = (e: PointerEvent) => {
-      const r = stage.getBoundingClientRect();
-      if (st.drag) {
-        const dx = e.clientX - st.lx, dy = e.clientY - st.ly;
-        if (Math.abs(dx) + Math.abs(dy) > 5) st.moved = true;
-        // pushing up or left travels forward, wherever the field is held
-        const step = -(dy + dx * 0.6) / Math.max(320, r.height) * 0.9;
-        st.target += step;
-        st.v = step * 0.3;
-        st.lx = e.clientX; st.ly = e.clientY;
-      }
-      if (reduced) return;
-      st.tpx = (e.clientX - r.left) / r.width - 0.5;
-      st.tpy = (e.clientY - r.top) / r.height - 0.5;
+      if (!st.drag) return;
+      const dx = e.clientX - st.lx, dy = e.clientY - st.ly;
+      if (Math.abs(dx) + Math.abs(dy) > 5) st.moved = true;
+      st.ax += dx; st.ay += dy;
+      st.vx += (dx - st.vx) * 0.5; st.vy += (dy - st.vy) * 0.5;
+      st.lx = e.clientX; st.ly = e.clientY;
     };
-    const onUp = (e: PointerEvent) => {
+    const onUp = () => {
+      if (!st.drag) return;
       st.drag = false;
-      // a finger leaves nothing to lean against
-      if (e.pointerType !== 'mouse') { st.tpx = 0; st.tpy = 0; }
+      // a throw carries on a little; a still release stops where it is
+      if (st.moved) { st.ax += st.vx * 6; st.ay += st.vy * 6; }
+      st.vx = 0; st.vy = 0;
     };
 
     // Taken on window, ahead of the site's page transition. A drag must not
@@ -210,7 +239,7 @@ function Cloud({ cards }: { cards: Card[] }) {
       if (drag || (st.touch && st.active !== i)) {
         e.preventDefault();
         e.stopPropagation();
-        if (!drag) { st.active = i; st.hold = true; setTapped(true); setActive(i); }
+        if (!drag) { st.active = i; setTapped(true); setActive(i); }
       }
     };
 
@@ -220,7 +249,7 @@ function Cloud({ cards }: { cards: Card[] }) {
     window.addEventListener('pointercancel', onUp);
     window.addEventListener('click', onClick, true);
     return () => {
-      savedTravel = st.travel;
+      savedTurn = st.m;
       cancelAnimationFrame(raf);
       stage.removeEventListener('wheel', onWheel);
       window.removeEventListener('pointermove', onMove);
@@ -231,7 +260,6 @@ function Cloud({ cards }: { cards: Card[] }) {
   }, [n, seat]);
 
   const show = (i: number | null) => {
-    s.current.hold = i !== null;
     s.current.active = i ?? -1;
     setActive(i);
   };
@@ -239,7 +267,7 @@ function Cloud({ cards }: { cards: Card[] }) {
   const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     const st = s.current;
     st.touch = e.pointerType !== 'mouse';
-    st.drag = true; st.moved = false; st.lx = e.clientX; st.ly = e.clientY;
+    st.drag = true; st.moved = false; st.lx = e.clientX; st.ly = e.clientY; st.vx = 0; st.vy = 0;
     // touching empty page lets go of the chosen card
     if (st.touch && !(e.target as HTMLElement).closest('a')) { setTapped(false); show(null); }
   };
@@ -247,14 +275,14 @@ function Cloud({ cards }: { cards: Card[] }) {
   const cur = active === null ? null : cards[active].p;
   const line = cur && (
     <>
-      <span>{pad2(v2Work.indexOf(cur) + 1)}</span> {cur.name} <em>{cur.cat}, {cur.year}</em>
+      {cur.name} <em>{cur.cat}</em>
     </>
   );
 
   return (
     <div
       ref={stageRef}
-      className={`v2-ed-space${active !== null ? ' has-active' : ''}`}
+      className={`v2-ed-space${tapped && active !== null ? ' is-tapped' : ''}`}
       onPointerDown={onDown}
       data-lenis-prevent
     >
@@ -280,19 +308,15 @@ function Cloud({ cards }: { cards: Card[] }) {
         </Link>
       ))}
 
-      {/* one quiet line at the foot: the count at rest, the chosen project otherwise */}
+      {/* one quiet line at the foot, only while a card is chosen: its name, then what it is */}
       <p className="v2-ed-counter" aria-live="polite">
         {cur && tapped ? (
           <Link href={`/work/${cur.slug}`} className="v2-ed-open">
             <span className="v2-ed-open-text">{line}</span>
             <span className="v2-ed-open-knob"><ArrowUpRight /></span>
           </Link>
-        ) : cur ? (
-          line
         ) : (
-          <>
-            <span>{pad2(v2Work.length)}</span> Projects <em>scroll or drag to move through</em>
-          </>
+          line
         )}
       </p>
     </div>
