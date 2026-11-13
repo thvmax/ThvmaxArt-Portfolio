@@ -16,7 +16,8 @@ import ArrowUpRight from './ArrowUpRight';
  * direction, and it glides to rest when let go. At rest nothing moves
  * except the thumbnails that are videos, which play.
  *
- * With a mouse, the card under the pointer is named at the foot, and a
+ * A line at the foot gives the count. With a mouse, it names the card
+ * under the pointer instead, and a
  * click opens it. By touch there is no hover, so the first tap names the
  * card and the foot line becomes the way in; a second tap also opens it.
  *
@@ -63,7 +64,7 @@ function buildCards(): Card[] {
   return out.concat(extra);
 }
 
-function Thumb({ card, index }: { card: Card; index: number }) {
+function Thumb({ card }: { card: Card }) {
   const { p, src, video } = card;
   const cover = src ?? (video ? undefined : COVERS[p.slug]);
   return (
@@ -72,18 +73,7 @@ function Thumb({ card, index }: { card: Card; index: number }) {
         <video className="v2-ed-img" src={video} autoPlay muted loop playsInline preload="metadata" />
       ) : cover ? (
         <Image src={cover} alt="" fill sizes="(max-width: 700px) 34vw, 220px" className="v2-ed-img" />
-      ) : (
-        // no artwork yet: the plate carries the project's own name, set small,
-        // so it reads as a cover rather than a blank
-        <span className="v2-ed-plate">
-          <span>{pad2(index + 1)}</span>
-          <span>
-            {p.nameLines.map((l) => (
-              <span key={l}>{l}</span>
-            ))}
-          </span>
-        </span>
-      )}
+      ) : null}
     </span>
   );
 }
@@ -162,11 +152,15 @@ function Cloud({ cards }: { cards: Card[] }) {
 
       if (sized !== w * 10000 + h) {
         sized = w * 10000 + h;
-        // a sphere sized off the height; on a narrow screen it is held in to
-        // the width and stands taller than it is wide
-        RX = Math.min(h * 0.3, w * 0.36);
-        RY = Math.min(h * 0.3, Math.max(RX, h * 0.28));
-        stage.style.setProperty('--cw', `${Math.max(56, Math.min(h * 0.092, w * 0.165)).toFixed(1)}px`);
+        // The cluster keeps clear of the nav above and the line at the foot,
+        // and is spread wider than it is tall where there is room for it.
+        const cw = Math.max(56, Math.min(h * 0.092, w * 0.165));
+        const top = w < 700 ? 112 : 136, foot = w < 700 ? 124 : 116;
+        const room = Math.max(160, h - top - foot);
+        RY = Math.max(60, (room / 2 - cw * 0.85) / 1.06);
+        RX = Math.min(w * 0.38, RY * 1.4);
+        stage.style.setProperty('--cw', `${cw.toFixed(1)}px`);
+        stage.style.setProperty('--cy', `${(top + room / 2).toFixed(1)}px`);
         lastKey = '';
       }
 
@@ -303,20 +297,24 @@ function Cloud({ cards }: { cards: Card[] }) {
           data-cursor="hover"
         >
           <span className="v2-ed-node-card">
-            <Thumb card={card} index={v2Work.indexOf(card.p)} />
+            <Thumb card={card} />
           </span>
         </Link>
       ))}
 
-      {/* one quiet line at the foot, only while a card is chosen: its name, then what it is */}
+      {/* one quiet line at the foot: the count at rest, the chosen card's name otherwise */}
       <p className="v2-ed-counter" aria-live="polite">
         {cur && tapped ? (
           <Link href={`/work/${cur.slug}`} className="v2-ed-open">
             <span className="v2-ed-open-text">{line}</span>
             <span className="v2-ed-open-knob"><ArrowUpRight /></span>
           </Link>
-        ) : (
+        ) : cur ? (
           line
+        ) : (
+          <>
+            <span>{pad2(v2Work.length)}</span> Projects <em>drag to turn</em>
+          </>
         )}
       </p>
     </div>
