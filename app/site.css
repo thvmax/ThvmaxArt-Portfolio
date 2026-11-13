@@ -244,12 +244,15 @@ body.v2-locked { overflow: hidden; height: 100vh; }
   z-index: 80;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: clamp(1rem, 2.3vw, 2.75rem) var(--pad);
+  justify-content: flex-end;
+  min-height: 34px;
+  padding: 14px clamp(0.875rem, 1.6vw, 1.5rem);
   pointer-events: none;
+  box-sizing: content-box;
 }
 .v2-nav > * { pointer-events: auto; }
 
+/* wordmark + tabs, small and dead centre */
 .v2-nav-group {
   position: absolute;
   left: 50%;
@@ -257,99 +260,83 @@ body.v2-locked { overflow: hidden; height: 100vh; }
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 1rem;
-}
-
-.v2-nav-logo,
-.v2-nav-menu {
-  background: var(--wash);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, color 0.35s ease;
+  gap: 0.9rem;
+  white-space: nowrap;
 }
 .v2-nav-logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 26px 14px 20px;
-  font-family: var(--mono);
-  font-weight: 500;
-  font-size: 0.875rem;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  padding: 0.3rem 0.2rem;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.v2-nav-mark {
-  width: 14px;
-  height: 14px;
-  border-radius: 999px;
-  background: var(--fg);
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
-}
-.v2-nav-logo:hover .v2-nav-mark {
-  transform: scale(1.35);
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--fg) 22%, transparent);
-}
+.v2-nav-logo:hover { opacity: 0.55; }
 
-.v2-nav-menu {
-  display: flex;
-  align-items: center;
-  gap: 36px;
-  padding: 16px 32px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-}
+.v2-nav-menu { display: flex; align-items: flex-start; gap: 0.3rem; }
 .v2-nav-link {
-  position: relative;
-  padding-bottom: 2px;
+  display: inline-flex;
+  align-items: flex-start;
+  height: 34px;
+  padding: 0 0.6rem;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 34px;
+  transition: background-color 0.45s cubic-bezier(0.16, 1, 0.3, 1), color 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.v2-nav-link::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; bottom: -2px;
-  height: 1px;
-  background: currentColor;
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+.v2-nav-link:hover { background: color-mix(in srgb, var(--fg) 13%, transparent); }
+.v2-nav-link:active { transform: scale(0.97); }
+/* the name is folded shut until the tab is current or hovered */
+.v2-nav-link-name {
+  display: grid;
+  grid-template-columns: 0fr;
+  transition: grid-template-columns 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.v2-nav-link:hover::after { transform: scaleX(1); transform-origin: left; }
-.v2-nav-link.is-current { color: var(--fg); }
-.v2-nav-link.is-current::after { transform: scaleX(1); }
+.v2-nav-link-name > span {
+  overflow: hidden; min-width: 0; opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), padding 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.v2-nav-link.is-current .v2-nav-link-name,
+.v2-nav-group.is-home .v2-nav-link-name { grid-template-columns: 1fr; }
+.v2-nav-link.is-current .v2-nav-link-name > span,
+.v2-nav-group.is-home .v2-nav-link-name > span { opacity: 1; padding-right: 0.3rem; }
+@media (hover: hover) {
+  .v2-nav-link:hover .v2-nav-link-name { grid-template-columns: 1fr; }
+  .v2-nav-link:hover .v2-nav-link-name > span { opacity: 1; padding-right: 0.3rem; }
+}
+.v2-nav-link-num { font-size: 0.75rem; line-height: 34px; font-variant-numeric: tabular-nums; }
+/* beside a spelled-out name the number rides high, like a footnote mark */
+.v2-nav-link.is-current .v2-nav-link-num,
+.v2-nav-group.is-home .v2-nav-link-num { line-height: 24px; }
+@media (hover: hover) { .v2-nav-link:hover .v2-nav-link-num { line-height: 24px; } }
 
-.v2-nav-right { display: flex; align-items: center; gap: 0.75rem; }
+.v2-nav-right { display: flex; align-items: center; gap: 0.3rem; }
 
 /* An inverted block is passing under the nav — flip the chrome.
    Written against roles, so it holds in both themes. */
-.v2-nav--on-invert .v2-nav-logo,
-.v2-nav--on-invert .v2-nav-menu {
-  background: var(--wash-inv);
-  border-color: var(--line-inv);
-  color: var(--bg);
-}
-.v2-nav--on-invert .v2-nav-mark { background: var(--bg); }
-.v2-nav--on-invert .v2-nav-link.is-current { color: var(--bg); }
+.v2-nav--on-invert .v2-nav-logo { color: var(--bg); }
+.v2-nav--on-invert .v2-nav-link { color: var(--bg); background: color-mix(in srgb, var(--bg) 14%, transparent); }
 .v2-nav--on-invert .v2-pill {
   --pill-bg: var(--bg);
   --pill-fg: var(--fg);
   --knob-bg: var(--fg);
   --knob-fg: var(--bg);
 }
-.v2-nav--on-invert .v2-burger { box-shadow: inset 0 0 0 1px var(--line-inv-strong); color: var(--bg); }
+.v2-nav--on-invert .v2-burger, .v2-nav--on-invert .v2-dial { background: color-mix(in srgb, var(--bg) 14%, transparent); color: var(--bg); }
 .v2-nav--on-invert .v2-burger:hover { background: var(--bg); color: var(--fg); }
-.v2-nav--on-invert .v2-dial { box-shadow: inset 0 0 0 1px var(--line-inv-strong); color: var(--bg); }
 .v2-nav--on-invert .v2-dial-disc::after { background: var(--fg); }
 
 .v2-burger {
   display: grid;
-  width: 50px;
-  height: 50px;
-  border-radius: 999px;
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--line);
+  align-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
   color: var(--fg);
   place-items: center;
-  gap: 5px;
+  gap: 4px;
   transition: background 0.35s ease, color 0.35s ease;
 }
 .v2-burger:hover { background: var(--fg); color: var(--bg); }
@@ -357,7 +344,7 @@ body.v2-locked { overflow: hidden; height: 100vh; }
 .v2-burger:hover span:last-child { transform: translateY(-1px) scaleX(1); }
 .v2-burger span {
   display: block;
-  width: 18px;
+  width: 14px;
   height: 1.5px;
   background: currentColor;
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
@@ -369,23 +356,23 @@ body.v2-locked { overflow: hidden; height: 100vh; }
   position: relative;
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px var(--line);
+  width: 34px;
+  height: 34px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
   color: var(--fg);
-  transition: box-shadow 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+  transition: background-color 0.4s cubic-bezier(0.32, 0.72, 0, 1),
               transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
-.v2-dial:hover { box-shadow: inset 0 0 0 1px rgba(138, 143, 148, 0.55); }
+.v2-dial:hover { background: color-mix(in srgb, var(--fg) 13%, transparent); }
 .v2-dial:active { transform: scale(0.94); }
 
 /* a disc with a bite taken out of it — crescent one way, gibbous the other */
 .v2-dial-disc {
   position: relative;
   display: block;
-  width: 17px;
-  height: 17px;
+  width: 13px;
+  height: 13px;
   border-radius: 999px;
   background: currentColor;
   overflow: hidden;
@@ -400,7 +387,7 @@ body.v2-locked { overflow: hidden; height: 100vh; }
   transform: translate(42%, -22%);
   transition: transform 0.6s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
-.v2-dial:hover { box-shadow: inset 0 0 0 1px rgba(138, 143, 148, 0.55); transform: scale(1.05); }
+
 
 html[data-theme='light'] .v2-dial-disc { transform: rotate(180deg); }
 html[data-theme='light'] .v2-dial:hover .v2-dial-disc { transform: rotate(162deg); }
@@ -712,9 +699,13 @@ body.v2-intro-open { overflow: hidden; }
   background: var(--fg);
   color: var(--bg);
   overflow: hidden;
-  visibility: hidden;
+  /* shown only when the head script has decided it will play — that runs
+     before first paint, so the sheet is up before the page is ever seen */
+  display: none;
   pointer-events: none;
 }
+html[data-intro='play'] .v2-intro { display: block; }
+html[data-intro='play'] body { overflow: hidden; }
 .v2-intro-txt {
   position: absolute; inset: 0;
   display: flex; flex-direction: column; justify-content: center;
@@ -1576,7 +1567,9 @@ body.v2-intro-open { overflow: hidden; }
 }
 
 @media (max-width: 900px) {
-  .v2-nav-menu { display: none; }
+  /* no room to centre the tabs beside the buttons: they sit at the left */
+  .v2-nav { justify-content: space-between; }
+  .v2-nav-group { position: static; transform: none; gap: 0.6rem; }
   .v2-preview { display: none; }
   .v2-toolkit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v2-reach { grid-template-columns: minmax(0, 1fr); }
@@ -1611,54 +1604,61 @@ body.v2-intro-open { overflow: hidden; }
   .v2-reveal { opacity: 1; transform: none; }
 }
 
-/* ── Work — ring gallery (/work) ───────────────────────────────────── */
-/* The whole screen is the ring. Type stays small on purpose: the work
-   carries the page, the type just labels it. */
+/* ── Work — a cluster of portrait thumbnails on a sphere (/work) ───── */
+/* The page is empty but for the cluster. Type stays small on purpose:
+   the work carries the page, the type just labels it. */
 
 .v2-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.v2-ed--space { position: relative; height: 100svh; min-height: 32rem; padding: 0; }
+.v2-ed--space { position: relative; height: 100svh; min-height: 30rem; padding: 0; }
 .v2-ed-space {
   position: absolute; inset: 0; z-index: 1;
-  overflow: hidden; touch-action: none; cursor: grab; user-select: none;
+  overflow: hidden; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
 }
 .v2-ed-space:active { cursor: grabbing; }
-.v2-ed-media { position: absolute; inset: 0; display: block; overflow: hidden; }
-.v2-ed-img { object-fit: cover; }
+
 .v2-ed-node {
-  position: absolute; left: 50%; top: 54%;
-  width: clamp(120px, 13.5vw, 270px);
-  will-change: transform; -webkit-user-drag: none; backface-visibility: hidden;
+  position: absolute; left: 50%; top: var(--cy, 51.5%);
+  width: var(--cw, 96px); opacity: 0;
+  will-change: transform, opacity; -webkit-user-drag: none; -webkit-tap-highlight-color: transparent;
 }
 .v2-ed-node-card {
-  position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden;
-  transition: transform 0.7s cubic-bezier(0.32, 0.72, 0, 1);
+  position: relative; display: block; aspect-ratio: 3 / 4; overflow: hidden;
+  container-type: inline-size;
 }
-/* hover: the one card comes up in full colour, the rest fall back. The
-   veil is page-coloured rather than real transparency, so dimmed cards
-   never show the cards stacked behind them. */
-.v2-ed-node-card::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: var(--bg); opacity: 0;
-  transition: opacity 0.55s cubic-bezier(0.32, 0.72, 0, 1);
-}
-.v2-ed-space.has-active .v2-ed-node:not(.is-active) .v2-ed-node-card::after { opacity: 0.8; }
-.v2-ed-node.is-active .v2-ed-node-card { transform: scale(1.12); }
-.v2-ed-node:active .v2-ed-node-card { transform: scale(1.12); }
-.v2-ed-node:focus-visible { outline: none; }
-.v2-ed-node:focus-visible .v2-ed-node-card { outline: 1px solid var(--fg); }
+.v2-ed-media { position: absolute; inset: 0; display: block; overflow: hidden; }
+.v2-ed-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
-.v2-ed-index {
-  position: absolute; left: var(--pad); bottom: clamp(1.25rem, 2.5vw, 2.25rem); z-index: 101;
-  font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.06em; color: var(--muted); pointer-events: none;
-}
+/* by touch there is no pointer to show which card was chosen, so it steps forward a little */
+.v2-ed-node-card { transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+.v2-ed-space.is-tapped .v2-ed-node.is-active .v2-ed-node-card { transform: scale(1.08); }
+.v2-ed-node:focus-visible { outline: none; }
+.v2-ed-node:focus-visible .v2-ed-node-card { outline: 1px solid var(--fg); outline-offset: 3px; }
+
 .v2-ed-counter {
-  position: absolute; left: 0; right: 0; bottom: clamp(1.25rem, 2.5vw, 2.25rem); text-align: center; z-index: 101;
-  font-size: clamp(0.8125rem, 0.95vw, 1rem); font-weight: 500; color: var(--fg); pointer-events: none;
-  transition: opacity 0.4s ease;
+  position: absolute; left: var(--pad); right: var(--pad); bottom: clamp(1.5rem, 2.6vw, 2.5rem); z-index: 500;
+  margin: 0; text-align: center; pointer-events: none;
+  font-size: clamp(0.8125rem, 0.9vw, 0.9375rem); font-weight: 500; color: var(--fg);
 }
-@media (max-width: 700px) {
-  .v2-ed-node { width: 30vw; }
+.v2-ed-counter span { font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.08em; color: var(--muted); margin-right: 0.6em; }
+.v2-ed-counter em { font-style: normal; font-weight: 400; color: var(--muted); margin-left: 0.4em; }
+
+/* by touch the line becomes the way in: a pill with the arrow in its own knob */
+.v2-ed-open {
+  pointer-events: auto; display: inline-flex; align-items: center; gap: 0.9rem; max-width: 100%;
+  padding: 0.4rem 0.4rem 0.4rem 1.1rem; border-radius: 999px;
+  background: var(--fg); color: var(--bg); text-decoration: none; text-align: left;
+  animation: v2-ed-open-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.v2-ed-counter span { font-family: var(--mono); font-size: 0.6875rem; color: var(--muted); margin-right: 0.5em; }
-.v2-ed-counter em { font-style: normal; font-weight: 400; color: var(--muted); margin-left: 0.35em; }
+.v2-ed-open:active { transform: scale(0.97); }
+.v2-ed-open-text { margin: 0 !important; font: inherit !important; letter-spacing: inherit !important; color: inherit !important; min-width: 0; }
+.v2-ed-open-text span, .v2-ed-open-text em { color: color-mix(in srgb, var(--bg) 62%, transparent); }
+.v2-ed-open-text em { display: block; margin-left: 0; font-size: 0.75rem; }
+.v2-ed-open-knob {
+  flex: none; margin: 0 !important; width: 2.25rem; height: 2.25rem; border-radius: 50%;
+  display: grid; place-items: center; font-size: 0.875rem !important;
+  background: color-mix(in srgb, var(--bg) 16%, transparent); color: var(--bg) !important;
+}
+@keyframes v2-ed-open-in { from { opacity: 0; transform: translateY(0.75rem); } }
+@media (prefers-reduced-motion: reduce) { .v2-ed-open { animation: none; } }

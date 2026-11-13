@@ -4,85 +4,135 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { plate, v2Work, type V2Project } from '@/lib/v2content';
+import ArrowUpRight from './ArrowUpRight';
 
 /**
- * Work (/work) — an interactive ring gallery in the manner of cipher.tv:
- * the projects (plus extra real stills) as overlapping landscape cards on
- * a slowly turning ring that fills the screen.
+ * Work (/work) — the projects as a cluster of portrait thumbnails hung
+ * on an invisible sphere in the middle of an otherwise empty page.
  *
- * The ring is not a clean circle: like the reference it is a leaning
- * oval, with each card sitting a little in or out of line and at its own
- * size, so the frames stair-step over one another.
+ * Every card faces the viewer at all times; only its place on the sphere
+ * changes. Near cards are large and sit in front, far ones small and
+ * behind. Dragging turns the whole cluster like a trackball, in any
+ * direction, and it glides to rest when let go. At rest nothing moves
+ * except the thumbnails that are videos, which play.
  *
- * Scroll (either way) or drag turns the ring. Hovering a card lifts it in
- * full colour while every other card drops right back, and
- * its number and title appear at the foot. A click goes straight to the
- * site's page transition; coming back, the ring is where it was left and
- * simply settles in.
+ * The cluster leans a few degrees toward the pointer. With a mouse, the
+ * card under the pointer is named at the foot, and a
+ * click opens it. By touch there is no hover, so the first tap names the
+ * card and the foot line becomes the way in; a second tap also opens it.
  *
- * Plain DOM + transforms, no WebGL, so every card is a real link
- * (keyboard and screen-reader reachable).
+ * Plain DOM and transforms: every card is a real link. The same layout
+ * serves phone and desktop, sized off the viewport.
  */
 
 const COVERS: Record<string, string> = {
   'sting-nightlife-repositioning': '/case-studies/sting-night-life/thematic-kv.png',
 };
 
-const pad2 = (n: number) => String(n).padStart(2, '0');
-const pad3 = (n: number) => String(n).padStart(3, '0');
-const rest = (p: V2Project) => p.cat.split(' · ').slice(1).join(' · ') || p.cat;
+/* ── Cards ─────────────────────────────────────────────────────────── */
 
-function Media({ p, sizes, src }: { p: V2Project; sizes: string; src?: string }) {
-  const cover = src ?? COVERS[p.slug];
+/** One thumbnail in the cluster: a project, optionally showing one of its stills or films. */
+type Card = { key: string; p: V2Project; src?: string; video?: string };
+
+const STING = '/case-studies/sting-night-life/';
+const STING_EXTRA: Pick<Card, 'src' | 'video'>[] = [
+  { video: 'hero-video.mp4' },
+  { src: 'product-kv.png' },
+  { src: 'event-poster.png' },
+  { video: 'Header-Video.mp4' },
+  { src: 'kv-qr-code.png' },
+  { src: 'slide-1.jpg' },
+  { src: 'slide-3.jpg' },
+];
+
+/** Every project once, then the extra real stills and films that exist (all STING for now), spread through. */
+function buildCards(): Card[] {
+  const base: Card[] = v2Work.map((p) => ({ key: p.slug, p }));
+  const sting = v2Work.find((p) => p.slug === 'sting-nightlife-repositioning');
+  const extra: Card[] = sting
+    ? STING_EXTRA.map((x) => ({
+        key: `sting-${x.src ?? x.video}`,
+        p: sting,
+        src: x.src && STING + x.src,
+        video: x.video && STING + x.video,
+      }))
+    : [];
+  const out: Card[] = [];
+  base.forEach((c, i) => { out.push(c); if (extra.length) out.push(extra.shift()!); if (i > 6 && extra.length) out.push(extra.shift()!); });
+  return out.concat(extra);
+}
+
+function Thumb({ card }: { card: Card }) {
+  const { p, src, video } = card;
+  const cover = src ?? (video ? undefined : COVERS[p.slug]);
   return (
     <span className="v2-ed-media" style={{ background: plate(p.accent) }}>
-      {cover && <Image src={cover} alt="" fill sizes={sizes} className="v2-ed-img" />}
+      {video ? (
+        <video className="v2-ed-img" src={video} autoPlay muted loop playsInline preload="metadata" />
+      ) : cover ? (
+        <Image src={cover} alt="" fill sizes="(max-width: 700px) 34vw, 220px" className="v2-ed-img" />
+      ) : null}
     </span>
   );
 }
 
-/* ── Ring ──────────────────────────────────────────────────────────── */
+/* ── Cloud ─────────────────────────────────────────────────────────── */
 
-/** One card on the ring: a project, optionally showing one of its stills. */
-type Card = { key: string; p: V2Project; src?: string };
+const frac = (v: number) => v - Math.floor(v);
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+const hash = (i: number, k: number) => frac(Math.sin(i * 127.1 + k * 311.7) * 43758.5453);
 
-const STING_STILLS = ['product-kv.png', 'event-poster.png', 'kv-qr-code.png', 'slide-1.jpg'];
+type Mat = [number, number, number, number, number, number, number, number, number];
 
-/** Every project once, then the extra real stills that exist (all STING for now). */
-function buildCards(): Card[] {
-  const cards: Card[] = v2Work.map((p) => ({ key: p.slug, p }));
-  const sting = v2Work.find((p) => p.slug === 'sting-nightlife-repositioning');
-  if (sting) STING_STILLS.forEach((f) => cards.push({ key: `sting-${f}`, p: sting, src: `/case-studies/sting-night-life/${f}` }));
-  // interleave so the STING stills spread round the ring instead of clumping
-  const out: Card[] = [];
-  const base = cards.slice(0, v2Work.length), extra = cards.slice(v2Work.length);
-  base.forEach((c, i) => { out.push(c); if (i % 2 === 1 && extra.length) out.push(extra.shift()!); });
-  return out.concat(extra);
+/** Turn `m` by `a` about the screen's vertical axis and `b` about its horizontal one. */
+function turn(m: Mat, a: number, b: number): Mat {
+  const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+  // T = Ry(a) · Rx(b), then T · m
+  const t = [ca, sa * sb, sa * cb, 0, cb, -sb, -sa, ca * sb, ca * cb];
+  const o = new Array(9) as Mat;
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+    o[r * 3 + c] = t[r * 3] * m[c] + t[r * 3 + 1] * m[3 + c] + t[r * 3 + 2] * m[6 + c];
+  }
+  return o;
 }
 
-/** Where the ring was left, so coming back to /work picks it up rather than restarting. */
-let savedRot: number | null = null;
+/** Thousands of small turns drift; square the matrix back up now and then. */
+function square(m: Mat): Mat {
+  let [a, b, c, d, e, f] = m;
+  let l = Math.hypot(a, b, c); a /= l; b /= l; c /= l;
+  const dot = a * d + b * e + c * f; d -= dot * a; e -= dot * b; f -= dot * c;
+  l = Math.hypot(d, e, f); d /= l; e /= l; f /= l;
+  return [a, b, c, d, e, f, b * f - c * e, c * d - a * f, a * e - b * d];
+}
 
-const LEAN = -0.38; // the oval leans: long axis runs lower-left to upper-right
+const START: Mat = turn([1, 0, 0, 0, 1, 0, 0, 0, 1], 0.5, -0.35);
+const EYE = 3;        // viewer's distance, in sphere radii: sets how much nearer cards grow
 
-function Ring({ cards }: { cards: Card[] }) {
-  const items = cards.map((c) => c.p);
+/** How the cluster was left, so coming back to /work picks it up rather than restarting. */
+let savedTurn: Mat | null = null;
+
+function Cloud({ cards }: { cards: Card[] }) {
   const n = cards.length;
   const stageRef = useRef<HTMLDivElement | null>(null);
   const nodes = useRef<(HTMLAnchorElement | null)[]>([]);
   const [active, setActive] = useState<number | null>(null);
+  const [tapped, setTapped] = useState(false);   // chosen by touch: the foot line becomes the way in
   const s = useRef({
-    rot: -0.6, v: 0, auto: 0, born: 0, last: 0, resume: false, faded: false,
-    hold: false, drag: false, moved: false, lx: 0, ly: 0,
-    px: 0, py: 0, tpx: 0, tpy: 0, active: -1,
+    m: START, ax: 0, ay: 0, vx: 0, vy: 0, frames: 0, born: 0, resume: false,
+    drag: false, moved: false, touch: false, lx: 0, ly: 0, active: -1,
+    px: 0, py: 0, tpx: 0, tpy: 0,
   });
-  // each card keeps its own place in the line and its own size (fixed, not random per load)
-  const quirk = useMemo(
-    () => Array.from({ length: n }, (_, i) => ({
-      r: 1 + 0.11 * Math.sin(i * 2.4 + 1),
-      a: 0.09 * Math.sin(i * 3.1),
-      k: 1 + 0.17 * Math.sin(i * 1.7 + 0.5),
-    })),
+
+  // Each card's fixed seat on the unit sphere: evenly spread (a Fibonacci
+  // lattice), then knocked a little off it and in or out, so the cluster
+  // reads as scattered rather than plotted. Fixed per card, not random per load.
+  const seat = useMemo(
+    () => Array.from({ length: n }, (_, i) => {
+      const y = 1 - (2 * (i + 0.5)) / n + (hash(i, 1) - 0.5) * 0.16;
+      const r = Math.sqrt(Math.max(0, 1 - y * y)), a = i * 2.39996 + (hash(i, 2) - 0.5) * 0.5;
+      const d = 0.82 + hash(i, 3) * 0.24;
+      return [Math.cos(a) * r * d, y * d, Math.sin(a) * r * d] as const;
+    }),
     [n],
   );
 
@@ -91,87 +141,108 @@ function Ring({ cards }: { cards: Card[] }) {
     if (!stage) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const st = s.current;
-    if (savedRot !== null) { st.rot = savedRot; st.resume = true; }
-    const cosL = Math.cos(LEAN), sinL = Math.sin(LEAN);
-    let raf = 0;
+    if (savedTurn) { st.m = savedTurn; st.resume = true; }
+    let raf = 0, sized = 0, RX = 0, RY = 0, lastKey = '';
 
     const tick = (now: number) => {
-      if (!st.born) { st.born = now; st.last = now; }
-      const dt = Math.min(3, (now - st.last) / 16.67);
-      st.last = now;
-
-      // first visit: the cards start stacked in the centre and fan out into the
-      // ring. Coming back: the ring is already formed and only eases up to size.
-      const o = reduced ? 1 : Math.min(1, (now - st.born) / (st.resume ? 900 : 1400));
-      const eased = 1 - Math.pow(1 - o, 4);
-      const spread = st.resume ? 0.9 + 0.1 * eased : 0.03 + 0.97 * eased;
-      const alpha = st.resume ? eased : Math.min(1, eased * 1.4);
-
       const w = stage.clientWidth, h = stage.clientHeight;
-      const narrow = w < 700;
-      const A = (narrow ? w * 0.3 : Math.min(w * 0.25, h * 0.5)) * spread;
-      const B = (narrow ? h * 0.25 : h * 0.215) * spread;
-      const cl = narrow ? 1 : cosL, sl = narrow ? 0 : sinL;
+      if (!w) { raf = requestAnimationFrame(tick); return; }
+      if (!st.born) st.born = now;
 
-      // the idle turn eases off and back on, so hovering never jolts the ring
-      st.auto += ((reduced || st.hold || st.drag ? 0 : 0.0014) - st.auto) * Math.min(1, 0.06 * dt);
-      st.rot += (st.auto + st.v + (st.resume ? 0 : (1 - eased) * 0.035)) * dt;
-      st.v *= Math.pow(0.94, dt);
-      st.px += (st.tpx - st.px) * 0.06;
-      st.py += (st.tpy - st.py) * 0.06;
+      if (sized !== w * 10000 + h) {
+        sized = w * 10000 + h;
+        // The cluster keeps clear of the nav above and the line at the foot,
+        // and is spread wider than it is tall where there is room for it.
+        const cw = Math.max(52, Math.min(h * 0.086, w * 0.155));
+        const top = w < 700 ? 78 : 84, foot = w < 700 ? 104 : 84;
+        const room = Math.max(160, h - top - foot);
+        RY = Math.max(60, (room / 2 - cw * 0.85) / 1.06);
+        RX = Math.min(w * 0.38, RY * 1.22);
+        stage.style.setProperty('--cw', `${cw.toFixed(1)}px`);
+        stage.style.setProperty('--cy', `${(top + room / 2).toFixed(1)}px`);
+        lastKey = '';
+      }
 
+      // the hand's movement is paid out a share per frame, so the cluster
+      // follows smoothly and runs on a little after it is let go
+      const dx = st.ax * 0.16, dy = st.ay * 0.16;
+      st.ax -= dx; st.ay -= dy;
+      if (Math.abs(st.ax) + Math.abs(st.ay) < 0.05) { st.ax = 0; st.ay = 0; }
+      if (Math.abs(dx) + Math.abs(dy) > 0.008) {
+        st.m = turn(st.m, dx / RX, -dy / RY);
+        if (++st.frames % 240 === 0) st.m = square(st.m);
+      }
+
+      // nothing to redraw once it has opened and come to rest
+      const o = reduced || st.resume ? 1 : clamp01((now - st.born) / 1900);
+      // the whole cluster leans a few degrees toward the pointer, and back
+      st.px += (st.tpx - st.px) * 0.07; st.py += (st.tpy - st.py) * 0.07;
+      if (Math.abs(st.tpx - st.px) + Math.abs(st.tpy - st.py) < 0.0008) { st.px = st.tpx; st.py = st.tpy; }
+      const key = o < 1 ? '' : st.m.map((v) => v.toFixed(4)).join() + st.px.toFixed(3) + st.py.toFixed(3);
+      if (key && key === lastKey) { raf = requestAnimationFrame(tick); return; }
+      lastKey = key;
+
+      const m = turn(st.m, st.px * 0.22, -st.py * 0.16);
       for (let i = 0; i < n; i++) {
         const el = nodes.current[i];
         if (!el) continue;
-        const q = quirk[i];
-        const t = (i / n) * Math.PI * 2 + st.rot + q.a;
-        const u = Math.cos(t) * A * q.r, v = Math.sin(t) * B * q.r;
-        const near = Math.cos(t - Math.PI * 0.75);
-        const k = q.k * (1 + 0.06 * near);
-        const px = u * cl - v * sl + st.px * (10 + 8 * near);
-        const py = u * sl + v * cl + st.py * (10 + 8 * near);
-        // transform is the only thing written every frame. Stacking is fixed
-        // (each card over the one before it, like tiles) so cards never swap
-        // front-to-back as the ring turns; opacity is only touched while fading in.
-        el.style.transform = `translate3d(${px.toFixed(1)}px, ${py.toFixed(1)}px, 0) translate(-50%, -50%) scale(${k.toFixed(4)})`;
-        if (!st.faded) el.style.opacity = String(alpha);
+        const [px, py, pz] = seat[i];
+        const x = m[0] * px + m[1] * py + m[2] * pz;
+        const y = m[3] * px + m[4] * py + m[5] * pz;
+        const z = m[6] * px + m[7] * py + m[8] * pz;    // +1 nearest … −1 furthest
+
+        // arriving: the cards open out from one small stack, in turn
+        const oi = reduced || st.resume ? 1 : clamp01((now - st.born - i * 35) / 1300);
+        const e = 1 - Math.pow(1 - oi, 4);
+
+        const k = EYE / (EYE - z);                       // perspective: nearer is larger and further out
+        el.style.transform = `translate3d(${(x * RX * k * e).toFixed(1)}px, ${(y * RY * k * e).toFixed(1)}px, 0) translate(-50%, -50%) scale(${(k * (0.3 + 0.7 * e)).toFixed(4)})`;
+        el.style.opacity = Math.min(1, e * 1.6).toFixed(3);
+        el.style.zIndex = String(100 + Math.round(z * 90));
       }
-      if (!st.faded && alpha >= 1) st.faded = true;
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      s.current.v += Math.max(-0.06, Math.min(0.06, (e.deltaY + e.deltaX) * 0.00022));
+      st.ax -= Math.max(-120, Math.min(120, e.deltaX)) * 0.6;
+      st.ay -= Math.max(-120, Math.min(120, e.deltaY)) * 0.6;
     };
     const onMove = (e: PointerEvent) => {
-      if (st.drag) {
-        const dx = e.clientX - st.lx, dy = e.clientY - st.ly;
-        if (Math.abs(dx) + Math.abs(dy) > 4) st.moved = true;
-        // turn the ring the way the pointer pushes it, wherever it is grabbed
+      if (e.pointerType === 'mouse' && !reduced) {
         const r = stage.getBoundingClientRect();
-        const cx = e.clientX - (r.left + r.width / 2), cy = e.clientY - (r.top + r.height * 0.53);
-        const len = Math.max(60, Math.hypot(cx, cy));
-        st.v = (cx * dy - cy * dx) / (len * len) * 0.9;
-        st.lx = e.clientX; st.ly = e.clientY;
-        return;
+        st.tpx = (e.clientX - r.left) / r.width - 0.5;
+        st.tpy = (e.clientY - r.top) / r.height - 0.5;
       }
-      if (e.pointerType !== 'mouse' || reduced) return;
-      const r = stage.getBoundingClientRect();
-      st.tpx = (e.clientX - r.left) / r.width - 0.5;
-      st.tpy = (e.clientY - r.top) / r.height - 0.5;
+      if (!st.drag) return;
+      const dx = e.clientX - st.lx, dy = e.clientY - st.ly;
+      if (Math.abs(dx) + Math.abs(dy) > 5) st.moved = true;
+      st.ax += dx; st.ay += dy;
+      st.vx += (dx - st.vx) * 0.5; st.vy += (dy - st.vy) * 0.5;
+      st.lx = e.clientX; st.ly = e.clientY;
     };
-    const onUp = () => { s.current.drag = false; };
+    const onUp = () => {
+      if (!st.drag) return;
+      st.drag = false;
+      // a throw carries on a little; a still release stops where it is
+      if (st.moved) { st.ax += st.vx * 6; st.ay += st.vy * 6; }
+      st.vx = 0; st.vy = 0;
+    };
 
-    // Taken on window, ahead of the site's page transition: a drag must not
-    // open a project. A real click passes straight through to the transition.
+    // Taken on window, ahead of the site's page transition. A drag must not
+    // open a project; and by touch the first tap only chooses the card.
     const onClick = (e: MouseEvent) => {
-      const link = (e.target as HTMLElement | null)?.closest?.('a.v2-ed-node');
-      if (!link || !stage.contains(link) || !st.moved) return;
+      const link = (e.target as HTMLElement | null)?.closest?.('a.v2-ed-node') as HTMLElement | null;
+      if (!link || !stage.contains(link)) return;
+      const i = Number(link.dataset.i);
+      const drag = st.moved;
       st.moved = false;
-      e.preventDefault();
-      e.stopPropagation();
+      if (drag || (st.touch && st.active !== i)) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!drag) { st.active = i; setTapped(true); setActive(i); }
+      }
     };
 
     stage.addEventListener('wheel', onWheel, { passive: false });
@@ -180,7 +251,7 @@ function Ring({ cards }: { cards: Card[] }) {
     window.addEventListener('pointercancel', onUp);
     window.addEventListener('click', onClick, true);
     return () => {
-      savedRot = st.rot;
+      savedTurn = st.m;
       cancelAnimationFrame(raf);
       stage.removeEventListener('wheel', onWheel);
       window.removeEventListener('pointermove', onMove);
@@ -188,59 +259,66 @@ function Ring({ cards }: { cards: Card[] }) {
       window.removeEventListener('pointercancel', onUp);
       window.removeEventListener('click', onClick, true);
     };
-  }, [n, quirk]);
-
-  const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const st = s.current;
-    st.drag = true; st.moved = false; st.lx = e.clientX; st.ly = e.clientY;
-  };
+  }, [n, seat]);
 
   const show = (i: number | null) => {
-    s.current.hold = i !== null;
     s.current.active = i ?? -1;
     setActive(i);
   };
-  const cur = active === null ? null : items[active];
+
+  const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const st = s.current;
+    st.touch = e.pointerType !== 'mouse';
+    st.drag = true; st.moved = false; st.lx = e.clientX; st.ly = e.clientY; st.vx = 0; st.vy = 0;
+    // touching empty page lets go of the chosen card
+    if (st.touch && !(e.target as HTMLElement).closest('a')) { setTapped(false); show(null); }
+  };
+
+  const cur = active === null ? null : cards[active].p;
+  const line = cur && (
+    <>
+      {cur.name} <em>{cur.cat}</em>
+    </>
+  );
 
   return (
     <div
       ref={stageRef}
-      className={`v2-ed-space${active !== null ? ' has-active' : ''}`}
+      className={`v2-ed-space${tapped && active !== null ? ' is-tapped' : ''}`}
       onPointerDown={onDown}
       data-lenis-prevent
     >
-      {cards.map(({ key, p, src }, i) => (
+      {cards.map((card, i) => (
         <Link
-          key={key}
+          key={card.key}
           ref={(el) => { nodes.current[i] = el; }}
-          href={`/work/${p.slug}`}
+          href={`/work/${card.p.slug}`}
+          data-i={i}
           className={`v2-ed-node${active === i ? ' is-active' : ''}`}
-          style={{ zIndex: active === i ? 400 : i + 1 }}
-          aria-label={`${p.name} — ${p.cat}, ${p.year}`}
-          onPointerEnter={() => show(i)}
-          onPointerLeave={() => show(null)}
-          onFocus={() => show(i)}
-          onBlur={() => show(null)}
+          aria-label={`${card.p.name} — ${card.p.cat}, ${card.p.year}`}
+          onPointerEnter={(e) => { if (e.pointerType === 'mouse') show(i); }}
+          onPointerLeave={(e) => { if (e.pointerType === 'mouse') show(null); }}
+          // keyboard focus only: a tap also focuses the link, and must not count as choosing it
+          onFocus={(e) => { if (e.currentTarget.matches(':focus-visible') && !s.current.touch) show(i); }}
+          onBlur={() => { if (!s.current.touch) show(null); }}
           draggable={false}
           data-cursor="hover"
         >
           <span className="v2-ed-node-card">
-            <Media p={p} src={src} sizes="(max-width: 700px) 40vw, 300px" />
+            <Thumb card={card} />
           </span>
         </Link>
       ))}
 
-      <span className="v2-ed-index" aria-hidden="true">{cur ? pad3(active! + 1) : ''}</span>
-
+      {/* one quiet line at the foot, only while a card is chosen: its name, then what it is */}
       <p className="v2-ed-counter" aria-live="polite">
-        {cur ? (
-          <>
-            {cur.name} <em>{rest(cur)}, {cur.year}</em>
-          </>
+        {cur && tapped ? (
+          <Link href={`/work/${cur.slug}`} className="v2-ed-open">
+            <span className="v2-ed-open-text">{line}</span>
+            <span className="v2-ed-open-knob"><ArrowUpRight /></span>
+          </Link>
         ) : (
-          <>
-            <span>{pad2(v2Work.length)}</span> Projects <em>scroll or drag to turn</em>
-          </>
+          line
         )}
       </p>
     </div>
@@ -254,7 +332,7 @@ export default function WorkEditorial() {
   return (
     <section className="v2-ed v2-ed--space">
       <h1 className="v2-sr-only">Selected work</h1>
-      <Ring cards={cards} />
+      <Cloud cards={cards} />
     </section>
   );
 }

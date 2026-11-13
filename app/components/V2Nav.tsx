@@ -9,7 +9,7 @@ import { v2Nav, v2Site, v2Social } from '@/lib/v2content';
 import ThemeToggle from './ThemeToggle';
 
 /**
- * Floating nav + full-screen menu overlay ("State — Menu open").
+ * Small centred nav + full-screen menu overlay ("State — Menu open").
  * Links are routes: every frame is its own page.
  */
 export default function V2Nav() {
@@ -22,6 +22,8 @@ export default function V2Nav() {
 
   const isCurrent = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
+
+  const anyCurrent = v2Nav.slice(1).some((l) => isCurrent(l.href));
 
   // Route change closes the overlay
   useEffect(() => {
@@ -73,8 +75,8 @@ export default function V2Nav() {
       gsap.killTweensOf([el, ...rows, ...aside]);
       gsap.fromTo(
         el,
-        { clipPath: 'circle(0% at calc(100% - 5rem) 4rem)' },
-        { clipPath: 'circle(150% at calc(100% - 5rem) 4rem)', duration: 0.85, ease: 'power4.inOut' },
+        { clipPath: 'circle(0% at calc(100% - 2.5rem) 2rem)' },
+        { clipPath: 'circle(150% at calc(100% - 2.5rem) 2rem)', duration: 0.85, ease: 'power4.inOut' },
       );
       gsap.fromTo(
         rows,
@@ -94,7 +96,7 @@ export default function V2Nav() {
         return;
       }
       gsap.to(el, {
-        clipPath: 'circle(0% at calc(100% - 5rem) 4rem)',
+        clipPath: 'circle(0% at calc(100% - 2.5rem) 2rem)',
         duration: 0.6,
         ease: 'power4.inOut',
         onComplete: () => el.classList.remove('is-open'),
@@ -115,22 +117,24 @@ export default function V2Nav() {
   return (
     <>
       <nav className={`v2-nav ${onInvert ? 'v2-nav--on-invert' : ''}`}>
-        <Link className="v2-nav-logo" href="/" data-cursor="hover">
-          <span className="v2-nav-mark" aria-hidden="true" />
-          {v2Site.name}
-        </Link>
-
-        <div className="v2-nav-group">
+        {/* wordmark, then one small tab per page: the page you are on is
+            spelled out with its number, the others are numbers until hovered */}
+        <div className={`v2-nav-group${anyCurrent ? '' : ' is-home'}`}>
+          <Link className="v2-nav-logo" href="/" data-cursor="hover">
+            {v2Site.name}
+          </Link>
           <div className="v2-nav-menu">
-            {v2Nav.slice(1).map((l) => (
+            {v2Nav.slice(1).map((l, i) => (
               <Link
                 key={l.href}
                 className={`v2-nav-link ${isCurrent(l.href) ? 'is-current' : ''}`}
                 href={l.href}
+                aria-label={l.label}
                 aria-current={isCurrent(l.href) ? 'page' : undefined}
                 data-cursor="hover"
               >
-                {l.label}
+                <span className="v2-nav-link-name"><span>{l.label}</span></span>
+                <span className="v2-nav-link-num" aria-hidden="true">{i + 1}</span>
               </Link>
             ))}
           </div>

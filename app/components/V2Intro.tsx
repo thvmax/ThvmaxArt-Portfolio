@@ -35,6 +35,7 @@ const markDone = () => {
   try {
     sessionStorage.setItem(SEEN_KEY, '1');
   } catch {}
+  document.documentElement.removeAttribute('data-intro');
   window.dispatchEvent(new Event(INTRO_DONE));
 };
 
@@ -129,7 +130,9 @@ export default function V2Intro() {
     if (!root || !count) return;
 
     document.body.classList.add('v2-intro-open');
-    root.style.visibility = 'visible';
+    // normally already set by the head script; this covers arriving at
+    // home by an in-site link, where that script has long since run
+    document.documentElement.setAttribute('data-intro', 'play');
 
     const ink = (getComputedStyle(root).color.match(/[\d.]+/g) ?? ['242', '242', '240']).slice(0, 3).join(' ');
     const page = document.querySelector('.v2 main') as HTMLElement | null;
@@ -250,7 +253,10 @@ export default function V2Intro() {
           if (k >= 1) {
             root.classList.add('is-out');
             liftAt = now + 60;
-            // the page is there, already moving, as the sheet comes off it
+            // the page is there, already moving, as the sheet comes off it.
+            // The sheet must stay up while it lifts, so it is pinned inline
+            // before markDone clears the attribute that was showing it.
+            root.style.display = 'block';
             if (!fired) { fired = true; markDone(); }
           }
         }
@@ -289,7 +295,9 @@ export default function V2Intro() {
     };
   }, [armed]);
 
-  if (armed === null || armed === false) return null;
+  // Rendered on the server too (armed === null): the head script decides
+  // before first paint whether it shows, so the page is never seen first.
+  if (armed === false) return null;
 
   return (
     <div className="v2-intro" ref={rootRef} aria-hidden="true">
