@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { plate, v2Work, type V2Project } from '@/lib/v2content';
+import { plate, v2Work, v2WorkPage, type V2Project } from '@/lib/v2content';
 
 /**
  * Work (/work) — an interactive ring gallery in the manner of cipher.tv:
@@ -14,14 +14,20 @@ import { plate, v2Work, type V2Project } from '@/lib/v2content';
  * oval, with each card sitting a little in or out of line and at its own
  * size, so the frames stair-step over one another.
  *
- * Scroll (either way) or drag turns the ring. Hovering a card lifts it in
- * full colour while every other card drops right back, and
- * its number and title appear at the foot. A click goes straight to the
+ * Scroll (either way) or drag turns the ring: input moves a target angle
+ * and the ring glides after it, opening out a little while it is moving
+ * fast and closing up as it settles. Hovering a card lifts it in full
+ * colour while every other card drops right back, and its number and
+ * title set in the middle of the ring. A click goes straight to the
  * site's page transition; coming back, the ring is where it was left and
  * simply settles in.
  *
  * Plain DOM + transforms, no WebGL, so every card is a real link
  * (keyboard and screen-reader reachable).
+ *
+ * On a phone the ring gives way to an editorial index (see Index): a
+ * ring of overlapping cards has no hover to name them and no room to
+ * read, so the projects run down the page as captioned plates instead.
  */
 
 const COVERS: Record<string, string> = {
@@ -29,8 +35,6 @@ const COVERS: Record<string, string> = {
 };
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
-const pad3 = (n: number) => String(n).padStart(3, '0');
-const rest = (p: V2Project) => p.cat.split(' · ').slice(1).join(' · ') || p.cat;
 
 function Media({ p, sizes, src }: { p: V2Project; sizes: string; src?: string }) {
   const cover = src ?? COVERS[p.slug];
@@ -72,7 +76,7 @@ function Ring({ cards }: { cards: Card[] }) {
   const nodes = useRef<(HTMLAnchorElement | null)[]>([]);
   const [active, setActive] = useState<number | null>(null);
   const s = useRef({
-    rot: -0.6, v: 0, auto: 0, born: 0, last: 0, resume: false, faded: false,
+    rot: -0.6, target: -0.6, v: 0, auto: 0, open: 1, born: 0, last: 0, resume: false, faded: false,
     hold: false, drag: false, moved: false, lx: 0, ly: 0,
     px: 0, py: 0, tpx: 0, tpy: 0, active: -1,
   });
@@ -91,7 +95,7 @@ function Ring({ cards }: { cards: Card[] }) {
     if (!stage) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const st = s.current;
-    if (savedRot !== null) { st.rot = savedRot; st.resume = true; }
+    if (savedRot !== null) { st.rot = savedRot; st.target = savedRot; st.resume = true; }
     const cosL = Math.cos(LEAN), sinL = Math.sin(LEAN);
     let raf = 0;
 
@@ -108,15 +112,25 @@ function Ring({ cards }: { cards: Card[] }) {
       const alpha = st.resume ? eased : Math.min(1, eased * 1.4);
 
       const w = stage.clientWidth, h = stage.clientHeight;
-      const narrow = w < 700;
-      const A = (narrow ? w * 0.3 : Math.min(w * 0.25, h * 0.5)) * spread;
-      const B = (narrow ? h * 0.25 : h * 0.215) * spread;
-      const cl = narrow ? 1 : cosL, sl = narrow ? 0 : sinL;
+      // hidden (the phone layout is showing instead): idle until it is back
+      if (!w) { st.born = 0; raf = requestAnimationFrame(tick); return; }
 
       // the idle turn eases off and back on, so hovering never jolts the ring
-      st.auto += ((reduced || st.hold || st.drag ? 0 : 0.0014) - st.auto) * Math.min(1, 0.06 * dt);
-      st.rot += (st.auto + st.v + (st.resume ? 0 : (1 - eased) * 0.035)) * dt;
-      st.v *= Math.pow(0.94, dt);
+      st.auto += ((reduced || st.hold || st.drag ? 0 : 0.0012) - st.auto) * Math.min(1, 0.06 * dt);
+      // input moves the target; the ring glides after it and never snaps
+      st.target += (st.auto + st.v + (st.resume ? 0 : (1 - eased) * 0.035)) * dt;
+      st.v *= Math.pow(0.95, dt);
+      const lag = st.target - st.rot;
+      st.rot += lag * (1 - Math.pow(1 - 0.085, dt));
+      // moving fast, the ring opens out and the cards draw back a touch
+      const rush = Math.min(1, Math.abs(lag) * 2.2);
+      st.open += (1 + 0.075 * rush - st.open) * Math.min(1, 0.1 * dt);
+      const shrink = 1 - 0.07 * (st.open - 1) / 0.075;
+
+      const A = Math.min(w * 0.205, h * 0.41) * spread * st.open;
+      const B = h * 0.178 * spread * st.open;
+      const cl = cosL, sl = sinL;
+
       st.px += (st.tpx - st.px) * 0.06;
       st.py += (st.tpy - st.py) * 0.06;
 
@@ -127,7 +141,7 @@ function Ring({ cards }: { cards: Card[] }) {
         const t = (i / n) * Math.PI * 2 + st.rot + q.a;
         const u = Math.cos(t) * A * q.r, v = Math.sin(t) * B * q.r;
         const near = Math.cos(t - Math.PI * 0.75);
-        const k = q.k * (1 + 0.06 * near);
+        const k = q.k * (1 + 0.06 * near) * shrink;
         const px = u * cl - v * sl + st.px * (10 + 8 * near);
         const py = u * sl + v * cl + st.py * (10 + 8 * near);
         // transform is the only thing written every frame. Stacking is fixed
@@ -143,7 +157,8 @@ function Ring({ cards }: { cards: Card[] }) {
 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      s.current.v += Math.max(-0.06, Math.min(0.06, (e.deltaY + e.deltaX) * 0.00022));
+      // straight onto the target: a notch of the wheel is a fixed turn, eased in
+      s.current.target += Math.max(-0.5, Math.min(0.5, (e.deltaY + e.deltaX) * 0.0011));
     };
     const onMove = (e: PointerEvent) => {
       if (st.drag) {
@@ -151,9 +166,11 @@ function Ring({ cards }: { cards: Card[] }) {
         if (Math.abs(dx) + Math.abs(dy) > 4) st.moved = true;
         // turn the ring the way the pointer pushes it, wherever it is grabbed
         const r = stage.getBoundingClientRect();
-        const cx = e.clientX - (r.left + r.width / 2), cy = e.clientY - (r.top + r.height * 0.53);
+        const cx = e.clientX - (r.left + r.width / 2), cy = e.clientY - (r.top + r.height * 0.52);
         const len = Math.max(60, Math.hypot(cx, cy));
-        st.v = (cx * dy - cy * dx) / (len * len) * 0.9;
+        const turn = (cx * dy - cy * dx) / (len * len);
+        st.target += turn;          // follows the hand…
+        st.v = turn * 0.35;         // …and keeps a little of the throw on release
         st.lx = e.clientX; st.ly = e.clientY;
         return;
       }
@@ -225,24 +242,96 @@ function Ring({ cards }: { cards: Card[] }) {
           data-cursor="hover"
         >
           <span className="v2-ed-node-card">
-            <Media p={p} src={src} sizes="(max-width: 700px) 40vw, 300px" />
+            <Media p={p} src={src} sizes="240px" />
           </span>
         </Link>
       ))}
 
-      <span className="v2-ed-index" aria-hidden="true">{cur ? pad3(active! + 1) : ''}</span>
+      {/* the middle of the ring is the caption: the page line at rest, the
+          project under the pointer otherwise */}
+      <div className={`v2-ed-centre${cur ? ' is-project' : ''}`} aria-live="polite">
+        <div className="v2-ed-centre-rest">
+          <span className="v2-ed-kicker">{v2WorkPage.label}</span>
+          <p>
+            {v2WorkPage.headingLead} <span>{v2WorkPage.headingItalic}</span>.
+          </p>
+        </div>
+        <div className="v2-ed-centre-project">
+          <span className="v2-ed-kicker">{cur ? `${pad2(v2Work.indexOf(cur) + 1)} / ${pad2(v2Work.length)}` : ''}</span>
+          <p>{cur?.name}</p>
+          <span className="v2-ed-centre-meta">{cur ? `${cur.cat} — ${cur.year}` : ''}</span>
+        </div>
+      </div>
 
-      <p className="v2-ed-counter" aria-live="polite">
-        {cur ? (
-          <>
-            {cur.name} <em>{rest(cur)}, {cur.year}</em>
-          </>
-        ) : (
-          <>
-            <span>{pad2(v2Work.length)}</span> Projects <em>scroll or drag to turn</em>
-          </>
-        )}
-      </p>
+      <div className="v2-ed-foot" aria-hidden="true">
+        <span>{pad2(v2Work.length)} Projects</span>
+        <span>Scroll or drag to turn</span>
+        <span>{v2WorkPage.scope}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Index (phone) ─────────────────────────────────────────────────── */
+
+/**
+ * The projects as a column of captioned plates, stepping left and right
+ * down the page like a magazine contents spread. Each one rises into
+ * place as it is scrolled to, its picture settling back from a slight
+ * push-in; IntersectionObserver, transform and opacity only.
+ */
+function Index() {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const els = Array.from(root.querySelectorAll<HTMLElement>('[data-rise]'));
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      els.forEach((el) => el.classList.add('is-in'));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('is-in');
+        io.unobserve(e.target);
+      }),
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.08 },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div className="v2-ed-list" ref={rootRef}>
+      <header className="v2-ed-list-head" data-rise>
+        <span className="v2-ed-kicker">{v2WorkPage.label}</span>
+        <p className="v2-ed-list-title">
+          {v2WorkPage.headingLead} <span>{v2WorkPage.headingItalic}</span>.
+        </p>
+        <p className="v2-ed-list-intro">{v2WorkPage.intro}</p>
+      </header>
+
+      <ol className="v2-ed-list-items">
+        {v2Work.map((p, i) => (
+          <li key={p.slug} className="v2-ed-item" data-rise>
+            <Link href={`/work/${p.slug}`} aria-label={`${p.name} — ${p.cat}, ${p.year}`}>
+              <span className="v2-ed-item-rule">
+                <span>{pad2(i + 1)}</span>
+                <span>{p.year}</span>
+              </span>
+              <span className="v2-ed-item-plate">
+                <Media p={p} sizes="(max-width: 760px) 92vw, 1px" />
+              </span>
+              <span className="v2-ed-item-name">{p.name}</span>
+              <span className="v2-ed-item-cat">{p.cat}</span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+
+      <p className="v2-ed-list-end">{pad2(v2Work.length)} Projects — {v2WorkPage.scope}</p>
     </div>
   );
 }
@@ -255,6 +344,7 @@ export default function WorkEditorial() {
     <section className="v2-ed v2-ed--space">
       <h1 className="v2-sr-only">Selected work</h1>
       <Ring cards={cards} />
+      <Index />
     </section>
   );
 }

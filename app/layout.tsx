@@ -155,14 +155,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="stylesheet" href={FONTS} />
         {/* Resolve the theme before first paint, or a light-mode visitor
-            gets a dark flash on every navigation. */}
+            gets a dark flash on every navigation. The same script decides
+            whether the intro plays (see V2Intro). */}
         <script
           dangerouslySetInnerHTML={{
             __html:
               "(function(){try{var t=localStorage.getItem('thv-theme');" +
               "if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}" +
               "document.documentElement.setAttribute('data-theme',t);}" +
-              "catch(e){document.documentElement.setAttribute('data-theme','dark');}})();",
+              "catch(e){document.documentElement.setAttribute('data-theme','dark');}" +
+              // First visit of the session, landing on home: raise the intro
+              // sheet now, before paint, so the page never shows ahead of it.
+              "try{if(location.pathname==='/'&&!sessionStorage.getItem('v2-intro-seen')" +
+              "&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)" +
+              "document.documentElement.setAttribute('data-intro','play');}catch(e){}})();",
           }}
         />
         <script
