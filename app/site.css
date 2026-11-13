@@ -1615,8 +1615,8 @@ html[data-intro='play'] body { overflow: hidden; }
   .v2-reveal { opacity: 1; transform: none; }
 }
 
-/* ── Work — ring gallery (/work) ───────────────────────────────────── */
-/* The whole screen is the ring. Type stays small on purpose: the work
+/* ── Work — globe gallery (/work) ──────────────────────────────────── */
+/* The whole screen is the globe. Type stays small on purpose: the work
    carries the page, the type just labels it. */
 
 .v2-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -1625,37 +1625,43 @@ html[data-intro='play'] body { overflow: hidden; }
 .v2-ed-space {
   position: absolute; inset: 0; z-index: 1;
   overflow: hidden; touch-action: none; cursor: grab; user-select: none;
+  perspective: 2200px; perspective-origin: 50% 49%;
 }
 .v2-ed-space:active { cursor: grabbing; }
 .v2-ed-media { position: absolute; inset: 0; display: block; overflow: hidden; }
 .v2-ed-img { object-fit: cover; }
+
+/* the axis leans, like the earth's; the globe inside it is what turns */
+.v2-ed-axis, .v2-ed-globe {
+  position: absolute; left: 50%; top: 49%; width: 0; height: 0;
+  transform-style: preserve-3d;
+}
+.v2-ed-axis { transform: rotateZ(-11deg) rotateX(-9deg); }
+.v2-ed-globe { left: 0; top: 0; opacity: 0; will-change: transform; }
+
 .v2-ed-node {
-  position: absolute; left: 50%; top: 52%;
-  width: clamp(104px, 10.5vw, 208px);
-  will-change: transform; -webkit-user-drag: none; backface-visibility: hidden;
+  position: absolute; left: 0; top: 0;
+  width: var(--tw, 200px); aspect-ratio: 16 / 9;
+  margin: calc(var(--tw, 200px) * -0.28125) 0 0 calc(var(--tw, 200px) * -0.5);
+  transform-style: preserve-3d; backface-visibility: hidden;
+  -webkit-user-drag: none;
 }
 .v2-ed-node-card {
-  position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden;
+  position: absolute; inset: 0; display: block; overflow: hidden;
+  backface-visibility: hidden;
   transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
-/* hover: the one card comes up in full colour, the rest fall back. The
-   veil is page-coloured rather than real transparency, so dimmed cards
-   never show the cards stacked behind them. */
+/* hover: the one tile lifts off the surface in full colour, the rest
+   fall back under a page-coloured veil */
 .v2-ed-node-card::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: var(--bg); opacity: 0;
   transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.v2-ed-space.has-active .v2-ed-node:not(.is-active) .v2-ed-node-card::after { opacity: 0.82; }
-.v2-ed-node.is-active .v2-ed-node-card { transform: scale(1.14); }
-.v2-ed-node:active .v2-ed-node-card { transform: scale(1.14); }
+.v2-ed-space.has-active .v2-ed-node:not(.is-active) .v2-ed-node-card::after { opacity: 0.78; }
+.v2-ed-node.is-active .v2-ed-node-card { transform: translateZ(40px) scale(1.12); }
 .v2-ed-node:focus-visible { outline: none; }
 .v2-ed-node:focus-visible .v2-ed-node-card { outline: 1px solid var(--fg); }
-
-.v2-ed-kicker {
-  display: block; font-family: var(--mono); font-size: 0.6875rem; font-weight: 500;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
-}
 
 .v2-ed-counter {
   position: absolute; left: 0; right: 0; bottom: clamp(1.5rem, 2.6vw, 2.5rem); z-index: 101;
