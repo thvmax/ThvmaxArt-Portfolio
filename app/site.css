@@ -653,6 +653,16 @@ html.is-morphing body {
   box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--line);
   will-change: transform, opacity;
 }
+.v2-preview-art { object-fit: cover; opacity: 0; transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.v2-preview-art.is-on { opacity: 1; }
+.v2-preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.32), transparent 32%, transparent 52%, rgba(0, 0, 0, 0.62));
+  pointer-events: none;
+}
+.v2-preview-count, .v2-preview-title { z-index: 1; }
 .v2-preview-grain {
   position: absolute;
   inset: 0;
@@ -1404,37 +1414,69 @@ html[data-intro='play'] body { overflow: hidden; }
   letter-spacing: -0.01em;
 }
 
-/* Gallery — one image per row, occasional two-up pairs */
-.v2-case-gallery { padding: clamp(4rem, 8.6vw, 9rem) var(--pad) 0; }
-.v2-case-media-grid { margin-top: clamp(1.5rem, 3vw, 3.5rem); display: flex; flex-direction: column; gap: clamp(1.5rem, 3.2vw, 3.5rem); }
-.v2-case-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 2.4vw, 2.5rem); }
-.v2-case-media {
+/* Gallery — the artwork at its own proportions. Frames in a row share
+   one height and each is as wide as its aspect ratio asks, so a poster
+   stays a poster and a spread stays a spread: nothing is cropped to fit. */
+.v2-case-gallery { padding: clamp(2.5rem, 5vw, 5.5rem) var(--pad) 0; }
+.v2-case-rows { display: flex; flex-direction: column; gap: clamp(2.25rem, 4.4vw, 5rem); }
+.v2-case-row-inner {
+  --gap: clamp(0.75rem, 1.6vw, 1.75rem);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap);
+  /* a row of tall pieces would outgrow the screen: cap its height, centre it */
+  max-width: calc(86svh * var(--sum) + (var(--n) - 1) * var(--gap));
+  margin-inline: auto;
+}
+.v2-case-frame { flex: var(--r) 1 0%; min-width: 0; margin: 0; }
+.v2-case-row--single .v2-case-frame { flex: none; width: min(100%, calc(84svh * var(--r))); margin-inline: auto; }
+.v2-case-row--single .v2-case-row-inner { max-width: none; }
+.v2-case-frame-media {
   position: relative;
-  aspect-ratio: 1740 / 1000;
-  border-radius: 20px;
+  aspect-ratio: var(--r);
+  border-radius: 14px;
   overflow: hidden;
   isolation: isolate;
+  background: var(--raised);
 }
-.v2-case-media--third { aspect-ratio: 1740 / 1180; }
-.v2-case-duo .v2-case-media { aspect-ratio: 4 / 3; }
-.v2-case-media-fill {
-  position: absolute;
-  inset: -8%;
-  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
-}
-.v2-case-media:hover .v2-case-media-fill { transform: scale(1.04); }
+.v2-case-frame-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.v2-case-media-fill { position: absolute; inset: -8%; will-change: transform; }
 .v2-case-media-grade { position: absolute; inset: 0; background: #0b0c0d; pointer-events: none; }
-.v2-case-media-label,
-.v2-case-media-note {
-  position: absolute;
-  left: 24px;
-  z-index: 2;
-  color: var(--on-art);
-  font-family: var(--mono);
+.v2-case-cap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.7rem;
+  margin-top: 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
-.v2-case-media-label { top: 24px; font-weight: 500; font-size: 0.75rem; letter-spacing: 0.03em; }
-.v2-case-media-note { bottom: 24px; font-size: 0.6875rem; letter-spacing: 0.06em; }
+.v2-case-cap-label { font-weight: 500; color: var(--fg); }
+.v2-case-cap-note { color: var(--muted); }
+
+/* Hero, as a set: the pieces side by side on the project's colour, all one
+   height, sized to whichever of the frame's width or height runs out first */
+.v2-case-hero-media--set { --g: clamp(0.6rem, 1.4vw, 1.5rem); }
+.v2-case-hero-set {
+  position: absolute;
+  inset: clamp(1.5rem, 4.6vw, 5.25rem) var(--pad);
+  container-type: size;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--g);
+}
+.v2-case-hero-piece {
+  position: relative;
+  flex: none;
+  height: min(100cqh, calc((100cqw - (var(--n) - 1) * var(--g)) / var(--sum)));
+  aspect-ratio: var(--r);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 28px 60px -34px rgba(0, 0, 0, 0.7);
+}
+.v2-case-hero-piece img { object-fit: cover; }
+.v2-case-hero-art { object-fit: cover; }
+video.v2-case-hero-fill { top: -10%; left: -10%; width: 120%; height: 120%; inset: auto; object-fit: cover; }
 
 /* Result — the inverted interruption */
 .v2-case-result { margin-top: clamp(4rem, 8.6vw, 9rem); background: var(--fg); color: var(--bg); }
@@ -1480,8 +1522,17 @@ html[data-intro='play'] body { overflow: hidden; }
   overflow: hidden;
   transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.v2-case-next-count { position: absolute; top: 20px; left: 20px; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.08em; color: var(--on-art); }
+.v2-case-next-art { object-fit: cover; }
+.v2-case-next-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 34%, transparent 66%, rgba(0, 0, 0, 0.3));
+  pointer-events: none;
+}
+.v2-case-next-count { z-index: 1; position: absolute; top: 20px; left: 20px; font-family: var(--mono); font-size: 0.6875rem; letter-spacing: 0.08em; color: var(--on-art); }
 .v2-case-next-arrow {
+  z-index: 1;
   position: absolute;
   right: 20px; bottom: 20px;
   display: grid;
@@ -1582,10 +1633,19 @@ html[data-intro='play'] body { overflow: hidden; }
   .v2-stats, .v2-facts, .v2-links, .v2-toolkit, .v2-reach { grid-template-columns: minmax(0, 1fr); }
   .v2-band-foot, .v2-contact-foot { flex-direction: column; gap: 0.5rem; }
   .v2-case-meta { grid-template-columns: minmax(0, 1fr); }
-  .v2-case-duo { grid-template-columns: minmax(0, 1fr); }
   .v2-case-hero-media { aspect-ratio: 4 / 3; }
-  .v2-case-media-label { left: 16px; top: 16px; }
-  .v2-case-media-note { left: 16px; bottom: 16px; }
+  .v2-case-row-inner { max-width: none; }
+  .v2-case-row--n3 .v2-case-frame:first-child { grid-column: 1 / -1; }
+  /* the set wraps two to a line on a phone, so each piece stays legible */
+  .v2-case-hero-media--set { aspect-ratio: 4 / 5; }
+  .v2-case-hero-set { flex-wrap: wrap; align-content: center; inset: 1.5rem var(--pad); }
+  .v2-case-hero-piece { height: min(calc((100cqh - (var(--rows) - 1) * var(--g)) / var(--rows)), calc((100cqw - var(--g)) / (2 * var(--maxr)))); }
+  .v2-case-row--n3 .v2-case-row-inner, .v2-case-row--n4 .v2-case-row-inner { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .v2-case-row--wide .v2-case-row-inner { flex-direction: column; }
+  .v2-case-row--wide .v2-case-frame { flex: none; width: 100%; }
+  .v2-case-row--single .v2-case-frame { width: min(100%, calc(78svh * var(--r))); }
+  .v2-case-frame-media { border-radius: 10px; }
+  .v2-case-cap { font-size: 0.75rem; margin-top: 0.6rem; }
   .v2-case-next-count { top: 16px; left: 16px; }
   .v2-case-next-arrow { right: 16px; bottom: 16px; width: 40px; height: 40px; }
 }

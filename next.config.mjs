@@ -12,6 +12,9 @@ const nextConfig = {
       { source: '/sting-night-life', destination: '/work/sting-nightlife-repositioning', permanent: true },
       { source: '/work-editorial', destination: '/work', permanent: true },
       { source: '/work/aia-life-insurance-refresh', destination: '/work/aia-mandalay-office-opening', permanent: true },
+      // renamed when the case studies were filled from the old portfolio
+      { source: '/work/aia-brand-social-films', destination: '/work/insurance-social-advertising', permanent: true },
+      { source: '/work/true-money-app-concept', destination: '/work/truemoney-social-advertising', permanent: true },
       { source: '/art-direction', destination: '/work', permanent: true },
       { source: '/motion-production', destination: '/work', permanent: true },
       { source: '/digital-ui', destination: '/work', permanent: true },

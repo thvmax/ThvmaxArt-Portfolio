@@ -1,19 +1,28 @@
 // ─── Content for the v2 layout (Figma: "ThvmaxArt Website 1") ────────
 // Copy is taken verbatim from the Figma frames 02 Work / 03 Project —
 // STING / 04 About / 05 Contact / State — Menu open. This file is the
-// single source of site copy.
+// single source of site copy. Artwork lives in /public/work/<slug>/.
+
+import { workMedia } from './workMedia';
+
+export type V2Span = 'full' | 'half' | 'third' | 'quarter';
 
 export interface V2Still {
-  label: string;      // top-left caption
-  note: string;       // bottom-left caption
-  grade: number;      // 0–1 darkening pass over the gradient plate
-  span?: 'half' | 'third';
+  label: string;      // caption, first line
+  note?: string;      // caption, second voice
+  src?: string;       // artwork in /public/work/<slug>/
+  video?: string;
+  w?: number;         // intrinsic size, so the frame keeps the artwork's proportions
+  h?: number;
+  grade?: number;     // 0–1 darkening pass over the gradient plate (no artwork yet)
+  span?: V2Span;      // consecutive stills of one span share a row
 }
 
 export interface V2Chapter {
   label: string;      // THE BRIEF / THE IDEA / MY ROLE
   heading: string;
   body: string;
+  media?: V2Still[];  // frames that follow this chapter
 }
 
 export interface V2Study {
@@ -23,7 +32,7 @@ export interface V2Study {
   year: string;
   deliverables: string;
   chapters: V2Chapter[];
-  stills: V2Still[];
+  stills: V2Still[];  // frames after the last chapter
   result?: {
     figure: string;
     caption: string;
@@ -31,15 +40,35 @@ export interface V2Study {
   };
 }
 
+/** The opening frame of a case study: one image or film edge to edge, or a set of pieces laid side by side on the project's colour. */
+export interface V2Hero {
+  src?: string;
+  video?: string;
+  set?: V2Still[];
+}
+
 export interface V2Project {
   slug: string;
   name: string;
   nameLines: string[];  // display break for the preview plate / hero
   cat: string;          // mono meta line, e.g. "FMCG · Campaign"
-  year: string;
+  year: string;         // empty when the source gives no date
   accent: string;       // the project's own colour — artwork is never desaturated
+  cover?: string;       // 3:4 thumbnail for the Work cluster
+  extras?: string[];    // further 3:4 thumbnails (images or .mp4) for the cluster
+  hero?: V2Hero;
   study?: V2Study;
 }
+
+// ─── Artwork helpers ─────────────────────────────────────────────────
+
+/** A frame from /public/work/<slug>/<name>.jpg, sized from workMedia. */
+const pic = (slug: string, name: string, label: string, note = '', span: V2Span = 'full'): V2Still => {
+  const [w, h] = workMedia[slug]?.[name] ?? [1600, 1000];
+  return { src: `/work/${slug}/${name}.jpg`, w, h, label, note, span };
+};
+const cov = (slug: string, name: string) => `/work/${slug}/cover-${name}.jpg`;
+const art = (slug: string, name: string) => `/work/${slug}/${name}.jpg`;
 
 export const v2Site = {
   name: 'THVMAX',
@@ -119,43 +148,80 @@ export const v2AreaServed = [
   'Worldwide',
 ];
 
+const STING = 'sting-nightlife-repositioning';
+const TITAN = 'pepsi-titan-wall-art';
+const MEALS = 'pepsi-meals-ar-campaign';
+const VELOSI = 'velosi-brand-channel';
+const TALENT = 'pepsi-talent-development';
+const MANDALAY = 'aia-mandalay-office-opening';
+const SOCIAL = 'pepsico-social-advertising';
+const CAL = 'pepsi-2024-calendar';
+const POSM = 'pepsi-mt-posm';
+const INS = 'insurance-social-advertising';
+const TM = 'truemoney-social-advertising';
+const MEMBER = 'aia-member-propositions';
+const PROFILE = 'pepsi-company-profile';
+const SKIN = 'skin-town-identity';
+const AHTA = 'a-hta-identity';
+const INSIGHT = 'insight-3d-identity';
+const LOGOS = 'logofolio';
+const IREMIA = 'iremia-meditation-app';
+const RETOUCH = 'product-retouch';
+const STING_FILM = '/case-studies/sting-night-life/';
+
 export const v2Work: V2Project[] = [
   {
-    slug: 'sting-nightlife-repositioning',
+    slug: STING,
     name: 'STING Nightlife Campaign',
     nameLines: ['STING Nightlife', 'Campaign'],
     cat: 'FMCG · Campaign',
     year: '2024',
     accent: 'rgb(217, 199, 33)',
+    cover: cov(STING, 'kv-final'),
+    extras: [STING_FILM + 'hero-video.mp4', cov(STING, 'product-kv'), STING_FILM + 'Header-Video.mp4'],
+    hero: { video: STING_FILM + 'hero-video.mp4', src: art(STING, 'hero') },
     study: {
       lede: 'Taking an energy drink into the night — and growing its share while doing it.',
-      client: 'Pepsi-Cola Myanmar',
-      role: 'Senior Creative Designer',
-      year: '2023 — 24',
+      client: 'Pepsi-Cola Myanmar — STING Energy Drink',
+      role: 'Art direction, visualisation, campaign and TVC production management',
+      year: 'Dec 2024',
       deliverables: 'Key visual, TVC cutdown,\nend-frame KV animation',
       chapters: [
         {
           label: 'THE BRIEF',
           heading: 'Give STING a reason to be reached for after dark.',
-          body: 'Pepsi-Cola Myanmar took STING into nightlife — the late hours, where energy is about the night out rather than the next shift. The campaign needed one strong visual idea that could carry from the key visual through to broadcast.',
+          body: 'The nightlife commercial launch took STING to a new audience — the late hours, where energy is about the night out rather than the next shift. The key visual had to feel bold, fresh and energising, with the nightlife essence up front and the brand’s look and feel intact.',
+          media: [
+            pic(STING, 'kv-draft', 'Draft KV', 'AI composition', 'half'),
+            pic(STING, 'kv-final', 'Final KV', 'Shot with the model', 'half'),
+          ],
         },
         {
-          label: 'THE WORK',
-          heading: 'One night-grade image, from key visual to final frame.',
-          body: 'The campaign was built on a single nightlife key visual, then carried into motion — a TVC cutdown and an animated end-frame KV — so every format closed on the same image.',
+          label: 'THE KEY VISUAL',
+          heading: 'Drafted with AI, finished with a real shoot.',
+          body: 'We first built the KV composition with AI — placing the brand elements and readjusting the perspective so the photoshoot had an exact target. The final visual was then shot with the actual model and finished in post.',
+          media: [
+            pic(STING, 'dj', 'Mood reference', 'Nightlife energy', 'third'),
+            pic(STING, 'model', 'Photoshoot', 'Campaign talent', 'third'),
+            pic(STING, 'crowd', 'On the floor', 'Launch night', 'third'),
+            pic(STING, 'event', 'Launch event', 'Venue'),
+          ],
         },
         {
           label: 'MY ROLE',
-          heading: 'Art direction, key visual and motion.',
-          body: 'As Senior Creative Designer at Pepsi-Cola Myanmar I worked on the key visual and the motion pieces — the TVC cutdown and the end-frame KV animation — alongside TVC production. The same role covered Pepsi, Mirinda and 7UP work in parallel.',
+          heading: 'Art direction through to broadcast.',
+          body: 'Working with the Pepsi brand and creative team, I led art direction and visualisation, then managed campaign and TVC production — the cutdown and the animated end-frame KV — so every format closed on the same image.',
+          media: [
+            pic(STING, 'thematic-kv', 'Thematic KV', 'Nightlife', 'half'),
+            pic(STING, 'product-kv', 'Product KV', 'B3 · B6 · B12', 'half'),
+          ],
         },
       ],
       stills: [
-        { label: 'Key visual', note: 'Campaign master', grade: 0.22, span: 'half' },
-        { label: 'TVC cutdown', note: 'Broadcast', grade: 0.44, span: 'half' },
-        { label: 'End-frame KV', note: 'Animation', grade: 0.22, span: 'third' },
-        { label: 'TVC frame', note: 'Motion', grade: 0.44, span: 'third' },
-        { label: 'Night palette', note: 'Grade', grade: 0.22, span: 'third' },
+        pic(STING, 'interior', 'Venue build', 'LED installation', 'half'),
+        pic(STING, 'booth', 'Mini dance booth', 'Activation', 'half'),
+        pic(STING, 'event-poster', 'Event poster', 'Announcement', 'half'),
+        pic(STING, 'kv-qr', 'Retail KV', 'With QR', 'half'),
       ],
       result: {
         figure: '≈10%',
@@ -165,23 +231,205 @@ export const v2Work: V2Project[] = [
     },
   },
   {
-    slug: 'velosi-brand-channel',
+    slug: TITAN,
+    name: 'Pepsi Titan Wall Art',
+    nameLines: ['Pepsi Titan', 'Wall Art'],
+    cat: 'FMCG · Environmental',
+    year: '2024',
+    accent: 'rgb(214, 84, 84)',
+    cover: cov(TITAN, 'hero'),
+    extras: [cov(TITAN, 'merch')],
+    hero: { src: art(TITAN, 'hero') },
+    study: {
+      lede: 'A surreal wall for Pepsi Myanmar’s new office — modern Pepsi energy drawn over traditional Myanmar motifs.',
+      client: 'Pepsi-Cola Myanmar',
+      role: 'Art direction · Visualisation',
+      year: 'Apr 2024',
+      deliverables: 'Wall art, 3D mockups,\nmerch, illustrations, wallpaper',
+      chapters: [
+        {
+          label: 'THE IDEA',
+          heading: 'Pepsi’s energy and Myanmar’s heritage on one wall.',
+          body: 'For the new office I created a surreal wall art that blends a modern, vibrant style with traditional Myanmar elements. It captures Pepsi’s dynamic brand identity while celebrating the country’s cultural heritage — a piece that reads as local and contemporary at once.',
+          media: [pic(TITAN, 'wall', 'Wall art', 'Full spread')],
+        },
+        {
+          label: 'THE CRAFT',
+          heading: 'Composed to the room, previewed in 3D.',
+          body: 'The composition was adjusted to the office interior, and I built a 3D view of the wall to preview it in place. Keeping the essence of the Pepsi Titan brand, I chose a look that is bold, vibrant, artistic, youthful and surreal — right for the people who work in front of it every day.',
+          media: [
+            pic(TITAN, 'render-1', '3D mockup', 'Main wall', 'half'),
+            pic(TITAN, 'render-2', '3D mockup', 'Second wall', 'half'),
+          ],
+        },
+        {
+          label: 'BEYOND THE WALL',
+          heading: 'One illustration set, many surfaces.',
+          body: 'The same artwork carried onto merchandise, sticker illustrations, wallpapers and the 11th-anniversary office branding, so the wall became a system the whole office uses rather than a one-off mural.',
+          media: [
+            pic(TITAN, 'merch', 'Merch', 'Sweatshirt', 'third'),
+            pic(TITAN, 'stickers', 'Illustrations', 'Sticker set', 'third'),
+            pic(TITAN, 'office-brand', 'Office branding', '11th anniversary', 'third'),
+          ],
+        },
+      ],
+      stills: [pic(TITAN, 'wallpaper', 'Wallpaper', 'Desktop')],
+    },
+  },
+  {
+    slug: MEALS,
+    name: 'Pepsi Meals AR Campaign',
+    nameLines: ['Pepsi Meals', 'AR Campaign'],
+    cat: 'FMCG · AR Experience',
+    year: '2024',
+    accent: 'rgb(64, 132, 214)',
+    cover: cov(MEALS, 'kv'),
+    extras: [cov(MEALS, 'model')],
+    hero: { src: art(MEALS, 'hero') },
+    study: {
+      lede: 'An AR filter for the 2024 Pepsi Meals campaign — the can and the meal, together on screen.',
+      client: 'Pepsi-Cola Myanmar',
+      role: 'Art direction · AR visualisation',
+      year: 'Mar 2024',
+      deliverables: 'AR filter look, campaign KV,\nsocial posts',
+      chapters: [
+        {
+          label: 'THE BRIEF',
+          heading: 'Make Pepsi part of the meal.',
+          body: 'The 2024 Pepsi Meals campaign launched an AR filter to strengthen the brand’s presence in the Pepsi + Meals category. I was assigned to visualise the filter and give it art direction.',
+          media: [
+            pic(MEALS, 'kv', 'Campaign KV', 'Filter launch', 'half'),
+            pic(MEALS, 'reminder', 'Reminder post', 'Prize mechanic', 'half'),
+          ],
+        },
+        {
+          label: 'THE FILTER',
+          heading: 'Familiar dishes, served with the can.',
+          body: 'Each filter state pairs the Pepsi can with a Myanmar dish, styled as a glowing 3D plate and lettered in Burmese — a set of looks people could cycle through, capture and share.',
+          media: [
+            pic(MEALS, 'filters', 'Filter states', 'In-app captures', 'half'),
+            pic(MEALS, 'model', 'Campaign talent', 'Pepsi + Meals', 'half'),
+          ],
+        },
+      ],
+      stills: [pic(MEALS, 'dishes', 'AR dishes', 'Samples')],
+    },
+  },
+  {
+    slug: VELOSI,
     name: 'Velosi Brand Channel',
     nameLines: ['Velosi Brand', 'Channel'],
-    cat: 'Social · Always-on',
+    cat: 'Engineering · Social',
     year: '2026',
     accent: 'rgb(56, 168, 178)',
+    cover: cov(VELOSI, 'eid-al-etihad'),
+    extras: [cov(VELOSI, 'ramadan')],
+    hero: {
+      set: [
+        pic(VELOSI, 'commemoration-day', 'UAE Commemoration Day'),
+        pic(VELOSI, 'ramadan', 'Ramadan Kareem'),
+        pic(VELOSI, 'eid-al-etihad', 'Eid Al Etihad'),
+      ],
+    },
     study: {
-      lede: 'An always-on brand channel for an asset-integrity company — 45K to 75K without a single stock photo.',
+      lede: 'An always-on social channel for an asset-integrity group in Abu Dhabi — national days, seasons and causes, grown from 45K to 75K followers.',
       client: 'Velosi Asset Integrity — Abu Dhabi, UAE',
       role: 'Senior Creative Designer / Design Lead',
       year: '2024 — 26',
-      deliverables: 'Channel system, motion\ntemplates, campaign art direction',
-      chapters: [],
-      stills: [
-        { label: 'Channel system', note: 'Always-on grid', grade: 0.22, span: 'half' },
-        { label: 'Motion templates', note: 'Reels + shorts', grade: 0.44, span: 'half' },
+      deliverables: 'Channel system, social posts,\nmotion templates',
+      chapters: [
+        {
+          label: 'THE CHANNEL',
+          heading: 'An engineering brand that shows up for the moment.',
+          body: 'The channel marks the dates Velosi’s people and clients care about — UAE Commemoration Day, Eid Al Etihad, Ramadan, World Environment Day, Women’s Day and the national days of the countries the group works in — each in the brand’s own blue and type.',
+          media: [
+            pic(VELOSI, 'environment-day', 'World Environment Day', '5 June', 'third'),
+            pic(VELOSI, 'womens-day', 'Women’s Day', '8 March', 'third'),
+            pic(VELOSI, 'independence-day', 'Vietnam National Day', '2 September', 'third'),
+          ],
+        },
+        {
+          label: 'THE SYSTEM',
+          heading: 'One frame, many occasions.',
+          body: 'Every post sits on the same footer, logo lock-up and type hierarchy, so the feed reads as one brand however different the subject — and a new post can be produced quickly without redrawing the system.',
+        },
       ],
+      stills: [],
+    },
+  },
+  {
+    slug: TALENT,
+    name: 'Pepsi Talent Development',
+    nameLines: ['Pepsi Talent', 'Development'],
+    cat: 'FMCG · Employer brand',
+    year: '2024',
+    accent: 'rgb(46, 106, 196)',
+    cover: cov(TALENT, 'kv'),
+    extras: [cov(TALENT, 'emblem')],
+    hero: { src: art(TALENT, 'hero') },
+    study: {
+      lede: 'A talent programme identity for Gen Z — Pepsi’s energy, set in a galaxy of stars.',
+      client: 'Pepsi-Cola Myanmar — with the HR team',
+      role: 'Art direction · Key visual',
+      year: 'Mar 2024',
+      deliverables: 'Key visuals, emblem,\nholding cards, standees',
+      chapters: [
+        {
+          label: 'THE BRIEF',
+          heading: 'Bring young talent to Pepsi.',
+          body: 'The Talent Development Program helps young people follow their passion and explore their future careers. My goal was to bring out the aesthetic essence of the Pepsi brand so the programme would appeal to Gen Z applicants.',
+          media: [
+            pic(TALENT, 'kv', 'Main KV', 'Embark your new journey', 'half'),
+            pic(TALENT, 'thematic', 'Thematic KV', 'The emblem', 'half'),
+          ],
+        },
+        {
+          label: 'THE CONCEPT',
+          heading: 'Stars for the applicants, an emblem for the chosen.',
+          body: 'The stars in the galaxy represent the hardworking talents applying for the programme. The emblem — a ring of glowing glass forms — stands for the outstanding trainees selected from them.',
+          media: [pic(TALENT, 'standee', 'Standees', 'Launch event')],
+        },
+      ],
+      stills: [
+        pic(TALENT, 'card', 'Holding card', 'Recruitment', 'half'),
+        pic(TALENT, 'emblem', 'Emblem', 'Glass render', 'half'),
+      ],
+    },
+  },
+  {
+    slug: MANDALAY,
+    name: 'AIA Mandalay Office Opening',
+    nameLines: ['AIA Mandalay', 'Office Opening'],
+    cat: 'Insurance · Key visual',
+    year: '2022',
+    accent: 'rgb(198, 68, 96)',
+    cover: cov(MANDALAY, 'visual'),
+    hero: { src: art(MANDALAY, 'hero') },
+    study: {
+      lede: 'A launch key visual for AIA’s new Mandalay office, built from the city’s own landmarks.',
+      client: 'AIA Myanmar — Marketing team',
+      role: 'Creative Designer',
+      year: 'Dec 2022',
+      deliverables: 'Office-opening key visual,\nto AIA Myanmar brand guidelines',
+      chapters: [
+        {
+          label: 'THE BRIEF',
+          heading: 'Open a new office in a city with its own icons.',
+          body: 'For the launch of the AIA Mandalay office I created a visual that sets the new building among traditional elements of the city — making the office feel unique to Mandalay while following the AIA Myanmar brand guidelines.',
+          media: [pic(MANDALAY, 'visual', 'Launch key visual', 'AIA’s new Mandalay Office is now open')],
+        },
+        {
+          label: 'THE ELEMENTS',
+          heading: 'The palace, the umbrellas, the office itself.',
+          body: 'Three references carry the composition: Mandalay Palace and its moat, the hand-painted Mandalay umbrellas, and the new office interior — each placed so the city is recognisable at a glance.',
+          media: [
+            pic(MANDALAY, 'umbrellas', 'Mandalay umbrella', 'Craft', 'third'),
+            pic(MANDALAY, 'palace', 'Mandalay Palace', 'Landmark', 'third'),
+            pic(MANDALAY, 'office', 'Mandalay office', 'Interior', 'third'),
+          ],
+        },
+      ],
+      stills: [],
     },
   },
   {
@@ -224,180 +472,524 @@ export const v2Work: V2Project[] = [
     },
   },
   {
-    slug: 'pepsi-meals-ar-campaign',
-    name: 'Pepsi Meals AR Campaign',
-    nameLines: ['Pepsi Meals', 'AR Campaign'],
-    cat: 'FMCG · AR Experience',
-    year: '2024',
-    accent: 'rgb(64, 132, 214)',
+    slug: SOCIAL,
+    name: 'Pepsi-Cola Social Advertising',
+    nameLines: ['Pepsi-Cola Social', 'Advertising'],
+    cat: 'FMCG · Social',
+    year: '2023 — 24',
+    accent: 'rgb(38, 88, 200)',
+    cover: cov(SOCIAL, 'pepsi-poster'),
+    extras: [cov(SOCIAL, 'mirinda-green'), cov(SOCIAL, '7up-feeling-up'), cov(SOCIAL, 'sting-gold')],
+    hero: {
+      set: [
+        pic(SOCIAL, 'pepsi-poster', 'Pepsi'),
+        pic(SOCIAL, 'mirinda-green', 'Mirinda'),
+        pic(SOCIAL, '7up-feeling-up', '7UP'),
+        pic(SOCIAL, 'sting-gold', 'STING'),
+      ],
+    },
     study: {
-      lede: 'Where the meal becomes an interactive playground — pack, phone and reward in one loop.',
+      lede: 'Always-on social for Pepsi, 7UP, Mirinda and STING in Myanmar — one designer, four brand voices.',
       client: 'Pepsi-Cola Myanmar',
-      role: 'Art Director · AR Visualization',
-      year: '2022 — 24',
-      deliverables: 'Visual identity, 3D assets,\nAR experience design',
+      role: 'Senior Creative Designer',
+      year: '2023 — 24',
+      deliverables: 'Social posts, seasonal\ncampaigns, flavour launches',
+      chapters: [
+        {
+          label: 'PEPSI',
+          heading: 'Electric blue, built around the can.',
+          body: 'Seasonal moments, flavour launches and community events — New Year, Women’s Day, the Padauk flavour, the A-Tar Memofest — each composed around the can in Pepsi’s blue, with the Burmese headline drawn into the image rather than laid on top.',
+          media: [
+            pic(SOCIAL, 'pepsi-padauk', 'Padauk flavour', 'Launch', 'third'),
+            pic(SOCIAL, 'pepsi-memofest', 'A-Tar Memofest', 'Event', 'third'),
+            pic(SOCIAL, 'pepsi-emoji', 'Meals better with Pepsi', 'Engagement', 'third'),
+            pic(SOCIAL, 'pepsi-new-year', 'Happy 2024', 'New Year', 'third'),
+            pic(SOCIAL, 'pepsi-ice', 'Ice cold', 'Product', 'third'),
+            pic(SOCIAL, 'pepsi-hand', 'Ask for Pepsi', 'Retail', 'third'),
+            pic(SOCIAL, 'pepsi-womens-day', 'Women’s Day', '8 March', 'half'),
+            pic(SOCIAL, 'pepsi-kiosk', 'Pepsi kiosk', 'Outlet', 'half'),
+          ],
+        },
+        {
+          label: '7UP',
+          heading: 'Fresh air, cold green.',
+          body: 'For 7UP the art direction leaned on open landscapes, mist and lime — “Hike up, drink 7UP” and “Feeling up” — so the drink reads as refreshment you can almost feel.',
+          media: [
+            pic(SOCIAL, '7up-hike', 'Hike up, drink 7UP', 'Outdoor', 'third'),
+            pic(SOCIAL, '7up-cooler', 'Cooler', 'Holiday', 'third'),
+            pic(SOCIAL, '7up-feeling-up', 'Feeling up', 'Product', 'third'),
+          ],
+        },
+        {
+          label: 'MIRINDA',
+          heading: 'Orange, loud and playful.',
+          body: 'Mirinda took the opposite register: saturated orange and magenta, splashes and flying fruit — a brand that is allowed to shout.',
+          media: [
+            pic(SOCIAL, 'mirinda-orange', 'Mirinda Orange', 'Product', 'third'),
+            pic(SOCIAL, 'mirinda-girl', 'Turn it up', 'Talent', 'third'),
+            pic(SOCIAL, 'mirinda-splash', 'Splash', 'Product', 'third'),
+            pic(SOCIAL, 'mirinda-clock', 'Anytime', 'Product', 'half'),
+            pic(SOCIAL, 'mirinda-green', 'Mirinda Green', 'Flavour', 'half'),
+          ],
+        },
+        {
+          label: 'STING',
+          heading: 'Red heat for the energy drink.',
+          body: 'STING’s always-on work kept the brand’s red-and-gold energy — lightning, sparks and cans in motion — running alongside the nightlife campaign.',
+          media: [
+            pic(SOCIAL, 'sting-red', 'STING Red', 'Product', 'third'),
+            pic(SOCIAL, 'sting-gold', 'STING Gold', 'Product', 'third'),
+            pic(SOCIAL, 'sting-can', 'Night can', 'Teaser', 'third'),
+            pic(SOCIAL, 'sting-bottles', 'Bottles', 'Pack range', 'half'),
+            pic(SOCIAL, 'sting-cans', 'Cans', 'Pack range', 'half'),
+          ],
+        },
+      ],
+      stills: [],
+    },
+  },
+  {
+    slug: CAL,
+    name: 'Pepsi 2024 Calendar',
+    nameLines: ['Pepsi 2024', 'Calendar'],
+    cat: 'FMCG · Print',
+    year: '2024',
+    accent: 'rgb(32, 70, 190)',
+    cover: cov(CAL, 'pages'),
+    hero: { src: art(CAL, 'hero') },
+    study: {
+      lede: 'Twelve months, twelve product stories — the 2024 desk calendar for Pepsi-Cola Myanmar.',
+      client: 'Pepsi-Cola Myanmar',
+      role: 'Art direction · Print design',
+      year: '2024',
+      deliverables: 'Desk calendar, 12 product\nvisuals, print production',
       chapters: [
         {
           label: 'THE IDEA',
-          heading: 'Bridge the physical pack and the phone.',
-          body: 'Scan, and the meal comes alive with branded 3D characters, effects and rewards designed to drive participation and resharing straight from the table.',
+          heading: 'A visual journey through the year.',
+          body: 'As you flip through the months, each page opens on a visual built around one PepsiCo product — Pepsi, 7UP, Mirinda and STING — so the calendar tells the portfolio’s story one month at a time.',
+          media: [pic(CAL, 'pages', 'Calendar pages', 'Print')],
         },
         {
-          label: 'THE BUILD',
-          heading: 'Identity first, then assets light enough to run anywhere.',
-          body: 'I directed the visual identity and modelled and optimised the 3D assets for smooth real-time AR performance across a wide range of devices, including the low-end handsets that make up most of the market.',
-        },
-        {
-          label: 'THE PAYOFF',
-          heading: 'A digital-physical loop with a tech-forward edge.',
-          body: 'Longer engagement time per session and a novel mechanic in a crowded FMCG space, with the AR layer giving the campaign a reason to be shared rather than scrolled past.',
+          label: 'THE PAGES',
+          heading: 'The artwork leads, the dates stay readable.',
+          body: 'Every page pairs a full-bleed product visual with a clean month grid, so the image carries the page and the calendar still works on a desk all year.',
+          media: [
+            pic(CAL, 'jan', 'January', '', 'half'),
+            pic(CAL, 'feb', 'February', '', 'half'),
+            pic(CAL, 'apr', 'April', '', 'half'),
+            pic(CAL, 'may', 'May', '', 'half'),
+            pic(CAL, 'jun', 'June', '', 'half'),
+            pic(CAL, 'jul', 'July', '', 'half'),
+            pic(CAL, 'aug', 'August', '', 'half'),
+            pic(CAL, 'sep', 'September', '', 'half'),
+            pic(CAL, 'nov', 'November', '', 'half'),
+            pic(CAL, 'dec', 'December', '', 'half'),
+          ],
         },
       ],
-      stills: [
-        { label: 'AR experience', note: 'In-app capture', grade: 0.22, span: 'half' },
-        { label: '3D asset', note: 'Real-time optimised', grade: 0.44, span: 'half' },
-        { label: 'Pack integration', note: 'Scan trigger', grade: 0.22, span: 'third' },
-        { label: 'Reward states', note: 'Motion', grade: 0.44, span: 'third' },
-        { label: 'Identity', note: 'Campaign toolkit', grade: 0.22, span: 'third' },
-      ],
+      stills: [],
     },
   },
   {
-    slug: 'pepsi-titan-wall-art',
-    name: 'Pepsi Titan Wall Art',
-    nameLines: ['Pepsi Titan', 'Wall Art'],
-    cat: 'FMCG · Environmental',
-    year: '2023',
-    accent: 'rgb(214, 84, 84)',
+    slug: POSM,
+    name: 'Modern Trade POSM',
+    nameLines: ['Modern Trade', 'POSM'],
+    cat: 'FMCG · Retail',
+    year: '2024',
+    accent: 'rgb(206, 38, 52)',
+    cover: cov(POSM, 'promotion-cans'),
+    extras: [cov(POSM, 'gondola-sting')],
+    hero: { src: art(POSM, 'hero') },
     study: {
-      lede: 'Brand at monumental scale — a mural engineered in 3D before a single litre of paint.',
+      lede: 'Promotion banners, posters and gondola displays for Pepsi-Cola brands in Myanmar’s modern-trade stores.',
       client: 'Pepsi-Cola Myanmar',
-      role: 'Art Director · Illustrator',
-      year: '2023',
-      deliverables: '3D visualisation, illustration\nguide, mural production art',
-      chapters: [
-        {
-          label: 'THE CONCEPT',
-          heading: 'A titan expression of the brand.',
-          body: 'Bottle forms and brand marks reimagined at architectural scale, composed to draw the eye from across the street and hold up at both fifty metres and five.',
-        },
-        {
-          label: 'THE CRAFT',
-          heading: 'Modelled and lit before it was painted.',
-          body: 'Every panel was modelled and lit in 3D to preview shadow, depth and perspective on the real wall, then translated into a production-ready illustration guide for the paint team.',
-        },
-        {
-          label: 'THE IMPACT',
-          heading: 'A permanent, photographable anchor in the city.',
-          body: 'A share-worthy landmark that generated organic social reach and gave the brand a physical presence no media buy expires out of.',
-        },
-      ],
-      stills: [
-        { label: 'Finished mural', note: 'On site', grade: 0.22, span: 'half' },
-        { label: '3D visualization', note: 'Pre-production', grade: 0.44, span: 'half' },
-        { label: 'Illustration detail', note: 'Panel study', grade: 0.22, span: 'third' },
-        { label: 'On-site context', note: 'Street view', grade: 0.44, span: 'third' },
-        { label: 'Production guide', note: 'Paint spec', grade: 0.22, span: 'third' },
-      ],
-    },
-  },
-  {
-    slug: 'aia-mandalay-office-opening',
-    name: 'AIA Mandalay Office Opening',
-    nameLines: ['AIA Mandalay', 'Office Opening'],
-    cat: 'Financial · Key visual',
-    year: '2022',
-    accent: 'rgb(198, 68, 96)',
-    study: {
-      lede: 'A launch key visual for AIA’s new Mandalay office, built from the city’s own landmarks.',
-      client: 'AIA Life Insurance Myanmar',
-      role: 'Creative Designer',
-      year: 'Dec 2022',
-      deliverables: 'Office-opening key visual,\nto AIA Myanmar brand guidelines',
-      chapters: [],
-      stills: [
-        { label: 'Launch key visual', note: 'Mandalay Palace', grade: 0.22, span: 'half' },
-        { label: 'Detail', note: 'Mandalay umbrella', grade: 0.44, span: 'half' },
-      ],
-    },
-  },
-  {
-    slug: 'pepsi-talent-development',
-    name: 'Pepsi Talent Development',
-    nameLines: ['Pepsi Talent', 'Development'],
-    cat: 'FMCG · Campaign',
-    year: '2023',
-    accent: 'rgb(46, 106, 196)',
-    study: {
-      lede: 'A creative platform built for the next generation — credible to a sceptical Gen Z audience, still unmistakably Pepsi.',
-      client: 'Pepsi-Cola Myanmar',
-      role: 'Art Director',
-      year: '2023',
-      deliverables: 'Key visual, campaign system,\nsocial, event branding',
+      role: 'Retail design · Visualisation',
+      year: '2024',
+      deliverables: 'Promotion banners, posters,\ngondola mockups',
       chapters: [
         {
           label: 'THE BRIEF',
-          heading: 'Back emerging talent without sounding like a sponsor.',
-          body: 'Position Pepsi as a genuine backer of young creators — credible to an audience that can smell a media buy from across the room, while staying on-brand enough to sit beside the rest of the portfolio.',
+          heading: 'Win the shelf, not only the feed.',
+          body: 'Modern-trade promotions — two tickets for a Pepsi string bag, one ticket for a free Mirinda, four cans for the 2024 calendar — needed banners, posters and gondola ends that could be read from the aisle.',
+          media: [
+            pic(POSM, 'mirinda-banner', 'Promotion banner', 'Mirinda'),
+            pic(POSM, 'promotion-cans', 'Promotion poster', 'Multi-brand', 'half'),
+            pic(POSM, 'promotion-calendar', 'Promotion poster', 'Calendar offer', 'half'),
+          ],
         },
         {
-          label: 'THE LOOK',
-          heading: 'Energetic colour, expressive type, a system that scales.',
-          body: 'A flexible layout system that let the programme run across social, stage and print without losing its identity — the same rules producing a story frame, a poster and a stage backdrop.',
-        },
-        {
-          label: 'THE RESULT',
-          heading: 'An ownable world for the programme.',
-          body: 'A recognisable campaign identity that gave the talent programme a consistent presence across every touchpoint it appeared on.',
+          label: 'THE DISPLAYS',
+          heading: 'Gondolas, previewed before they were built.',
+          body: 'Each gondola was visualised as a 3D mockup — header, side panels and shelf strips — so the layout could be approved before production.',
+          media: [
+            pic(POSM, 'gondola-mixed', 'Gondola', 'Multi-brand', 'third'),
+            pic(POSM, 'gondola-pepsi', 'Gondola', 'Pepsi', 'third'),
+            pic(POSM, 'gondola-sting', 'Gondola', 'STING', 'third'),
+          ],
         },
       ],
-      stills: [
-        { label: 'Campaign key visual', note: 'Master', grade: 0.22, span: 'half' },
-        { label: 'Social series', note: '9:16', grade: 0.44, span: 'half' },
-        { label: 'Poster', note: 'Print', grade: 0.22, span: 'third' },
-        { label: 'Event branding', note: 'Stage', grade: 0.44, span: 'third' },
-        { label: 'Type system', note: 'Toolkit', grade: 0.22, span: 'third' },
-      ],
+      stills: [],
     },
   },
   {
-    slug: 'aia-brand-social-films',
-    name: 'AIA Brand & Social Films',
-    nameLines: ['AIA Brand', '& Social Films'],
-    cat: 'Insurance · Motion',
-    year: '2022',
+    slug: INS,
+    name: 'Insurance Social Campaigns',
+    nameLines: ['Insurance Social', 'Campaigns'],
+    cat: 'Insurance · Social',
+    year: '2022 — 23',
     accent: 'rgb(186, 62, 88)',
-    study: {
-      lede: 'Motion design and a social film series for AIA — animated brand stories, reels and campaign cutdowns.',
-      client: 'AIA Life Insurance Myanmar',
-      role: 'Motion Designer · Editor',
-      year: '2022',
-      deliverables: 'Brand films, social reels,\ncampaign cutdowns',
-      chapters: [],
-      stills: [
-        { label: 'Brand film', note: 'Master edit', grade: 0.22, span: 'half' },
-        { label: 'Social reels', note: 'Cutdowns', grade: 0.44, span: 'half' },
+    cover: cov(INS, 'alife-beauty'),
+    extras: [cov(INS, 'ains-vehicle')],
+    hero: {
+      set: [
+        pic(INS, 'aia-crossword', 'AIA'),
+        pic(INS, 'alife-beauty', 'A Life'),
+        pic(INS, 'ains-vehicle', 'A Insurance'),
       ],
+    },
+    study: {
+      lede: 'Social campaigns for three insurers — AIA, A Life and A Insurance — each with its own colour, cast and tone.',
+      client: 'AIA Myanmar · A Life Insurance · A Insurance',
+      role: 'Creative Designer',
+      year: '2022 — 23',
+      deliverables: 'Social posts, campaign\nseries, product launches',
+      chapters: [
+        {
+          label: 'AIA',
+          heading: 'Health, made into a habit.',
+          body: 'For AIA Myanmar the posts promoted healthier living and easier service — the PUSH step challenge with Locale, premium payments through AYA Pay, a New Year word search and the SHER customer line — in AIA red, with a light, friendly hand.',
+          media: [
+            pic(INS, 'aia-push', 'PUSH challenge', 'With Locale', 'third'),
+            pic(INS, 'aia-aya-pay', 'AYA Pay', 'Payments', 'third'),
+            pic(INS, 'aia-sher', 'SHER', 'Customer service', 'third'),
+          ],
+        },
+        {
+          label: 'A INSURANCE',
+          heading: 'Simple cover, confident people.',
+          body: 'A Insurance spoke in violet and white: motor, EV and life-planning products shown through confident people and clean product photography, with one benefit to each post.',
+          media: [
+            pic(INS, 'ains-sleep', 'Sleep tight', 'Life cover', 'quarter'),
+            pic(INS, 'ains-together', 'Together', 'Family', 'quarter'),
+            pic(INS, 'ains-ev', 'Clean Energy Fair', 'EV cover', 'quarter'),
+            pic(INS, 'ains-future', 'Build your future', 'Savings', 'quarter'),
+          ],
+        },
+        {
+          label: 'A LIFE',
+          heading: 'Life, told as a metaphor.',
+          body: 'A Life Insurance took a more poetic route — life as a garden, a journey, flowing water and a dance — surreal, painterly images finished into a series where each post carries one idea and the brand’s green.',
+          media: [
+            pic(INS, 'alife-grow', 'Grow your life’s garden', '', 'quarter'),
+            pic(INS, 'alife-journey', 'Life is a beautiful journey', '', 'quarter'),
+            pic(INS, 'alife-flow', 'Flow with confidence', '', 'quarter'),
+            pic(INS, 'alife-dance', 'On the stage of life', '', 'quarter'),
+          ],
+        },
+      ],
+      stills: [],
     },
   },
   {
-    slug: 'true-money-app-concept',
-    name: 'True Money App Concept',
-    nameLines: ['True Money', 'App Concept'],
-    cat: 'Fintech · Mobile UI',
+    slug: TM,
+    name: 'TrueMoney Social Advertising',
+    nameLines: ['TrueMoney Social', 'Advertising'],
+    cat: 'Fintech · Social',
     year: '2021',
-    accent: 'rgb(224, 106, 52)',
+    accent: 'rgb(232, 112, 36)',
+    cover: cov(TM, 'transfer'),
+    hero: {
+      set: [pic(TM, 'agent', 'Agents'), pic(TM, 'transfer', 'Transfers'), pic(TM, 'free', 'Offers')],
+    },
     study: {
-      lede: 'A mobile interface exploration for True Money — onboarding flows, wallet screens and a lightweight design system.',
-      client: 'True Money Myanmar',
-      role: 'UI Designer',
+      lede: 'Social advertising for TrueMoney Myanmar’s e-payment service — transfers, agents and offers, in the brand’s orange.',
+      client: 'TrueMoney Myanmar',
+      role: 'Creative Designer',
       year: '2021',
-      deliverables: 'Onboarding, wallet UI,\ncomponent system',
-      chapters: [],
-      stills: [
-        { label: 'Onboarding', note: 'Flow', grade: 0.22, span: 'half' },
-        { label: 'Wallet screens', note: 'Core UI', grade: 0.44, span: 'half' },
+      deliverables: 'Social posts,\nservice explainers',
+      chapters: [
+        {
+          label: 'THE WORK',
+          heading: 'Everyday money, one idea per post.',
+          body: 'Each post explains one part of the service — sending money, finding an agent, a free offer, a thank-you to customers — with one person, one clear Burmese headline and the orange that makes the brand recognisable across the feed.',
+          media: [
+            pic(TM, 'app', 'App support', 'Service', 'half'),
+            pic(TM, 'thank-you', 'Thank you', 'Customers', 'half'),
+          ],
+        },
       ],
+      stills: [],
+    },
+  },
+  {
+    slug: MEMBER,
+    name: 'AIA Member Propositions',
+    nameLines: ['AIA Member', 'Propositions'],
+    cat: 'Insurance · Print',
+    year: '2022',
+    accent: 'rgb(214, 36, 74)',
+    cover: cov(MEMBER, 'hero'),
+    hero: { src: art(MEMBER, 'hero') },
+    study: {
+      lede: 'A member-benefits brochure for AIA Myanmar — hospitals, telemedicine and fitness partners, organised so members can find theirs.',
+      client: 'AIA Myanmar',
+      role: 'Layout · Illustration',
+      year: '2022',
+      deliverables: 'Printed and digital brochure,\nspot illustrations',
+      chapters: [
+        {
+          label: 'THE BRIEF',
+          heading: 'Many partners, one clear book.',
+          body: 'AIA members get benefits from partner hospitals, telemedicine services and sports and fitness brands. The brochure groups them by need, and each spread gives a partner, its offer and how to use it.',
+          media: [
+            pic(MEMBER, 'cover', 'Cover', 'Member propositions', 'half'),
+            pic(MEMBER, 'partners', 'Partners', 'Overview', 'half'),
+          ],
+        },
+        {
+          label: 'THE SPREADS',
+          heading: 'Illustrated, colour-coded, quick to scan.',
+          body: 'Each category has its own colour and illustration, so a member can open straight to health care, telemedicine or fitness and read the offer in seconds.',
+          media: [
+            pic(MEMBER, 'foreign-hospitals', 'Health care', 'Foreign hospitals', 'half'),
+            pic(MEMBER, 'local-hospitals', 'Health care', 'Local hospitals', 'half'),
+            pic(MEMBER, 'telemedicine', 'Health care', 'Telemedicine', 'half'),
+            pic(MEMBER, 'sports-fitness', 'Health care', 'Sports and fitness', 'half'),
+            pic(MEMBER, 'benefits', 'Benefits', 'At a glance', 'half'),
+            pic(MEMBER, 'terms', 'Terms', 'Conditions', 'half'),
+          ],
+        },
+      ],
+      stills: [],
+    },
+  },
+  {
+    slug: PROFILE,
+    name: 'Pepsi Company Profile',
+    nameLines: ['Pepsi Company', 'Profile'],
+    cat: 'FMCG · Editorial',
+    year: '2024',
+    accent: 'rgb(30, 62, 196)',
+    cover: cov(PROFILE, 'cover'),
+    extras: [cov(PROFILE, 'page-03')],
+    hero: { src: art(PROFILE, 'hero') },
+    study: {
+      lede: 'The company profile for Pepsi Myanmar — the business, its people and its achievements, in one blue book.',
+      client: 'Pepsi-Cola Myanmar',
+      role: 'Editorial design',
+      year: '2024',
+      deliverables: 'Company profile,\nprint and digital',
+      chapters: [
+        {
+          label: 'THE BOOK',
+          heading: 'A corporate story with the brand’s energy.',
+          body: 'The profile covers the company’s story, its distribution across Myanmar, leadership messages and the Chairman’s Ring of Honor — set in Burmese on Pepsi’s deep blue, with the circular Pepsi motif carried through every page.',
+          media: [
+            pic(PROFILE, 'cover', 'Cover', '', 'third'),
+            pic(PROFILE, 'page-02', 'Spread', '', 'third'),
+            pic(PROFILE, 'page-03', 'Ring of Honor', '', 'third'),
+            pic(PROFILE, 'page-04', 'Spread', '', 'third'),
+            pic(PROFILE, 'page-05', 'Achievements', '', 'third'),
+            pic(PROFILE, 'page-06', 'Contents', '', 'third'),
+            pic(PROFILE, 'page-07', 'Distribution', '', 'third'),
+            pic(PROFILE, 'page-08', 'Spread', '', 'third'),
+            pic(PROFILE, 'contact', 'Contact', '', 'third'),
+          ],
+        },
+      ],
+      stills: [],
+    },
+  },
+  {
+    slug: SKIN,
+    name: 'Skin Town Identity',
+    nameLines: ['Skin Town', 'Identity'],
+    cat: 'Beauty · Brand identity',
+    year: '',
+    accent: 'rgb(58, 98, 82)',
+    cover: cov(SKIN, 'logo'),
+    extras: [cov(SKIN, 'jar')],
+    hero: {
+      set: [pic(SKIN, 'logo', 'Logo'), pic(SKIN, 'signage', 'Signage'), pic(SKIN, 'jar', 'Packaging')],
+    },
+    study: {
+      lede: 'Identity for Skin Town, a Myanmar maker of organic sugar wax — a calm serif and a leaf mark for a natural product.',
+      client: 'Skin Town — organic sugar wax',
+      role: 'Brand identity',
+      year: '',
+      deliverables: 'Logo, packaging,\nsignage, social',
+      chapters: [
+        {
+          label: 'THE BRAND',
+          heading: 'Natural ingredients, said plainly.',
+          body: 'Skin Town produces high-quality sugar wax in Myanmar. The logo reflects the brand’s commitment to natural ingredients and sustainability — the leaves in the mark stand for the organic, plant-based nature of the products.',
+          media: [
+            pic(SKIN, 'app', 'Social', 'Mobile', 'half'),
+            pic(SKIN, 'overview', 'Brand overview', 'Identity board', 'half'),
+          ],
+        },
+      ],
+      stills: [],
+    },
+  },
+  {
+    slug: AHTA,
+    name: 'A-HTA Identity',
+    nameLines: ['A-HTA', 'Identity'],
+    cat: 'Fashion · Brand identity',
+    year: '',
+    accent: 'rgb(190, 30, 102)',
+    cover: cov(AHTA, 'poster'),
+    extras: [cov(AHTA, 'portrait')],
+    hero: { src: art(AHTA, 'hero') },
+    study: {
+      lede: 'Identity for A-HTA, a local clothing brand — a flowing wordmark on deep magenta.',
+      client: 'A-HTA — local clothing brand',
+      role: 'Brand identity',
+      year: '',
+      deliverables: 'Wordmark, stationery,\ntags, bags, posters',
+      chapters: [
+        {
+          label: 'THE IDENTITY',
+          heading: 'A signature that moves like fabric.',
+          body: 'The wordmark is drawn as a flowing signature on a deep magenta, carried onto business cards, swing tags, shopping bags and posters so every touchpoint feels cut from the same cloth.',
+          media: [
+            pic(AHTA, 'card', 'Business card', 'Stationery', 'half'),
+            pic(AHTA, 'bag', 'Shopping bag', 'Retail', 'half'),
+            pic(AHTA, 'tag', 'Swing tag', 'Product', 'half'),
+            pic(AHTA, 'poster', 'Poster', 'Campaign', 'half'),
+            pic(AHTA, 'portrait', 'Lookbook', 'Photography', 'half'),
+            pic(AHTA, 'silhouette', 'Lookbook', 'Photography', 'half'),
+          ],
+        },
+      ],
+      stills: [],
+    },
+  },
+  {
+    slug: INSIGHT,
+    name: 'Insight 3D Identity',
+    nameLines: ['Insight 3D', 'Identity'],
+    cat: '3D studio · Brand identity',
+    year: '',
+    accent: 'rgb(92, 98, 106)',
+    cover: cov(INSIGHT, 'sphere'),
+    hero: { src: art(INSIGHT, 'hero') },
+    study: {
+      lede: 'Identity for Insight 3D, a 3D visualisation studio — a mark that is an eye and a lens at once.',
+      client: 'Insight 3D — 3D visualisation',
+      role: 'Brand identity',
+      year: '',
+      deliverables: 'Logo, stationery,\nmerchandise, web banner',
+      chapters: [
+        {
+          label: 'THE MARK',
+          heading: 'An eye, an aperture, a sphere.',
+          body: 'The logo reads as an eye and a camera aperture at once — fitting for a studio that sells renderings and animation. Rendered in black chrome, it moves from the logo itself to embossed paper, tote bags and the studio’s web banner.',
+          media: [
+            pic(INSIGHT, 'logo', 'Logo', 'Primary mark', 'half'),
+            pic(INSIGHT, 'sphere', 'Sphere', '3D render', 'half'),
+            pic(INSIGHT, 'emboss', 'Emboss', 'Stationery', 'third'),
+            pic(INSIGHT, 'tote', 'Tote bag', 'Merchandise', 'third'),
+            pic(INSIGHT, 'laptop', 'Website', 'Desktop', 'third'),
+          ],
+        },
+      ],
+      stills: [],
+    },
+  },
+  {
+    slug: LOGOS,
+    name: 'Logofolio',
+    nameLines: ['Logofolio', 'SMEs & start-ups'],
+    cat: 'Identity · Logo design',
+    year: '',
+    accent: 'rgb(140, 140, 140)',
+    cover: cov(LOGOS, 'grid'),
+    hero: { src: art(LOGOS, 'hero') },
+    study: {
+      lede: 'Logos for small businesses and start-ups — cafés, restaurants, clinics, pharmacies, gyms and shops.',
+      client: 'SMEs & start-ups',
+      role: 'Logo design',
+      year: '',
+      deliverables: 'Logos and\nwordmarks',
+      chapters: [
+        {
+          label: 'THE COLLECTION',
+          heading: 'Small businesses, distinct marks.',
+          body: 'A collection of marks for small businesses and start-ups — from Bean Here, Extra Bowls and The Canteen to MEDx and Shwe Phoe Aung Pharmacy — each drawn to work small and in one colour, on a sign, a cup or a phone screen.',
+          media: [pic(LOGOS, 'grid', 'Logo collection', 'Brand identity')],
+        },
+      ],
+      stills: [],
+    },
+  },
+  {
+    slug: IREMIA,
+    name: 'Iremia Meditation App',
+    nameLines: ['Iremia', 'Meditation App'],
+    cat: 'Product · UI design',
+    year: '',
+    accent: 'rgb(242, 128, 40)',
+    cover: cov(IREMIA, 'hero'),
+    hero: { src: art(IREMIA, 'hero') },
+    study: {
+      lede: 'A meditation app concept that tracks how people feel, then helps them calm down.',
+      client: 'App concept',
+      role: 'UI design · Illustration',
+      year: '',
+      deliverables: 'App UI, onboarding,\nillustrations',
+      chapters: [
+        {
+          label: 'THE IDEA',
+          heading: 'Know the mood, then ease it.',
+          body: 'Iremia tracks people’s emotions and offers guided sessions to reduce stress and calm anxiety — a check-in first, then the right exercise for that moment.',
+          media: [pic(IREMIA, 'screens', 'Final screens', 'Onboarding to session')],
+        },
+        {
+          label: 'THE INTERFACE',
+          heading: 'Warm orange, plenty of air, friendly drawings.',
+          body: 'The interface keeps one warm orange accent, generous white space and simple line illustrations, so the app feels like a breather rather than another dashboard. Designed in Figma and Illustrator.',
+          media: [
+            pic(IREMIA, 'onboarding', 'Onboarding', 'Mobile', 'half'),
+            pic(IREMIA, 'session', 'Session', 'Mobile', 'half'),
+          ],
+        },
+      ],
+      stills: [],
+    },
+  },
+  {
+    slug: RETOUCH,
+    name: 'Product Retouch & Manipulation',
+    nameLines: ['Product Retouch', '& Manipulation'],
+    cat: 'Advertising · Retouch',
+    year: '',
+    accent: 'rgb(196, 44, 40)',
+    cover: cov(RETOUCH, 'whisky'),
+    extras: [cov(RETOUCH, 'lays')],
+    hero: {
+      set: [pic(RETOUCH, 'whisky', 'Whisky'), pic(RETOUCH, 'lays', 'Crisps'), pic(RETOUCH, 'carlsberg', 'Beer')],
+    },
+    study: {
+      lede: 'Product advertising built in post — packshots composited into scenes that sell the taste.',
+      client: 'Product advertising',
+      role: 'Retouching · Photo manipulation',
+      year: '',
+      deliverables: 'Key visuals,\nproduct composites',
+      chapters: [
+        {
+          label: 'THE CRAFT',
+          heading: 'One packshot, a whole world around it.',
+          body: 'Each visual starts from a product shot and is built up in Photoshop — light, liquid, fruit and setting composited and graded until the product looks as if it belongs there.',
+          media: [
+            pic(RETOUCH, 'serum', 'Serum', 'Beauty', 'half'),
+            pic(RETOUCH, 'matcha', 'Matcha', 'Beverage', 'half'),
+          ],
+        },
+      ],
+      stills: [],
     },
   },
   {
@@ -479,13 +1071,13 @@ export const v2WorkSection = {
 
 export const v2WorkPage = {
   label: 'SELECTED WORK',
-  headingLead: 'Ten projects, four countries,',
+  headingLead: 'Twenty-one projects, four countries,',
   headingItalic: 'one instinct',
   intro:
-    'Campaign art direction, motion and product design for FMCG and enterprise brands across Myanmar and the UAE.',
+    'Campaign art direction, social, print, identity and product design for FMCG, insurance and enterprise brands across Myanmar and the UAE.',
   // the marquee footer carries scope only, so it sits on one line and
   // matches the hover state it swaps with
-  scope: 'Campaign · Motion · Product · Identity',
+  scope: 'Campaign · Social · Print · Identity · Product',
 };
 
 // ─── 04 About ────────────────────────────────────────────────────────
@@ -505,8 +1097,8 @@ export const v2About = {
   },
   stats: [
     { value: '7+', label: 'Years experience' },
-    { value: '40+', label: 'Projects delivered' },
-    { value: '30K', label: 'Followers added at Velosi' },
+    { value: '20+', label: 'Campaigns executed' },
+    { value: '2K+', label: 'Projects visualised' },
     { value: '≈10%', label: 'Share lift on STING' },
   ],
   experience: [
@@ -545,6 +1137,12 @@ export const v2About = {
       co: 'Bliss Creative Communication',
       note: 'Agency foundation — studio craft and production.',
       year: '2020',
+    },
+    {
+      role: 'Freelance Creative Lead',
+      co: 'TM Design Studio',
+      note: 'Brand identities, logos and product retouching for SMEs and start-ups.',
+      year: '2019 — now',
     },
   ],
   toolkit: [
@@ -591,6 +1189,9 @@ export const v2Contact = {
     { label: 'LANGUAGES', value: v2Site.languages },
   ],
 };
+
+/** Year and discipline as one meta line; the year is left out when the source gives none. */
+export const projectMeta = (p: V2Project) => (p.year ? `${p.cat} · ${p.year}` : p.cat);
 
 export const findProject = (slug: string) => v2Work.find((p) => p.slug === slug);
 

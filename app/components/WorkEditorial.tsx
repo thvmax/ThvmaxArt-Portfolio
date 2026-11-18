@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { plate, v2Work, type V2Project } from '@/lib/v2content';
+import { plate, projectMeta, v2Work, type V2Project } from '@/lib/v2content';
 import ArrowUpRight from './ArrowUpRight';
 
 /**
@@ -25,46 +25,34 @@ import ArrowUpRight from './ArrowUpRight';
  * serves phone and desktop, sized off the viewport.
  */
 
-const COVERS: Record<string, string> = {
-  'sting-nightlife-repositioning': '/case-studies/sting-night-life/thematic-kv.png',
-};
-
 /* ── Cards ─────────────────────────────────────────────────────────── */
 
-/** One thumbnail in the cluster: a project, optionally showing one of its stills or films. */
+/** One thumbnail in the cluster: a project, showing its cover or one of its further stills or films. */
 type Card = { key: string; p: V2Project; src?: string; video?: string };
 
-const STING = '/case-studies/sting-night-life/';
-const STING_EXTRA: Pick<Card, 'src' | 'video'>[] = [
-  { video: 'hero-video.mp4' },
-  { src: 'product-kv.png' },
-  { src: 'event-poster.png' },
-  { video: 'Header-Video.mp4' },
-  { src: 'kv-qr-code.png' },
-  { src: 'slide-1.jpg' },
-  { src: 'slide-3.jpg' },
-];
+const isFilm = (path: string) => path.endsWith('.mp4');
 
-/** Every project once, then the extra real stills and films that exist (all STING for now), spread through. */
+/** Every project once, in order, with the further stills and films spread through between them. */
 function buildCards(): Card[] {
-  const base: Card[] = v2Work.map((p) => ({ key: p.slug, p }));
-  const sting = v2Work.find((p) => p.slug === 'sting-nightlife-repositioning');
-  const extra: Card[] = sting
-    ? STING_EXTRA.map((x) => ({
-        key: `sting-${x.src ?? x.video}`,
-        p: sting,
-        src: x.src && STING + x.src,
-        video: x.video && STING + x.video,
-      }))
-    : [];
+  const base: Card[] = v2Work.map((p) => ({ key: p.slug, p, src: p.cover }));
+  const extra: Card[] = v2Work.flatMap((p) =>
+    (p.extras ?? []).map((x) => ({ key: `${p.slug}:${x}`, p, ...(isFilm(x) ? { video: x } : { src: x }) })),
+  );
+  // deal the extras out round-robin by project, so one project's cards don't bunch up
+  const byProject = new Map<string, Card[]>();
+  extra.forEach((c) => byProject.set(c.p.slug, [...(byProject.get(c.p.slug) ?? []), c]));
+  const dealt: Card[] = [];
+  while ([...byProject.values()].some((l) => l.length)) {
+    byProject.forEach((l) => { const c = l.shift(); if (c) dealt.push(c); });
+  }
   const out: Card[] = [];
-  base.forEach((c, i) => { out.push(c); if (extra.length) out.push(extra.shift()!); if (i > 6 && extra.length) out.push(extra.shift()!); });
-  return out.concat(extra);
+  const every = Math.max(1, Math.round(base.length / Math.max(1, dealt.length)));
+  base.forEach((c, i) => { out.push(c); if (i % every === 0 && dealt.length) out.push(dealt.shift()!); });
+  return out.concat(dealt);
 }
 
 function Thumb({ card }: { card: Card }) {
-  const { p, src, video } = card;
-  const cover = src ?? (video ? undefined : COVERS[p.slug]);
+  const { p, src: cover, video } = card;
   return (
     <span className="v2-ed-media" style={{ background: plate(p.accent) }}>
       {video ? (
@@ -153,7 +141,9 @@ function Cloud({ cards }: { cards: Card[] }) {
         sized = w * 10000 + h;
         // The cluster keeps clear of the nav above and the line at the foot,
         // and is spread wider than it is tall where there is room for it.
-        const cw = Math.max(52, Math.min(h * 0.086, w * 0.155));
+        // more cards, slightly smaller cards, so the cluster keeps its air
+        const dense = Math.min(1, Math.max(0.8, Math.sqrt(26 / n)));
+        const cw = Math.max(48, Math.min(h * 0.086, w * 0.155) * dense);
         const top = w < 700 ? 78 : 84, foot = w < 700 ? 104 : 84;
         const room = Math.max(160, h - top - foot);
         RY = Math.max(60, (room / 2 - cw * 0.85) / 1.06);
@@ -295,7 +285,7 @@ function Cloud({ cards }: { cards: Card[] }) {
           href={`/work/${card.p.slug}`}
           data-i={i}
           className={`v2-ed-node${active === i ? ' is-active' : ''}`}
-          aria-label={`${card.p.name} — ${card.p.cat}, ${card.p.year}`}
+          aria-label={`${card.p.name} — ${projectMeta(card.p)}`}
           onPointerEnter={(e) => { if (e.pointerType === 'mouse') show(i); }}
           onPointerLeave={(e) => { if (e.pointerType === 'mouse') show(null); }}
           // keyboard focus only: a tap also focuses the link, and must not count as choosing it

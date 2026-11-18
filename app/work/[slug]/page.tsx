@@ -41,7 +41,8 @@ export default function CaseStudyPage({ params }: { params: { slug: string } }) 
     url: `https://thvmaxart.com/work/${project.slug}`,
     description: project.study?.lede ?? project.cat,
     genre: project.cat,
-    dateCreated: project.year,
+    ...(project.year ? { dateCreated: project.year } : {}),
+    ...(project.cover ? { image: `https://thvmaxart.com${project.cover}` } : {}),
     creator: { '@id': 'https://thvmaxart.com/#person' },
     ...(project.study?.client && project.study.client !== 'Self-initiated'
       ? { sourceOrganization: { '@type': 'Organization', name: project.study.client } }

@@ -1,11 +1,12 @@
 "use client";
 
+import Image from 'next/image';
 import Link from 'next/link';
-import { useRef } from 'react';
+import { useRef, type CSSProperties } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import { plate, v2Site, v2Work, type V2Project, type V2Still } from '@/lib/v2content';
+import { plate, projectMeta, v2Site, v2Work, type V2Project, type V2Still } from '@/lib/v2content';
 import Reveal from './Reveal';
 import ScrambleLabel from './ScrambleLabel';
 import ArrowUpRight from './ArrowUpRight';
@@ -17,34 +18,91 @@ interface Props {
   next: V2Project;
 }
 
-type MediaRow =
-  | { type: 'duo'; items: [V2Still, V2Still] }
-  | { type: 'single'; item: V2Still };
+const PER_ROW = { full: 1, half: 2, third: 3, quarter: 4 } as const;
+// plates stand in where there is no artwork yet, at the old fixed proportions
+const PLATE_RATIO = { full: 1740 / 1000, half: 4 / 3, third: 1740 / 1180, quarter: 1 } as const;
+const SIZES = {
+  1: '(max-width: 700px) 100vw, 80vw',
+  2: '(max-width: 700px) 100vw, 46vw',
+  3: '(max-width: 700px) 50vw, 31vw',
+  4: '(max-width: 700px) 50vw, 23vw',
+} as const;
 
-/** Case study — art-director editorial: full-bleed hero, meta strip,
- *  single-column chapters, one-image-per-row gallery with two-up pairs. */
+const ratio = (s: V2Still) => (s.w && s.h ? s.w / s.h : PLATE_RATIO[s.span ?? 'full']);
+
+/** Consecutive stills of one span share a row, up to that span's count. */
+function toRows(stills: V2Still[]): V2Still[][] {
+  const rows: V2Still[][] = [];
+  let cur: V2Still[] = [];
+  for (const s of stills) {
+    const span = s.span ?? 'full';
+    const first = cur[0];
+    if (first && ((first.span ?? 'full') !== span || cur.length >= PER_ROW[span])) {
+      rows.push(cur);
+      cur = [];
+    }
+    cur.push(s);
+  }
+  if (cur.length) rows.push(cur);
+  return rows;
+}
+
+/** One piece of work at its own proportions, captioned underneath. */
+function Frame({ still, accent, sizes }: { still: V2Still; accent: string; sizes: string }) {
+  const style = { '--r': ratio(still).toFixed(4) } as CSSProperties;
+  return (
+    <figure className="v2-case-frame" style={style}>
+      <div className={`v2-case-frame-media${still.src || still.video ? '' : ' v2-case-frame-media--plate'}`}>
+        {still.video ? (
+          <video className="v2-case-frame-art" src={still.video} autoPlay muted loop playsInline preload="metadata" />
+        ) : still.src ? (
+          <Image className="v2-case-frame-art" src={still.src} alt={`${still.label}${still.note ? ` — ${still.note}` : ''}`} fill sizes={sizes} />
+        ) : (
+          <>
+            <span className="v2-case-media-fill" style={{ background: plate(accent, 131) }} />
+            <span className="v2-case-media-grade" style={{ opacity: still.grade ?? 0.22 }} />
+          </>
+        )}
+      </div>
+      <figcaption className="v2-case-cap">
+        <span className="v2-case-cap-label">{still.label}</span>
+        {still.note && <span className="v2-case-cap-note">{still.note}</span>}
+      </figcaption>
+    </figure>
+  );
+}
+
+/** A row of frames that share one height, each as wide as its proportions ask. */
+function Rows({ stills, accent }: { stills: V2Still[]; accent: string }) {
+  return (
+    <div className="v2-case-rows">
+      {toRows(stills).map((row, i) => {
+        const sum = row.reduce((a, s) => a + ratio(s), 0);
+        const kind = row.length === 1 ? ' v2-case-row--single' : sum > 2.6 && row.length === 2 ? ' v2-case-row--wide' : '';
+        return (
+          <Reveal className={`v2-case-row v2-case-row--n${row.length}${kind}`} key={`${row[0].label}-${i}`}>
+            <div className="v2-case-row-inner" style={{ '--sum': sum.toFixed(4), '--n': row.length } as CSSProperties}>
+              {row.map((s, j) => (
+                <Frame key={`${s.label}-${j}`} still={s} accent={accent} sizes={SIZES[row.length as 1 | 2 | 3 | 4]} />
+              ))}
+            </div>
+          </Reveal>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Case study — art-director editorial: hero, meta strip, chapters each
+ *  followed by their frames, the result, and the next project. */
 export default function CaseStudy({ project, next }: Props) {
   const rootRef = useRef<HTMLElement | null>(null);
   const study = project.study;
+  const hero = project.hero;
   const index = v2Work.findIndex((p) => p.slug === project.slug) + 1;
   const nextIndex = v2Work.findIndex((p) => p.slug === next.slug) + 1;
   const total = String(v2Work.length).padStart(2, '0');
-
-  // Group consecutive half-width stills into an occasional two-up pair;
-  // everything else sits on its own row.
-  const rows: MediaRow[] = [];
-  if (study) {
-    for (let i = 0; i < study.stills.length; i++) {
-      const s = study.stills[i];
-      const n = study.stills[i + 1];
-      if (s.span === 'half' && n?.span === 'half') {
-        rows.push({ type: 'duo', items: [s, n] });
-        i += 1;
-      } else {
-        rows.push({ type: 'single', item: s });
-      }
-    }
-  }
+  const nextArt = next.hero?.src ?? next.hero?.set?.[0]?.src ?? next.cover;
 
   useGSAP(
     () => {
@@ -61,7 +119,8 @@ export default function CaseStudy({ project, next }: Props) {
         },
       );
 
-      gsap.utils.toArray<HTMLElement>('.v2-case-media').forEach((media) => {
+      // only the stand-in plates drift; real artwork stays still and whole
+      gsap.utils.toArray<HTMLElement>('.v2-case-frame-media--plate').forEach((media) => {
         gsap.fromTo(
           media.querySelector('.v2-case-media-fill'),
           { yPercent: -6 },
@@ -82,8 +141,11 @@ export default function CaseStudy({ project, next }: Props) {
         { label: 'YEAR', value: study.year },
         { label: 'ROLE', value: study.role },
         { label: 'DISCIPLINE', value: project.cat },
-      ]
+      ].filter((m) => m.value)
     : [];
+
+  const set = hero?.set;
+  const setSum = set ? set.reduce((a, s) => a + ratio(s), 0) : 0;
 
   return (
     <article className="v2-case" ref={rootRef}>
@@ -100,10 +162,49 @@ export default function CaseStudy({ project, next }: Props) {
       </header>
 
       <Reveal className="v2-case-hero" delay={0.05}>
-        <div className="v2-case-hero-media">
-          <span className="v2-case-hero-fill" style={{ background: plate(project.accent, 140) }} />
-          <span className="v2-case-hero-label">{project.cat}</span>
-        </div>
+        {set ? (
+          <div
+            className="v2-case-hero-media v2-case-hero-media--set"
+            style={
+              {
+                background: plate(project.accent, 140),
+                '--n': set.length,
+                '--sum': setSum.toFixed(4),
+                '--maxr': Math.max(...set.map(ratio)).toFixed(4),
+                '--rows': Math.ceil(set.length / 2),
+              } as CSSProperties
+            }
+          >
+            <div className="v2-case-hero-set">
+              {set.map((s) => (
+                <div className="v2-case-hero-piece" key={s.src} style={{ '--r': ratio(s).toFixed(4) } as CSSProperties}>
+                  <Image src={s.src!} alt={s.label} fill priority sizes="(max-width: 700px) 34vw, 28vw" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="v2-case-hero-media">
+            {hero?.video ? (
+              <video
+                className="v2-case-hero-fill v2-case-hero-art"
+                src={hero.video}
+                poster={hero.src}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+              />
+            ) : hero?.src ? (
+              <span className="v2-case-hero-fill">
+                <Image className="v2-case-hero-art" src={hero.src} alt={project.name} fill priority sizes="100vw" />
+              </span>
+            ) : (
+              <span className="v2-case-hero-fill" style={{ background: plate(project.accent, 140) }} />
+            )}
+          </div>
+        )}
       </Reveal>
 
       {meta.length > 0 && (
@@ -118,44 +219,24 @@ export default function CaseStudy({ project, next }: Props) {
       )}
 
       {study?.chapters.map((c) => (
-        <Reveal as="section" className="v2-case-section" key={c.label}>
-          <ScrambleLabel accent>{c.label}</ScrambleLabel>
-          <h2 className="v2-case-heading">{c.heading}</h2>
-          <p className="v2-case-body">{c.body}</p>
-        </Reveal>
+        <section className="v2-case-chapter" key={c.label}>
+          <Reveal className="v2-case-section">
+            <ScrambleLabel accent>{c.label}</ScrambleLabel>
+            <h2 className="v2-case-heading">{c.heading}</h2>
+            <p className="v2-case-body">{c.body}</p>
+          </Reveal>
+          {c.media && c.media.length > 0 && (
+            <div className="v2-case-gallery">
+              <Rows stills={c.media} accent={project.accent} />
+            </div>
+          )}
+        </section>
       ))}
 
       {study && study.stills.length > 0 && (
-        <Reveal className="v2-case-gallery">
-          <ScrambleLabel accent>SELECTED FRAMES</ScrambleLabel>
-          <div className="v2-case-media-grid">
-            {rows.map((row, i) =>
-              row.type === 'duo' ? (
-                <div className="v2-case-duo" key={`${row.items[0].label}-${i}`}>
-                  {row.items.map((s) => (
-                    <div key={s.label} className="v2-case-media" data-cursor="hover">
-                      <span className="v2-case-media-fill" style={{ background: plate(project.accent, 131) }} />
-                      <span className="v2-case-media-grade" style={{ opacity: s.grade }} />
-                      <span className="v2-case-media-label">{s.label}</span>
-                      <span className="v2-case-media-note">{s.note}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div
-                  key={row.item.label}
-                  className={`v2-case-media ${row.item.span === 'third' ? 'v2-case-media--third' : ''}`}
-                  data-cursor="hover"
-                >
-                  <span className="v2-case-media-fill" style={{ background: plate(project.accent, 131) }} />
-                  <span className="v2-case-media-grade" style={{ opacity: row.item.grade }} />
-                  <span className="v2-case-media-label">{row.item.label}</span>
-                  <span className="v2-case-media-note">{row.item.note}</span>
-                </div>
-              ),
-            )}
-          </div>
-        </Reveal>
+        <div className="v2-case-gallery">
+          <Rows stills={study.stills} accent={project.accent} />
+        </div>
       )}
 
       {study?.result && (
@@ -181,9 +262,10 @@ export default function CaseStudy({ project, next }: Props) {
                   <span key={line}>{line}</span>
                 ))}
               </span>
-              <span className="v2-case-next-meta">{`${next.cat} · ${next.year}`}</span>
+              <span className="v2-case-next-meta">{projectMeta(next)}</span>
             </div>
             <div className="v2-case-next-media" style={{ background: plate(next.accent, 133) }}>
+              {nextArt && <Image className="v2-case-next-art" src={nextArt} alt="" fill sizes="(max-width: 900px) 90vw, 36vw" />}
               <span className="v2-case-next-count">
                 {String(nextIndex).padStart(2, '0')} / {total}
               </span>

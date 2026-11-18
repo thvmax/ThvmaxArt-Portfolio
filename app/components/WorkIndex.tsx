@@ -1,9 +1,13 @@
 "use client";
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { plate, v2Work, v2WorkSection, type V2Project } from '@/lib/v2content';
+
+/** The wide frame a project opens on, else its cover. */
+const previewArt = (p: V2Project) => p.hero?.src ?? p.cover;
 import Reveal from './Reveal';
 import ScrambleLabel from './ScrambleLabel';
 import ArrowUpRight from './ArrowUpRight';
@@ -85,7 +89,7 @@ export default function WorkIndex({ limit, hint }: { limit?: number; hint?: bool
             <span className="v2-row-num">{String(i + 1).padStart(2, '0')}</span>
             <span className="v2-row-name">{p.name}</span>
             <span className="v2-row-meta">{p.cat}</span>
-            <span className="v2-row-year">{p.year}</span>
+            <span className="v2-row-year">{p.year || '—'}</span>
             <span className="v2-row-arrow" aria-hidden="true"><ArrowUpRight /></span>
           </Link>
         ))}
@@ -100,6 +104,20 @@ export default function WorkIndex({ limit, hint }: { limit?: number; hint?: bool
         aria-hidden="true"
         style={{ background: plate(hovered?.accent ?? 'rgb(217, 199, 33)') }}
       >
+        {/* every preview is mounted once and cross-faded, so hovering never waits on a load */}
+        {shown.map((p) => {
+          const src = previewArt(p);
+          return src ? (
+            <Image
+              key={p.slug}
+              className={`v2-preview-art${hovered?.slug === p.slug ? ' is-on' : ''}`}
+              src={src}
+              alt=""
+              fill
+              sizes="460px"
+            />
+          ) : null;
+        })}
         <span className="v2-preview-grain" />
         <span className="v2-preview-count">
           {String(Math.max(hoveredIndex, 0) + 1).padStart(2, '0')} / {String(shown.length).padStart(2, '0')}
