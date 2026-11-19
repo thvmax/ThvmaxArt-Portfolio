@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { v2Home, v2Site } from '@/lib/v2content';
+import { v2Home, v2Site, v2Work } from '@/lib/v2content';
 import WorkIndex from './components/WorkIndex';
 import Reveal from './components/Reveal';
 import ScrambleLabel from './components/ScrambleLabel';
@@ -41,7 +41,7 @@ export default function HomePage() {
 
           <Reveal delay={0.05}>
             <Link className="v2-textlink" href="/work" data-cursor="hover">
-              View all ten projects ↗
+              View all {v2Work.length} projects ↗
             </Link>
           </Reveal>
         </section>
