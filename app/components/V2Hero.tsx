@@ -5,7 +5,6 @@ import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { v2Home, v2Site } from '@/lib/v2content';
 import { onIntroDone } from './V2Intro';
-import HoloFoil from './HoloFoil';
 
 gsap.registerPlugin(useGSAP);
 
@@ -63,7 +62,6 @@ export default function V2Hero() {
 
   return (
     <header className="v2-hero" ref={rootRef}>
-      <HoloFoil />
       <span className="v2-hero-label">{v2Home.label}</span>
       <span className="v2-hero-label v2-hero-label--r">Based in {v2Site.based}</span>
 

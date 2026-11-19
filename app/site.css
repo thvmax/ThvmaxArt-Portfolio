@@ -763,8 +763,6 @@ html[data-intro='play'] body { overflow: hidden; }
 /* ── Hero ─────────────────────────────────────────────────────────── */
 
 .v2-hero {
-  position: relative;
-  isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
   align-items: end;
@@ -828,17 +826,8 @@ html[data-intro='play'] body { overflow: hidden; }
   opacity: 0;
   transform: translateY(10px);
 }
-/* the holographic strip: behind the type, never in the way of a click */
-.v2-holo {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
 @media (max-width: 760px) {
-  .v2-hero { grid-template-columns: minmax(0, 1fr); align-items: start; padding-top: clamp(12rem, 26vh, 14rem); }
+  .v2-hero { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .v2-hero-label--r { justify-self: start; }
   .v2-hero-intro, .v2-hero-cue { grid-column: 1; grid-row: auto; }
 }
