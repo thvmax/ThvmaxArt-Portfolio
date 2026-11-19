@@ -13,8 +13,7 @@ import ArrowUpRight from './ArrowUpRight';
  * Every card faces the viewer at all times; only its place on the sphere
  * changes. Near cards are large and sit in front, far ones small and
  * behind. Dragging turns the whole cluster like a trackball, in any
- * direction, and it glides to rest when let go. At rest nothing moves
- * except the thumbnails that are videos, which play.
+ * direction, and it glides to rest when let go. At rest nothing moves.
  *
  * The cluster leans a few degrees toward the pointer. With a mouse, the
  * card under the pointer is named at the foot, and a
@@ -27,39 +26,18 @@ import ArrowUpRight from './ArrowUpRight';
 
 /* ── Cards ─────────────────────────────────────────────────────────── */
 
-/** One thumbnail in the cluster: a project, showing its cover or one of its further stills or films. */
-type Card = { key: string; p: V2Project; src?: string; video?: string };
+/** One thumbnail in the cluster: one card per project, showing its cover. */
+type Card = { key: string; p: V2Project; src?: string };
 
-const isFilm = (path: string) => path.endsWith('.mp4');
-
-/** Every project once, in order, with the further stills and films spread through between them. */
 function buildCards(): Card[] {
-  const base: Card[] = v2Work.map((p) => ({ key: p.slug, p, src: p.cover }));
-  const extra: Card[] = v2Work.flatMap((p) =>
-    (p.extras ?? []).map((x) => ({ key: `${p.slug}:${x}`, p, ...(isFilm(x) ? { video: x } : { src: x }) })),
-  );
-  // deal the extras out round-robin by project, so one project's cards don't bunch up
-  const byProject = new Map<string, Card[]>();
-  extra.forEach((c) => byProject.set(c.p.slug, [...(byProject.get(c.p.slug) ?? []), c]));
-  const dealt: Card[] = [];
-  while ([...byProject.values()].some((l) => l.length)) {
-    byProject.forEach((l) => { const c = l.shift(); if (c) dealt.push(c); });
-  }
-  const out: Card[] = [];
-  const every = Math.max(1, Math.round(base.length / Math.max(1, dealt.length)));
-  base.forEach((c, i) => { out.push(c); if (i % every === 0 && dealt.length) out.push(dealt.shift()!); });
-  return out.concat(dealt);
+  return v2Work.map((p) => ({ key: p.slug, p, src: p.cover }));
 }
 
 function Thumb({ card }: { card: Card }) {
-  const { p, src: cover, video } = card;
+  const { p, src: cover } = card;
   return (
     <span className="v2-ed-media" style={{ background: plate(p.accent) }}>
-      {video ? (
-        <video className="v2-ed-img" src={video} autoPlay muted loop playsInline preload="metadata" />
-      ) : cover ? (
-        <Image src={cover} alt="" fill sizes="(max-width: 700px) 34vw, 220px" className="v2-ed-img" />
-      ) : null}
+      {cover && <Image src={cover} alt="" fill sizes="(max-width: 700px) 34vw, 220px" className="v2-ed-img" />}
     </span>
   );
 }

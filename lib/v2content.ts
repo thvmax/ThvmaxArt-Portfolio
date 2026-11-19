@@ -54,8 +54,7 @@ export interface V2Project {
   cat: string;          // mono meta line, e.g. "FMCG · Campaign"
   year: string;         // empty when the source gives no date
   accent: string;       // the project's own colour — artwork is never desaturated
-  cover?: string;       // 3:4 thumbnail for the Work cluster
-  extras?: string[];    // further 3:4 thumbnails (images or .mp4) for the cluster
+  cover?: string;       // 3:4 thumbnail — the project's one card in the Work cluster
   hero?: V2Hero;
   study?: V2Study;
 }
@@ -178,7 +177,6 @@ export const v2Work: V2Project[] = [
     year: '2024',
     accent: 'rgb(217, 199, 33)',
     cover: cov(STING, 'kv-final'),
-    extras: [STING_FILM + 'hero-video.mp4', cov(STING, 'product-kv'), STING_FILM + 'Header-Video.mp4'],
     hero: { video: STING_FILM + 'hero-video.mp4', src: art(STING, 'hero') },
     study: {
       lede: 'Taking an energy drink into the night — and growing its share while doing it.',
@@ -238,7 +236,6 @@ export const v2Work: V2Project[] = [
     year: '2024',
     accent: 'rgb(214, 84, 84)',
     cover: cov(TITAN, 'hero'),
-    extras: [cov(TITAN, 'merch')],
     hero: { src: art(TITAN, 'hero') },
     study: {
       lede: 'A surreal wall for Pepsi Myanmar’s new office — modern Pepsi energy drawn over traditional Myanmar motifs.',
@@ -284,7 +281,6 @@ export const v2Work: V2Project[] = [
     year: '2024',
     accent: 'rgb(64, 132, 214)',
     cover: cov(MEALS, 'kv'),
-    extras: [cov(MEALS, 'model')],
     hero: { src: art(MEALS, 'hero') },
     study: {
       lede: 'An AR filter for the 2024 Pepsi Meals campaign — the can and the meal, together on screen.',
@@ -323,7 +319,6 @@ export const v2Work: V2Project[] = [
     year: '2026',
     accent: 'rgb(56, 168, 178)',
     cover: cov(VELOSI, 'eid-al-etihad'),
-    extras: [cov(VELOSI, 'ramadan')],
     hero: {
       set: [
         pic(VELOSI, 'commemoration-day', 'UAE Commemoration Day'),
@@ -365,7 +360,6 @@ export const v2Work: V2Project[] = [
     year: '2024',
     accent: 'rgb(46, 106, 196)',
     cover: cov(TALENT, 'kv'),
-    extras: [cov(TALENT, 'emblem')],
     hero: { src: art(TALENT, 'hero') },
     study: {
       lede: 'A talent programme identity for Gen Z — Pepsi’s energy, set in a galaxy of stars.',
@@ -479,7 +473,6 @@ export const v2Work: V2Project[] = [
     year: '2023 — 24',
     accent: 'rgb(38, 88, 200)',
     cover: cov(SOCIAL, 'pepsi-poster'),
-    extras: [cov(SOCIAL, 'mirinda-green'), cov(SOCIAL, '7up-feeling-up'), cov(SOCIAL, 'sting-gold')],
     hero: {
       set: [
         pic(SOCIAL, 'pepsi-poster', 'Pepsi'),
@@ -599,7 +592,6 @@ export const v2Work: V2Project[] = [
     year: '2024',
     accent: 'rgb(206, 38, 52)',
     cover: cov(POSM, 'promotion-cans'),
-    extras: [cov(POSM, 'gondola-sting')],
     hero: { src: art(POSM, 'hero') },
     study: {
       lede: 'Promotion banners, posters and gondola displays for Pepsi-Cola brands in Myanmar’s modern-trade stores.',
@@ -640,7 +632,6 @@ export const v2Work: V2Project[] = [
     year: '2022 — 23',
     accent: 'rgb(186, 62, 88)',
     cover: cov(INS, 'alife-beauty'),
-    extras: [cov(INS, 'ains-vehicle')],
     hero: {
       set: [
         pic(INS, 'aia-crossword', 'AIA'),
@@ -772,7 +763,6 @@ export const v2Work: V2Project[] = [
     year: '2024',
     accent: 'rgb(30, 62, 196)',
     cover: cov(PROFILE, 'cover'),
-    extras: [cov(PROFILE, 'page-03')],
     hero: { src: art(PROFILE, 'hero') },
     study: {
       lede: 'The company profile for Pepsi Myanmar — the business, its people and its achievements, in one blue book.',
@@ -809,7 +799,6 @@ export const v2Work: V2Project[] = [
     year: '',
     accent: 'rgb(58, 98, 82)',
     cover: cov(SKIN, 'logo'),
-    extras: [cov(SKIN, 'jar')],
     hero: {
       set: [pic(SKIN, 'logo', 'Logo'), pic(SKIN, 'signage', 'Signage'), pic(SKIN, 'jar', 'Packaging')],
     },
@@ -841,7 +830,6 @@ export const v2Work: V2Project[] = [
     year: '',
     accent: 'rgb(190, 30, 102)',
     cover: cov(AHTA, 'poster'),
-    extras: [cov(AHTA, 'portrait')],
     hero: { src: art(AHTA, 'hero') },
     study: {
       lede: 'Identity for A-HTA, a local clothing brand — a flowing wordmark on deep magenta.',
@@ -968,7 +956,6 @@ export const v2Work: V2Project[] = [
     year: '',
     accent: 'rgb(196, 44, 40)',
     cover: cov(RETOUCH, 'whisky'),
-    extras: [cov(RETOUCH, 'lays')],
     hero: {
       set: [pic(RETOUCH, 'whisky', 'Whisky'), pic(RETOUCH, 'lays', 'Crisps'), pic(RETOUCH, 'carlsberg', 'Beer')],
     },
